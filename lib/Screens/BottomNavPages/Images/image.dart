@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 
 class ImageHomePage extends StatefulWidget {
@@ -10,6 +12,14 @@ class ImageHomePage extends StatefulWidget {
 }
 
 class _ImageHomePageState extends State<ImageHomePage> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    Provider.of<GetStatusProvider>(context, listen: false).getStatus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
