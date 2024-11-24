@@ -1,18 +1,15 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
-class ImageView extends StatefulWidget {
-  const ImageView({Key? key}) : super(key: key);
+class VideoView extends StatefulWidget {
+  const VideoView({Key? key}) : super(key: key);
 
   @override
-  State<ImageView> createState() => _ImageViewState();
+  State<VideoView> createState() => _VideoViewState();
 }
 
-class _ImageViewState extends State<ImageView> {
+class _VideoViewState extends State<VideoView> {
   List<Widget> buttonsList = [
     Icon(Icons.download),
-    Icon(Icons.print),
     Icon(Icons.share),
   ];
 
@@ -38,9 +35,6 @@ class _ImageViewState extends State<ImageView> {
                     print("download");
                     break;
                   case 1:
-                    print("print");
-                    break;
-                  case 2:
                     print("share");
                     break;
                 }
