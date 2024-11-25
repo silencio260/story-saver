@@ -134,6 +134,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_native_api:
+    dependency: "direct main"
+    description:
+      name: flutter_native_api
+      sha256: "9cb9d83b5db8985ee2e7b5e5f6cad80395a248fd5949e4e207611a0dab227ef0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
