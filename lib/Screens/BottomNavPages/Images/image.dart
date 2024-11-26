@@ -67,7 +67,7 @@ class _ImageHomePageState extends State<ImageHomePage> {
                                 image: FileImage(File(data.path)),
                                 fit: BoxFit.cover,
                               ),
-                              color: Colors.amber,
+                              color: const Color.fromARGB(255, 236, 235, 230),
                               borderRadius: BorderRadius.circular(10)),
                         ),
                       );

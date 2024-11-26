@@ -5,6 +5,7 @@ import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:flutter_native_api/flutter_native_api.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:flutter/material.dart';
 
@@ -52,12 +51,9 @@ class _ImageViewState extends State<ImageView> {
                     break;
                   case 1:
                     print("print");
-                    FlutterNativeApi.printImage(
-                        widget.imagePath!, widget.imagePath!.split('/').last);
                     break;
                   case 2:
                     print("share");
-                    FlutterNativeApi.shareImage(widget.imagePath!);
                     break;
                 }
               },

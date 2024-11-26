@@ -1,7 +1,13 @@
+import 'dart:io';
+
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 class VideoView extends StatefulWidget {
-  const VideoView({Key? key}) : super(key: key);
+  final String? videoPath;
+  const VideoView({Key? key, this.videoPath}) : super(key: key);
 
   @override
   State<VideoView> createState() => _VideoViewState();
@@ -13,12 +19,39 @@ class _VideoViewState extends State<VideoView> {
     Icon(Icons.share),
   ];
 
+  ChewieController? _chewieController;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _chewieController = ChewieController(
+        videoPlayerController:
+            VideoPlayerController.file(File(widget.videoPath!)),
+        autoInitialize: true,
+        autoPlay: true,
+        looping: true,
+        aspectRatio: 5 / 6,
+        errorBuilder: ((context, errorMessage) {
+          return Center(
+            child: Text(errorMessage),
+          );
+        }));
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _chewieController!.pause();
+    _chewieController!.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(color: Colors.grey),
-      ),
+      body: Chewie(controller: _chewieController!),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(left: 25),
         child: Row(
@@ -32,7 +65,11 @@ class _VideoViewState extends State<VideoView> {
               onPressed: () {
                 switch (index) {
                   case 0:
-                    print("download");
+                    print("download video");
+                    ImageGallerySaver.saveFile(widget.videoPath!).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Video Saved")));
+                    });
                     break;
                   case 1:
                     print("share");
