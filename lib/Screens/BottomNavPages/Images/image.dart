@@ -59,7 +59,18 @@ class _ImageHomePageState extends State<ImageHomePage> {
                               context,
                               CupertinoPageRoute(
                                   builder: (_) =>
-                                      ImageView(imagePath: data.path)));
+                                      ImageView(imagePath: data.path),
+                              ),
+                           );
+
+                          // print('--+++--- ' +
+                          //     data.toString());
+                          // print(
+                          //     data);
+                          // print('--+++--- ' +
+                          //     data.path);
+                          // print(
+                          //     '--+++ ' + snapshot.data.toString());
                         },
                         child: Container(
                           decoration: BoxDecoration(
