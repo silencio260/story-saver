@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/bottom_nav_provider.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/ThumbnailExperiment.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/image.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video.dart';
 
@@ -12,7 +13,9 @@ class MainActivity extends StatefulWidget {
 }
 
 class _MainActivityState extends State<MainActivity> {
-  List<Widget> pages = const [ImageHomePage(), VideoHomePage()];
+
+  List<Widget> pages = const [ImageHomePage(), VideoHomePage(), Thumbnailexperiment()];
+
   @override
   Widget build(BuildContext context) {
     return Consumer<BottomNavProvider>(builder: (context, nav, child) {
@@ -27,7 +30,9 @@ class _MainActivityState extends State<MainActivity> {
               BottomNavigationBarItem(icon: Icon(Icons.image), label: "Image"),
               BottomNavigationBarItem(
                   icon: Icon(Icons.video_call), label: "Video"),
-            ]),
+              BottomNavigationBarItem(icon: Icon(Icons.access_alarm_outlined), label: "Experiments"),
+            ],
+        ),
       );
     });
   }

@@ -28,7 +28,7 @@ class _VideoHomePageState extends State<VideoHomePage> {
     // TODO: implement initState
     super.initState();
 
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
   }
 
   bool _isFetched = false;
@@ -148,8 +148,8 @@ class _VideoHomePageState extends State<VideoHomePage> {
                             print( snapshot.hasData);
                             print('-----    ----- ');
                             return
-                              // snapshot.hasData
-                              //   ?
+                              snapshot.hasData
+                                ?
                             GestureDetector(
                                     onTap: () {
                                       // Navigator.push(
@@ -162,22 +162,73 @@ class _VideoHomePageState extends State<VideoHomePage> {
                                           snapshot.data.toString());
                                       print(
                                           '--+++ ' + snapshot.data.toString());
+                                      print(snapshot.data!);
                                     },
-                                    child: Center(
-                                      child:
-                                      // snapshot.hasData
-                                      //     ? CircularProgressIndicator()
-                                      //     : snapshot.data != null
-                                      //     ?
-                                      Image.memory(
-                                        snapshot.data!,
-                                        // width: 300,
-                                        // height: 300,
-                                        // fit: BoxFit.contain,
-                                      )
-                                    //       : Text('Failed to load image'),
-                                    ),
-                            );
+                                    child:
+                                    Image.memory(
+                                      snapshot.data!,
+
+                                      fit: BoxFit.cover,
+                                    )
+                                    // new Center(
+                                    //   child:
+                              // new Container(
+                              //             decoration: new BoxDecoration(
+                              //
+                              //               color: Colors.purple,
+                              //             ),
+                              //             child: new  Image.memory(
+                              //               snapshot.data!,
+                              //               width: 700,
+                              //               height: 1300,
+                              //               fit: BoxFit.cover,
+                              //             )
+                              //         // ),
+                              //       )
+
+                              // Container(
+                                    //       decoration: BoxDecoration(
+                                    //           image: DecorationImage(
+                                    //             image: FileImage(File(snapshot.data
+                                    //                 .toString())), //FileImage(File(data.path)),
+                                    //             fit: BoxFit.cover,
+                                    //           ),
+                                    //           color: const Color.fromARGB(
+                                    //               255, 236, 235, 230),
+                                    //           borderRadius:
+                                    //               BorderRadius.circular(10)),
+                                    //     ),
+                                    //   )
+
+                                    //   Container(
+                                    //     decoration: BoxDecoration(
+                                    //         image: DecorationImage(
+                                    //           image: FileImage(File(snapshot.data
+                                    //               .toString())), //FileImage(File(data.path)),
+                                    //           fit: BoxFit.cover,
+                                    //         ),
+                                    //         color: const Color.fromARGB(
+                                    //             255, 236, 235, 230),
+                                    //         borderRadius:
+                                    //             BorderRadius.circular(10)),
+                                    //   ),
+                                    // )
+
+                                    // Center(
+                                    //   child:
+                                    //   // snapshot.hasData
+                                    //   //     ? CircularProgressIndicator()
+                                    //   //     : snapshot.data != null
+                                    //   //     ?
+                                    //   Image.memory(
+                                    //     snapshot.data!,
+                                    //     // width: 300,
+                                    //     // height: 300,
+                                    //     fit: BoxFit.contain,
+                                    //   )
+                                    // //       : Text('Failed to load image'),
+                                    // ),
+                            )
 
                                   //   Container(
                                   //     decoration: BoxDecoration(
@@ -193,9 +244,9 @@ class _VideoHomePageState extends State<VideoHomePage> {
                                   //   ),
                                   // )
 
-                                // : Center(
-                                //     child: CircularProgressIndicator(),
-                                //   );
+                                : Center(
+                                    child: CircularProgressIndicator(),
+                                  );
                           });
                     }),
                   ),
