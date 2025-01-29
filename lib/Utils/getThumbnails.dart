@@ -9,6 +9,31 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_video_thumbnail_plus/flutter_video_thumbnail_plus.dart';
 import 'package:video_compress/video_compress.dart';
 
+
+import 'package:photo_manager/photo_manager.dart';
+
+Future<AssetPathEntity?> getSpecificAlbum(String albumName) async {
+  final List<AssetPathEntity> albums = await PhotoManager.getAssetPathList();
+
+  for (final AssetPathEntity album in albums) {
+    if (album.name == albumName) {
+      return album; // Return the specific album
+    }
+  }
+  return null; // Album not found
+}
+
+Future<List<AssetEntity>> getAssetsFromAlbum(AssetPathEntity album) async {
+  final List<AssetEntity> assets = await album.getAssetListRange(
+    start: 0,
+    end: await album.assetCountAsync,//album.assetCount,
+  );
+  return assets;
+}
+
+
+
+
 Future<Uint8List> getThumbnail(String path) async {
   // XFile thumb = await VideoThumbnail.thumbnailFile(video: path);
   // final thumb = await VideoCompress.getFileThumbnail(path,
