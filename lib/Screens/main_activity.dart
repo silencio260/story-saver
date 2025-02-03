@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/bottom_nav_provider.dart';
+import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/ExperimentWithPhotoManager.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/ThumbnailExperiment.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/image.dart';
@@ -15,7 +17,16 @@ class MainActivity extends StatefulWidget {
 
 class _MainActivityState extends State<MainActivity> {
 
-  List<Widget> pages = const [ImageHomePage(), Thumbnailexperiment(), MediaStoreVideos()];
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
+
+    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
+  }
+
+  List<Widget> pages = const [ImageHomePage(), VideoHomePage(), MediaStoreVideos()];
 
   @override
   Widget build(BuildContext context) {

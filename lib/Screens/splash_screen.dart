@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/main_activity.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,6 +16,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
     navigate();
   }
 

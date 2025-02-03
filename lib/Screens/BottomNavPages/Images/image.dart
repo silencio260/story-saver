@@ -19,7 +19,7 @@ class _ImageHomePageState extends State<ImageHomePage> {
     // TODO: implement initState
     super.initState();
 
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
   }
 
   bool _isFetched = false;
@@ -28,12 +28,12 @@ class _ImageHomePageState extends State<ImageHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Consumer<GetStatusProvider>(builder: (context, file, child) {
-      if (_isFetched == false) {
-        file.getStatus('.jpg');
-        Future.delayed(const Duration(microseconds: 1), () {
-          _isFetched = true;
-        });
-      }
+      // if (_isFetched == false) {
+      //   file.getStatus('.jpg');
+      //   Future.delayed(const Duration(microseconds: 1), () {
+      //     _isFetched = true;
+      //   });
+      // }
       return file.isWhatsappAvailable == false
           ? const Center(
               child: Text('Whatsapp not available'),

@@ -7,6 +7,7 @@ import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Utils/getThumbnails.dart';
 import 'package:video_compress/video_compress.dart';
 
 import 'package:flutter_isolate/flutter_isolate.dart';
@@ -40,6 +41,13 @@ class GetStatusProvider extends ChangeNotifier {
       final directory = Directory(AppConstants.WHATSAPP_PATH);
       if (directory.existsSync()) {
         final items = directory.listSync();
+
+
+        // Sort by last modified time (newest first)
+        // items.sort((a, b) {
+        //   return File(b.path).lastModifiedSync().compareTo(File(a.path).lastModifiedSync());
+        // });
+
         if (ext == ".mp4") {
           _getVideos = items.where((element) => element.path.endsWith(ext)).toList();
           notifyListeners();
@@ -49,6 +57,30 @@ class GetStatusProvider extends ChangeNotifier {
         }
       }
       _isWhatsappAvailable = true;
+      notifyListeners();
+    }
+  }
+
+  void getAllStatus() async {
+    _isLoading = true;
+    notifyListeners();
+
+    if (await getStoragePermission() == true) {
+      final directory = Directory(AppConstants.WHATSAPP_PATH);
+      if (directory.existsSync()) {
+        final items = directory.listSync();
+
+        // Sort by last modified time (newest first)
+        items.sort((a, b) {
+          return File(b.path).lastModifiedSync().compareTo(File(a.path).lastModifiedSync());
+        });
+
+        _getVideos = items.where((element) => element.path.endsWith('.mp4')).toList();
+        _getImages = items.where((element) => element.path.endsWith('.jpg')).toList();
+      }
+
+      _isWhatsappAvailable = true;
+      _isLoading = false;
       notifyListeners();
     }
   }
@@ -125,65 +157,38 @@ class GetStatusProvider extends ChangeNotifier {
     }
   }
 
-}
+  Future<String> generateThumbnailFromListAllVideosForFutureBuilder(String videoPath) async {
+    // If already cached, no need to regenerate
+    if (_thumbnailCacheV2.containsKey(videoPath)) {
+      return Future.value(_thumbnailCacheV2[videoPath]!); // Ensure it's non-null
+    }
+
+    _isLoading = true;
+    // notifyListeners();
+
+    try {
+      // Replace this with your thumbnail generation logic
+      final thumbnail = await Thumbnail().generate(videoPath);
+
+      print("----- show thumbnail $thumbnail $videoPath");
+
+      _thumbnailCacheV2[videoPath] = thumbnail;
+      notifyListeners();
+
+      return thumbnail;
+
+      // print(_thumbnailCache[videoPath]);
+    } catch (e) {
+      _thumbnailCacheV2[videoPath] = null; // Cache null for failed attempts
 
 
-////////////////----------------------------////////////////////////
+    } finally {
+      _isLoading = false;
 
-Future<Uint8List?> generateThumbnailInIsolateWithFlutterIsolates(String videoPath) async {
-  final receivePort = ReceivePort();
-
-  // Spawn the isolate
-  await FlutterIsolate.spawn(_generateThumbnailTask, [videoPath, receivePort.sendPort]);
-
-  // Wait for the result from the isolate
-  final result = await receivePort.first;
-
-  print('generating in isolate $result');
-
-  // Close the receive port
-  receivePort.close();
-
-  return result as Uint8List?;
-}
-
-/// The isolate function for generating a thumbnail
-Future<void> _generateThumbnailTask(List<dynamic> args) async {
-  final String videoPath = args[0]; // The video file path
-  final SendPort sendPort = args[1]; // SendPort to communicate back
-
-  print('thumbnails value $videoPath $sendPort');
-
-  // VideoCompress.getByteThumbnail(
-  //   videoPath,
-  //   quality: 100, // Adjust quality if needed
-  //   position: -1, // Default position
-  // ).then((onValue){
-  //   print('in .then $onValue');
-  // });
-
-  try {
-    // Generate the thumbnail using the async library function
-    final thumbnail = await VideoCompress.getByteThumbnail(
-      videoPath,
-      quality: 100, // Adjust quality if needed
-      position: -1, // Default position
-    );
-    //     .then((onValue){
-    //   print('in .then $onValue');
-    // });
-
-    print("thumb in isolate generated ");
-    // Send the result back to the main isolate
-    sendPort.send(thumbnail);
-  } catch (e) {
-    print("Error generating thumbnail 2: $e");
-    sendPort.send(null);
+      return _thumbnailCacheV2[videoPath]!;
+    }
   }
+
 }
-
-
-
-
 
 

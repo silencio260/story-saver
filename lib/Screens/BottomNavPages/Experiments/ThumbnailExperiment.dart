@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
+import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
@@ -55,7 +56,8 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
     // TODO: implement initState
     super.initState();
 
-    Provider.of<GetStatusProvider>(context, listen: false).getExperimentalStatus('.mp4');
+    // Provider.of<GetStatusProvider>(context, listen: false).getExperimentalStatus('.mp4');
+    clearOldCachedFiles();
   }
 
   bool _isFetched = false;

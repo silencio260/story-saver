@@ -42,6 +42,8 @@ dependencies:
   list_all_videos: ^1.2.0
   flutter_isolate: ^2.1.0
   photo_manager: ^3.6.3
+
+  media_store_plus: ^0.1.3
 #  video_compress_v2: ^1.0.0+1
   # image_picker: ^1.1.2
   # file_selector: ^1.0.3
