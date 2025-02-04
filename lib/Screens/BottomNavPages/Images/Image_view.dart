@@ -23,13 +23,16 @@ class _ImageViewState extends State<ImageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
-        height: 900,
+        constraints: BoxConstraints(
+          maxHeight: 700
+        ),
         decoration: BoxDecoration(
           color: Colors.black,
           image: DecorationImage(
             image: FileImage(File(widget.imagePath!)),
-            fit: BoxFit.fitWidth,
+            fit: BoxFit.contain,
           ),
         ),
       ),
