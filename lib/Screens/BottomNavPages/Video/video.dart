@@ -137,13 +137,15 @@ class _VideoHomePageState extends State<VideoHomePage> {
                   child: Text("No Videos available"),
                 )
               :   Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(5),
                   child: GridView(
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8),
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 300, // Each item max width = 150
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 0.95,
+                        ),
                     children: List.generate(file.getVideos.length, (index) {
                       // print('---------------------');
                       // print(file.getVideos.length);
@@ -174,6 +176,7 @@ class _VideoHomePageState extends State<VideoHomePage> {
 
                                     },
                                     child: Container(
+                                      height: MediaQuery.of(context).size.height * 0.5,
                                       decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image: FileImage(File(snapshot.data.toString())),
@@ -181,6 +184,7 @@ class _VideoHomePageState extends State<VideoHomePage> {
                                           ),
                                           color: const Color.fromARGB(255, 236, 235, 230),
                                           borderRadius: BorderRadius.circular(10)),
+                                          // height: 500,
                                     ),
                                     // Image.memory(
                                     //   snapshot.data!,

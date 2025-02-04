@@ -43,13 +43,15 @@ class _ImageHomePageState extends State<ImageHomePage> {
                   child: Text("No images available"),
                 )
               : Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(5),
                   child: GridView(
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8),
+                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 300, // Each item max width = 150
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.95,
+                    ),
                     children: List.generate(file.getImages.length, (index) {
                       final data = file.getImages[index];
 
@@ -79,7 +81,7 @@ class _ImageHomePageState extends State<ImageHomePage> {
                                 fit: BoxFit.cover,
                               ),
                               color: const Color.fromARGB(255, 236, 235, 230),
-                              borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(2)),
                         ),
                       );
                     }),

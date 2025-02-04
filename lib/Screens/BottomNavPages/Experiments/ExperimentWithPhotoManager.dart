@@ -120,7 +120,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("MediaStore Videos")),
+      // appBar: AppBar(title: Text("MediaStore Videos")),
       body: Consumer<GetSavedMediaProvider>(builder: (context, file, child) {
       //(
       //   builder: (context) {
@@ -165,9 +165,10 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> {
                       leading: Image.memory(
                         snapshot.data!,
                         fit: BoxFit.cover,
-                        width: 100,
-                        height:  100,
+                        // width: 200,
+                        // height:  200,
                       ),
+                      // style: ,
                       // title: Text("Video ${index + 1}"),
                       // subtitle: Text("Duration: ${video.duration}s"),
                       subtitle: Text("${index + 1}", style: TextStyle(fontSize: 11),),
