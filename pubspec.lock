@@ -113,6 +113,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
+  double_tap_to_exit:
+    dependency: "direct main"
+    description:
+      name: double_tap_to_exit
+      sha256: "47e7244771ec6bd334562bfc26fe10409b240ed5c833ac7d0e752e8036d4e855"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   fake_async:
     dependency: transitive
     description:
