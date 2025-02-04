@@ -82,7 +82,7 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
       
           bool exitApp = await _showExitDialog(context) ?? false;
           if (exitApp) {
-            Navigator.of(context).pop();
+            SystemChannels.platform.invokeMethod('SystemNavigator.pop');
           }
         },
       
