@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:video_player/video_player.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
@@ -15,8 +16,10 @@ class VideoView extends StatefulWidget {
 
 class _VideoViewState extends State<VideoView> {
   List<Widget> buttonsList = [
+    Icon(Icons.arrow_back),
     Icon(Icons.download),
     Icon(Icons.share),
+    Icon(Icons.repeat_outlined),
   ];
 
   ChewieController? _chewieController;
@@ -31,8 +34,16 @@ class _VideoViewState extends State<VideoView> {
             VideoPlayerController.file(File(widget.videoPath!)),
         autoInitialize: true,
         autoPlay: true,
-        looping: true,
-        aspectRatio: 5 / 6,
+
+        // looping: true,
+        aspectRatio: 1,
+        materialProgressColors: ChewieProgressColors(
+          playedColor: const Color( CustomColors.ButtonColor), // Color of the played portion
+          handleColor: const Color( CustomColors.ButtonColor), // Color of the draggable handle
+          bufferedColor: Colors.grey, // Color of the buffered portion
+          backgroundColor: Colors.black, // Color of the remaining part
+        ),
+
         errorBuilder: ((context, errorMessage) {
           return Center(
             child: Text(errorMessage),
@@ -43,35 +54,49 @@ class _VideoViewState extends State<VideoView> {
   @override
   void dispose() {
     // TODO: implement dispose
-    super.dispose();
+
     _chewieController!.pause();
     _chewieController!.dispose();
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Chewie(controller: _chewieController!),
+      backgroundColor: Colors.black,
+      body: Container(
+        constraints: BoxConstraints(
+            maxHeight: 700
+        ),
+        child:  Chewie(controller: _chewieController!),
+      ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(left: 25),
+        padding: const EdgeInsets.symmetric(horizontal: 70),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
             return FloatingActionButton(
               foregroundColor: Colors.white,
-              backgroundColor: Colors.green,
+              backgroundColor: const Color( CustomColors.ButtonColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(70), // Adjust radius here
+              ),
               elevation: 0,
               heroTag: '$index',
               onPressed: () {
                 switch (index) {
                   case 0:
-                    print("download video");
-                    ImageGallerySaver.saveFile(widget.videoPath!).then((value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Video Saved")));
-                    });
+                    Navigator.pop(context);
                     break;
                   case 1:
+                    print("download");
+                    ImageGallerySaver.saveFile(widget.videoPath!).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Image Saved")));
+                    });
+                    break;
+                  case 2:
                     print("share");
                     break;
                 }

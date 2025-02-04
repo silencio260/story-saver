@@ -165,17 +165,18 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                                 ?
                             GestureDetector(
                                     onTap: () {
-                                      // Navigator.push(
-                                      //     context,
-                                      //     CupertinoPageRoute(
-                                      //         builder: (_) => VideoView(
-                                      //               videoPath: data.path,
-                                      //             )));
-                                      print('--+++--- in gesture' +
-                                          snapshot.data.toString());
-                                      print(
-                                          '--+++ ' + snapshot.data.toString());
-                                      print(snapshot.data!);
+                                      Navigator.push(
+                                          context,
+                                          CupertinoPageRoute(
+                                              builder: (_) => VideoView(
+                                                    videoPath: data.path,
+                                                  )));
+
+                                      // print('--+++--- in gesture' +
+                                      //     snapshot.data.toString());
+                                      // print(
+                                      //     '--+++ ' + snapshot.data.toString());
+                                      // print(snapshot.data!);
 
                                       // print("Provider_2 ${Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile}");
 
