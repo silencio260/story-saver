@@ -13,7 +13,11 @@ class ImageHomePage extends StatefulWidget {
   State<ImageHomePage> createState() => _ImageHomePageState();
 }
 
-class _ImageHomePageState extends State<ImageHomePage> {
+class _ImageHomePageState extends State<ImageHomePage> with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -26,6 +30,7 @@ class _ImageHomePageState extends State<ImageHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
         body: Consumer<GetStatusProvider>(builder: (context, file, child) {
       // if (_isFetched == false) {

@@ -24,7 +24,11 @@ class VideoHomePage extends StatefulWidget {
   State<VideoHomePage> createState() => _VideoHomePageState();
 }
 
-class _VideoHomePageState extends State<VideoHomePage> {
+class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -117,6 +121,7 @@ class _VideoHomePageState extends State<VideoHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
         body: Consumer<GetStatusProvider>(builder: (context, file, child) {
       // if (_isFetched == false) {

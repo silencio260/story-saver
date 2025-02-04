@@ -15,9 +15,12 @@ class MediaStoreVideos extends StatefulWidget {
   _MediaStoreVideosState createState() => _MediaStoreVideosState();
 }
 
-class _MediaStoreVideosState extends State<MediaStoreVideos> {
+class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepAliveClientMixin {
   List<AssetEntity> videoAssets = [];
   bool isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -119,6 +122,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       // appBar: AppBar(title: Text("MediaStore Videos")),
       body: Consumer<GetSavedMediaProvider>(builder: (context, file, child) {
