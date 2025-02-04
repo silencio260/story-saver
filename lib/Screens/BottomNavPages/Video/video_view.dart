@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:video_player/video_player.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
@@ -98,6 +100,16 @@ class _VideoViewState extends State<VideoView> {
                     break;
                   case 2:
                     print("share");
+                    Share.shareXFiles([XFile(widget.videoPath!)],
+                        text: 'Shared From WhatsApp Story Saver').then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Video Sent")));
+                    });
+                    break;
+
+                  case 3:
+                    print("share");
+                    shareToWhatsApp('Shared From Status Saver', filePath: widget.videoPath!, context: context);
                     break;
                 }
               },

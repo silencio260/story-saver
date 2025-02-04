@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:math';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Utils/ShareToApp.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
@@ -64,6 +66,18 @@ class _ImageViewState extends State<ImageView> {
                     break;
                   case 2:
                     print("share");
+                      Share.shareXFiles([XFile(widget.imagePath!)],
+                          text: 'Shared From WhatsApp Story Saver').then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Image Sent")));
+                    });
+
+                    break;
+
+
+                  case 3:
+                    print("share");
+                    shareToWhatsApp('Shared From Status Saver', filePath: widget.imagePath!, context: context);
                     break;
                 }
               },
