@@ -190,6 +190,23 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                                           ),
                                           color: const Color.fromARGB(255, 236, 235, 230),
                                           borderRadius: BorderRadius.circular(10)),
+
+                                      child: Stack(
+                                        children: [
+                                          // Your image is already inside the container with the decoration
+
+                                          // Positioned widget for the video icon
+                                          Positioned(
+                                            top: 10, // Adjust to your preference
+                                            right: 10, // Adjust to your preference
+                                            child: Icon(
+                                              Icons.videocam_sharp, // You can replace it with any other video icon
+                                              color: Colors.white, // Icon color
+                                              size: 20, // Icon size
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                           // height: 500,
                                     ),
                                     // Image.memory(

@@ -4,9 +4,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
 import 'package:video_compress/video_compress.dart';
 
@@ -85,21 +86,21 @@ class GetStatusProvider extends ChangeNotifier {
     }
   }
 
-  // Request storage permission
-  Future<bool> getStoragePermission() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      return true;
-    } else {
-      final storagePermission = await Permission.manageExternalStorage.request();
-      if (storagePermission.isGranted) {
-        return true;
-      } else {
-        openAppSettings(); // Optionally prompt user to open settings for manual permission
-        return false;
-      }
-    }
-  }
+  // // Request storage permission
+  // Future<bool> getStoragePermission() async {
+  //   final status = await Permission.storage.request();
+  //   if (status.isGranted) {
+  //     return true;
+  //   } else {
+  //     final storagePermission = await Permission.manageExternalStorage.request();
+  //     if (storagePermission.isGranted) {
+  //       return true;
+  //     } else {
+  //       openAppSettings(); // Optionally prompt user to open settings for manual permission
+  //       return false;
+  //     }
+  //   }
+  // }
 
 
 

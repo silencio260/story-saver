@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
+import 'package:storysaver/Utils/saveStatus.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
@@ -59,10 +60,11 @@ class _ImageViewState extends State<ImageView> {
                     break;
                   case 1:
                     print("download");
-                    ImageGallerySaver.saveFile(widget.imagePath!).then((value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Image Saved")));
-                    });
+                    saveStatus(context, widget.imagePath!);
+                    // ImageGallerySaver.saveFile(widget.imagePath!).then((value) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //       const SnackBar(content: Text("Image Saved")));
+                    // });
                     break;
                   case 2:
                     print("share");

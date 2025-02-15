@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
+import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
@@ -45,6 +46,7 @@ class _VideoViewState extends State<VideoView> {
           bufferedColor: Colors.grey, // Color of the buffered portion
           backgroundColor: Colors.black, // Color of the remaining part
         ),
+
 
         errorBuilder: ((context, errorMessage) {
           return Center(
@@ -92,11 +94,17 @@ class _VideoViewState extends State<VideoView> {
                     Navigator.pop(context);
                     break;
                   case 1:
-                    print("download");
-                    ImageGallerySaver.saveFile(widget.videoPath!).then((value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Image Saved")));
-                    });
+                    print("Save");
+
+                    saveStatus(context, widget.videoPath!);
+                    // ImageGallerySaver.saveFile(widget.videoPath!+'/ppp').then((value) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //       const SnackBar(content: Text("Image Saved")));
+                    // }).catchError((onError) {
+                    //
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //   const SnackBar(content: Text("Error Saving File")));
+                    // });
                     break;
                   case 2:
                     print("share");
