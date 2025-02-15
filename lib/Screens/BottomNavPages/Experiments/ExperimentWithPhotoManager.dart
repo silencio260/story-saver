@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -135,10 +136,11 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
               ?
           GridView(
             gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+            const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 300, // Each item max width = 150
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.95,
             ),
             children: List.generate(file.getMediaFile.length, (index) {
                 // print('GetSavedMediaProvider().getMediaFile[index] $video');
@@ -165,24 +167,52 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                       );
                     }
 
-                    return ListTile(
-                      leading: Image.memory(
-                        snapshot.data!,
-                        fit: BoxFit.cover,
-                        // width: 200,
-                        // height:  200,
+                    return Container(
+                      // height: MediaQuery.of(context).size.height * 0.5,
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: MemoryImage(snapshot.data!),
+                            fit: BoxFit.cover,
+                          ),
+                          color: const Color.fromARGB(255, 236, 235, 230),
+                          borderRadius: BorderRadius.circular(2)),
+
+                      child: Stack(
+                        children: [
+                          // Your image is already inside the container with the decoration
+
+                          // Positioned widget for the video icon
+                          Positioned(
+                            top: 10, // Adjust to your preference
+                            right: 10, // Adjust to your preference
+                            child: Icon(
+                              Icons.videocam_sharp, // You can replace it with any other video icon
+                              color: Colors.white, // Icon color
+                              size: 20, // Icon size
+                            ),
+                          ),
+                        ],
                       ),
-                      // style: ,
-                      // title: Text("Video ${index + 1}"),
-                      // subtitle: Text("Duration: ${video.duration}s"),
-                      subtitle: Text("${index + 1}", style: TextStyle(fontSize: 11),),
-                      onTap: () async {
-                        final file = await video.file; // Get the actual video file
-                        if (file != null) {
-                          print("Video Path: ${file.path}");
-                        }
-                      },
+                      // height: 500,
                     );
+
+                    // return ListTile(
+                    //   leading:
+                    //   Image.memory(
+                    //     snapshot.data!,
+                    //     fit: BoxFit.cover,
+                    //     width: 200,
+                    //     height:  200,
+                    //   ),
+                    //
+                    //   // subtitle: Text("${index + 1}", style: TextStyle(fontSize: 11),),
+                    //   onTap: () async {
+                    //     final file = await video.file; // Get the actual video file
+                    //     if (file != null) {
+                    //       print("Video Path: ${file.path}");
+                    //     }
+                    //   },
+                    // );
                   },
                 );
             }),

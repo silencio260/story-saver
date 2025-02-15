@@ -182,14 +182,14 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
                                     },
                                     child: Container(
-                                      height: MediaQuery.of(context).size.height * 0.5,
+                                      // height: MediaQuery.of(context).size.height * 0.5,
                                       decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image: FileImage(File(snapshot.data.toString())),
                                             fit: BoxFit.cover,
                                           ),
                                           color: const Color.fromARGB(255, 236, 235, 230),
-                                          borderRadius: BorderRadius.circular(10)),
+                                          borderRadius: BorderRadius.circular(2)),
 
                                       child: Stack(
                                         children: [
