@@ -273,6 +273,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.11.1"
+  media_scanner:
+    dependency: "direct overridden"
+    description:
+      path: "."
+      ref: support_gradle_8
+      resolved-ref: "7bff48e28845c4fed3b997e95d39cd2d09382b2b"
+      url: "https://github.com/mbfakourii/media_scanner.git"
+    source: git
+    version: "2.1.0"
   media_store_plus:
     dependency: "direct main"
     description:
@@ -437,10 +446,10 @@ packages:
     dependency: "direct main"
     description:
       name: photo_manager
-      sha256: dc26184676b26d722d656073ca8fe29203d7631ec613aed1a9679de3aa1f52c2
+      sha256: "0bc7548fd3111eb93a3b0abf1c57364e40aeda32512c100085a48dade60e574f"
       url: "https://pub.dev"
     source: hosted
-    version: "3.6.3"
+    version: "3.6.4"
   platform:
     dependency: transitive
     description:
