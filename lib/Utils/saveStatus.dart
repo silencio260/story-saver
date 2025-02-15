@@ -50,24 +50,13 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     }
 
     // ✅ Step 7: Copy the file to the new directory
-    await originalFile.copy(newFilePath);
-
-    // await MediaStore.ensureInitialized(filePath);
-
-    // await MediaScanner.loadMedia(path: newFilePath);
-    // final result = await MediaScanner.loadMedia(filePath);
+    final copiedFile = await originalFile.copy(newFilePath);
 
 
-    // ✅ Step 8: Save the file to the gallery
-    final result = await ImageGallerySaver.saveFile(newFilePath);
+    if (copiedFile.existsSync()) {
 
-    // final result = await ImageGallerySaver.saveFile(
-    //   originalFile.path,
-    //   name: fileName,  // Specify the name
-    //   isReturnPathOfIOS: true,  // Get path on iOS
-    // );
-    //
-    if (result['isSuccess'] == true) {
+      await MediaScanner.loadMedia(path: newFilePath);
+
       String successMessage = (fileExtension == "mp4" || fileExtension == "avi" || fileExtension == "mov")
           ? "Video saved successfully!"
           : "Image saved successfully!";
