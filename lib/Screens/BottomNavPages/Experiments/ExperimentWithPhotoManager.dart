@@ -8,6 +8,9 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/image_tile.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/video_tile.dart';
+import 'package:storysaver/Utils/GeAssetEntityPath.dart';
 
 class MediaStoreVideos extends StatefulWidget {
   const MediaStoreVideos({Key? key}) : super(key: key);
@@ -147,72 +150,21 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
 
                 final video = file.getMediaFile[index];
 
+                print('saved_status_file ${video} - ${''}');
+
+                // video.file.p
+
                 return FutureBuilder<Uint8List?>(
-                  future: video.thumbnailData, // Fetch thumbnail data
+                  future: video.type == AssetType.video ? video.thumbnailData : getAssetEntityBytes(video), // Fetch thumbnail data
                   builder: (context, snapshot) {
-                    // if (snapshot.connectionState == ConnectionState.waiting) {
-                    //   return ListTile(
-                    //     leading: CircularProgressIndicator(),
-                    //     title: Text("Loading thumbnail..."),
-                    //   );
-                    // }
+
+                    // print('in FutureBuilder snapshot.hasData: ${snapshot.hasData} - file.getMediaFile $index: ${video.thumbnailData}');
 
 
-                    print('in FutureBuilder snapshot.hasData: ${snapshot.hasData} - file.getMediaFile $index: ${video.thumbnailData}');
 
-                    if (!snapshot.hasData || snapshot.data == null) {
-                      return ListTile(
-                        leading: Icon(Icons.broken_image),
-                        title: Text("Thumbnail not available"),
-                      );
-                    }
-
-                    return Container(
-                      // height: MediaQuery.of(context).size.height * 0.5,
-                      decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: MemoryImage(snapshot.data!),
-                            fit: BoxFit.cover,
-                          ),
-                          color: const Color.fromARGB(255, 236, 235, 230),
-                          borderRadius: BorderRadius.circular(2)),
-
-                      child: Stack(
-                        children: [
-                          // Your image is already inside the container with the decoration
-
-                          // Positioned widget for the video icon
-                          Positioned(
-                            top: 10, // Adjust to your preference
-                            right: 10, // Adjust to your preference
-                            child: Icon(
-                              Icons.videocam_sharp, // You can replace it with any other video icon
-                              color: Colors.white, // Icon color
-                              size: 20, // Icon size
-                            ),
-                          ),
-                        ],
-                      ),
-                      // height: 500,
-                    );
-
-                    // return ListTile(
-                    //   leading:
-                    //   Image.memory(
-                    //     snapshot.data!,
-                    //     fit: BoxFit.cover,
-                    //     width: 200,
-                    //     height:  200,
-                    //   ),
-                    //
-                    //   // subtitle: Text("${index + 1}", style: TextStyle(fontSize: 11),),
-                    //   onTap: () async {
-                    //     final file = await video.file; // Get the actual video file
-                    //     if (file != null) {
-                    //       print("Video Path: ${file.path}");
-                    //     }
-                    //   },
-                    // );
+                    return video.type == AssetType.video ?
+                    VideoTile(snapshot: snapshot) :
+                    ImageTile(snapshot: snapshot);
                   },
                 );
             }),

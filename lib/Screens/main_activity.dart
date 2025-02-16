@@ -31,7 +31,7 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
 
     Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
-    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
+    // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
 
     controller = TabController(length: 3, vsync: this);
     // controller.addListener(() {

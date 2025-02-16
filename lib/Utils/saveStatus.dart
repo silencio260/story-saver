@@ -5,9 +5,9 @@ import 'package:media_store_plus/media_store_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:media_scanner/media_scanner.dart';
-
 
 Future<void> saveStatus(BuildContext context, String filePath) async {
   try {
@@ -29,7 +29,8 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     }
 
     // ✅ Step 3: Define target save directory
-    String saveDirectory = "/storage/emulated/0/Pictures/YourApp/Saved Statuses";
+    String saveDirectory =
+        "/storage/emulated/0/Pictures/YourApp/Saved Statuses";
     Directory directory = Directory(saveDirectory);
 
     // ✅ Step 4: Ensure directory exists
@@ -52,22 +53,24 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     // ✅ Step 7: Copy the file to the new directory
     final copiedFile = await originalFile.copy(newFilePath);
 
-
     if (copiedFile.existsSync()) {
-
       await MediaScanner.loadMedia(path: newFilePath);
 
-      String successMessage = (fileExtension == "mp4" || fileExtension == "avi" || fileExtension == "mov")
+      String successMessage = (fileExtension == "mp4" ||
+              fileExtension == "avi" ||
+              fileExtension == "mov")
           ? "Video saved successfully!"
           : "Image saved successfully!";
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(successMessage)),
       );
+
+      AnalyticsService().logSaveStatus()
+          .then((value) => print('log save status event to firbase'));
     } else {
       throw Exception("Failed to save file");
     }
-
   } catch (e) {
     // ✅ Step 9: Handle errors properly
     ScaffoldMessenger.of(context).showSnackBar(
