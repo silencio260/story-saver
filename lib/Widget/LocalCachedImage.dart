@@ -30,7 +30,7 @@ class LocalImageCache extends StatelessWidget {
       future: DefaultCacheManager().putFile(localImagePath, File(localImagePath).readAsBytesSync()),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
+            snapshot.hasData && snapshot.data != null) {
           return Image.file(snapshot.data!, fit: BoxFit.cover);
         } else {
           return Center(
