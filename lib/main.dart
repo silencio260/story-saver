@@ -1,14 +1,20 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/bottom_nav_provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('ensureInitialized');
+
+  AnalyticsService.init();
+
   // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
   // final getSavedMedia = GetSavedMediaProvider();
   // print('getSavedMedia');
@@ -17,6 +23,7 @@ void main() async {
 
   runApp(MyApp());
 
+  AnalyticsService.logAppOpen();
 }
 
 class MyApp extends StatelessWidget {
