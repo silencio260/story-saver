@@ -10,6 +10,7 @@ import 'package:storysaver/Screens/BottomNavPages/Experiments/ThumbnailExperimen
 import 'package:storysaver/Screens/BottomNavPages/Images/image.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 class MainActivity extends StatefulWidget {
   const MainActivity({Key? key}) : super(key: key);
@@ -25,13 +26,14 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
   void initState() {
     // TODO: implement initState
     super.initState();
-    
 
     // print('init myMainActivity');
 
     Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
     // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
+
+
 
     controller = TabController(length: 3, vsync: this);
     // controller.addListener(() {
@@ -88,6 +90,10 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
       
       
         child: Scaffold(
+          // floatingActionButton: FloatingActionButton(onPressed: (){
+          //   print('in app review click');
+          //   AppRatingService.init();
+          // }),
           appBar: AppBar(
             title: Text("Story Saver"),
             bottom: TabBar(
