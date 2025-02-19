@@ -60,6 +60,24 @@ class _ImageHomePageState extends State<ImageHomePage> with AutomaticKeepAliveCl
                     children: List.generate(file.getImages.length, (index) {
                       final data = file.getImages[index];
 
+                      print('---- ${data.path}');
+
+                    File tempFile = File(data.path);
+
+                    // Check if the file exists
+                    if (!tempFile.existsSync()) {
+
+                      // if(data.path){
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image, color: Colors.grey),
+                              // Text("Image not available", style: TextStyle(color: Colors.grey),)
+                            ],),
+                        );
+                      }
+
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -85,7 +103,7 @@ class _ImageHomePageState extends State<ImageHomePage> with AutomaticKeepAliveCl
                                 image: FileImage(File(data.path)),
                                 fit: BoxFit.cover,
                               ),
-                              color: const Color.fromARGB(255, 236, 235, 230),
+                              color: const Color.fromARGB(255, 255, 255, 255),
                               borderRadius: BorderRadius.circular(2)),
                         ),
                       );

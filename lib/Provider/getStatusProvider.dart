@@ -78,6 +78,13 @@ class GetStatusProvider extends ChangeNotifier {
 
         _getVideos = items.where((element) => element.path.endsWith('.mp4')).toList();
         _getImages = items.where((element) => element.path.endsWith('.jpg')).toList();
+
+        final fakeFileMP = File('/path/to/fake_file.mp4');
+        _getVideos.insert(0, fakeFileMP);
+
+
+        final fakeFileIMG = File('/path/to/fake_file.jpg');
+        _getImages.insert(0, fakeFileIMG);
       }
 
       _isWhatsappAvailable = true;

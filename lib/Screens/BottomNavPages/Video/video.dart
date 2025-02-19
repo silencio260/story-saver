@@ -274,7 +274,12 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                                     // ),
                             )
                             : Center(
-                                child: CircularProgressIndicator(),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image, color: Colors.grey),
+                                    // Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
+                                  ],),
                               );
                           });
                     }),
