@@ -20,6 +20,7 @@
         android:label="story_saver"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">
     
         <activity
