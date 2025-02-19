@@ -150,17 +150,17 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
 
                 final video = file.getMediaFile[index];
 
-                print('saved_status_file ${video} - ${''}');
+                // print('saved_status_file ${video} - ${''}');
 
-                // video.file.p
-
-                return FutureBuilder<Uint8List?>(
-                  future: video.type == AssetType.video ? video.thumbnailData : getAssetEntityBytes(video), // Fetch thumbnail data
+                return FutureBuilder<dynamic>(
+                  future: video.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
                   builder: (context, snapshot) {
 
                     // print('in FutureBuilder snapshot.hasData: ${snapshot.hasData} - file.getMediaFile $index: ${video.thumbnailData}');
-
-
+                    // final f = await video.file;
+                    // f.path;
+                    // if(video.type == AssetType.image)
+                    //   print("Path: ${} ${video.title}");
 
                     return video.type == AssetType.video ?
                     VideoTile(snapshot: snapshot) :
