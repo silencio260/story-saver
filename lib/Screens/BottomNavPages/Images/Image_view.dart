@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
@@ -31,12 +32,26 @@ class _ImageViewState extends State<ImageView> {
         constraints: BoxConstraints(
           maxHeight: 700
         ),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          image: DecorationImage(
-            image: FileImage(File(widget.imagePath!)),
-            fit: BoxFit.contain,
-          ),
+        // decoration: BoxDecoration(
+        //   color: Colors.black,
+        //   image: DecorationImage(
+        //     image: FileImage(File(widget.imagePath!)),
+        //     fit: BoxFit.contain,
+        //   ),
+        // ),
+        child: PhotoView(
+          imageProvider: FileImage(File(widget.imagePath!)),
+          minScale: PhotoViewComputedScale.contained,  // initial scale
+          maxScale: PhotoViewComputedScale.covered * 2,  // maximum zoom in
+          initialScale: PhotoViewComputedScale.contained,  // start at contained size
+          scaleStateController: PhotoViewScaleStateController(),
+          scaleStateCycle: (actual) {
+            // Only allow zooming in
+            if (actual == PhotoViewScaleState.initial) {
+              return PhotoViewScaleState.zoomedIn;
+            }
+            return PhotoViewScaleState.initial;
+          },
         ),
       ),
       floatingActionButton: Padding(
