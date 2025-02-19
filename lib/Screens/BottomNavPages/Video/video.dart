@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
@@ -46,6 +47,17 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   String _counter = 'video';
   final String? title = 'vid';
+
+  RefreshController _refreshController =
+  RefreshController(initialRefresh: false);
+
+  void _onRefresh() async{
+
+    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+
+    _refreshController.refreshCompleted();
+  }
 
 //   Future<void> _compressVideo() async {
 //     var file;
@@ -143,7 +155,20 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                 )
               :   Container(
                   padding: const EdgeInsets.all(5),
-                  child: GridView(
+                  child: SmartRefresher(
+          enablePullDown: true,
+          // enablePullUp: true,
+          header: WaterDropHeader(
+          waterDropColor: Colors.green, // Color of the water drop
+          refresh: CircularProgressIndicator( // Custom loader during refresh
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.green), // Loader color
+          ),
+          complete: Container(), // Customize or leave empty for the "complete" state
+          ),
+          controller: _refreshController,
+          onRefresh: _onRefresh,
+          child:
+                  GridView(
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 300, // Each item max width = 150
@@ -282,7 +307,8 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                                   ],),
                               );
                           });
-                    }),
+                    },),
+                  ),
                   ),
                 );
     }));
