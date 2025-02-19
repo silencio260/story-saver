@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Provider/bottom_nav_provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
@@ -73,6 +74,29 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
     );
   }
 
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
+
+  void _onRefresh() async{
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    _refreshController.refreshCompleted();
+  }
+
+  void _onLoading() async{
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+    // items.add((items.length+1).toString());
+    // if(mounted)
+    //   setState(() {
+    //
+    //   });
+    _refreshController.loadComplete();
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {  //WillPopScope
@@ -115,8 +139,18 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
             backgroundColor: const Color(CustomColors.AppBarColor),
             foregroundColor: Colors.white,
           ),
-          body: TabBarView(controller: controller, children: pages),
-        
+          body:
+          // CustomPullToRefresh(
+          //   onRefresh: _handleRefresh,
+          //   child: ListView.builder(
+          //     itemCount: _items.length,
+          //     itemBuilder: (context, index) => ListTile(
+          //       title: Text(_items[index]),
+          //     ),
+          //   ),
+          // ),
+          TabBarView(controller: controller, children: pages),
+
         ),
       ),
     );

@@ -93,6 +93,21 @@ class GetStatusProvider extends ChangeNotifier {
     }
   }
 
+  void removeImageAtIndex(int index) {
+    if (index >= 0 && index < _getImages.length && _getImages.length > 0) {
+      _getImages.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void removeVideoAtIndex(int index) {
+    if (index >= 0 && index < _getVideos.length && _getVideos.length > 0) {
+      _getVideos.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+
   // // Request storage permission
   // Future<bool> getStoragePermission() async {
   //   final status = await Permission.storage.request();
