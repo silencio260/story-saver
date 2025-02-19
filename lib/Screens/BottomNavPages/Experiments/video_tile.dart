@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class VideoTile extends StatefulWidget {
-  final AsyncSnapshot<Uint8List?>? snapshot;
+  final AsyncSnapshot<dynamic>? snapshot;
   const VideoTile({Key? key, this.snapshot}) : super(key: key);
 
   @override
@@ -18,9 +18,13 @@ class _VideoTileState extends State<VideoTile> {
   Widget build(BuildContext context) {
 
       if (!(widget.snapshot!.hasData) || widget.snapshot!.data == null) {
-        return ListTile(
-          leading: Icon(Icons.broken_image),
-          title: Text("Thumbnail not available"),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+            Icon(Icons.broken_image, color: Colors.grey),
+            Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
+          ],),
         );
       }
 

@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Utils/GeAssetEntityPath.dart';
 
 class ImageTile extends StatefulWidget {
-  final AsyncSnapshot<Uint8List?>? snapshot;
+  final AsyncSnapshot<dynamic>? snapshot;
   const ImageTile({Key? key, this.snapshot}) : super(key: key);
 
   @override
@@ -28,9 +28,13 @@ class _ImageTileState extends State<ImageTile> {
     // }
 
           if (!widget.snapshot!.hasData || widget.snapshot!.data == null) {
-            return ListTile(
-              leading: Icon(Icons.broken_image),
-              title: Text("Image not available"),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                Icon(Icons.broken_image, color: Colors.grey),
+                // Text("Image not available", style: TextStyle(color: Colors.grey),)
+              ],),
             );
           }
 
@@ -43,7 +47,8 @@ class _ImageTileState extends State<ImageTile> {
               // height: MediaQuery.of(context).size.height * 0.5,
               decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: MemoryImage(widget.snapshot!.data!),
+                    image: FileImage(File(widget.snapshot!.data!.path)),
+                    // image: MemoryImage(widget.snapshot!.data.path!),
                     // image: FileImage(File(snapshot.data!)),
                     fit: BoxFit.cover,
                   ),
