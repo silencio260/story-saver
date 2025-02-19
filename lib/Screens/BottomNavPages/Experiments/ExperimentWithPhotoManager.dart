@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/image_tile.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/video_tile.dart';
-import 'package:storysaver/Utils/GeAssetEntityPath.dart';
+import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 
 class MediaStoreVideos extends StatefulWidget {
   const MediaStoreVideos({Key? key}) : super(key: key);

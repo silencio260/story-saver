@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:storysaver/Utils/GeAssetEntityPath.dart';
+import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 
 class ImageTile extends StatefulWidget {
   final AsyncSnapshot<dynamic>? snapshot;
