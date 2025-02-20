@@ -12,6 +12,7 @@ import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
+import 'package:storysaver/Widget/MediaListItem.dart';
 
 // import 'package:file_selector/file_selector.dart';
 // import 'package:image_picker/image_picker.dart';
@@ -184,120 +185,121 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                           future: file.generateThumbnailFromListAllVideosForFutureBuilder(data.path),
                           builder: (context, snapshot) {
 
-
                             return
                               snapshot.hasData
                                 ?
-                            GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          CupertinoPageRoute(
-                                              builder: (_) => VideoView(
-                                                    videoPath: data.path,
-                                                  )));
+                             MediaListItem(mediaPath: snapshot.data.toString(), isVideo: true)
 
-                                      // print('--+++--- in gesture' +
-                                      //     snapshot.data.toString());
-                                      // print(
-                                      //     '--+++ ' + snapshot.data.toString());
-                                      // print(snapshot.data!);
-
-                                      // print("Provider_2 ${Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile}");
-
-                                    },
-                                    child: Container(
-                                      // height: MediaQuery.of(context).size.height * 0.5,
-                                      decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: FileImage(File(snapshot.data.toString())),
-                                            fit: BoxFit.cover,
-                                          ),
-                                          color: const Color.fromARGB(255, 236, 235, 230),
-                                          borderRadius: BorderRadius.circular(2)),
-
-                                      child: Stack(
-                                        children: [
-                                          // Your image is already inside the container with the decoration
-
-                                          // Positioned widget for the video icon
-                                          Positioned(
-                                            top: 10, // Adjust to your preference
-                                            right: 10, // Adjust to your preference
-                                            child: Icon(
-                                              Icons.videocam_sharp, // You can replace it with any other video icon
-                                              color: Colors.white, // Icon color
-                                              size: 20, // Icon size
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                          // height: 500,
-                                    ),
-                                    // Image.memory(
-                                    //   snapshot.data!,
-                                    //
-                                    //   fit: BoxFit.cover,
-                                    // )
-                                    // new Center(
-                                    //   child:
-                              // new Container(
-                              //             decoration: new BoxDecoration(
-                              //
-                              //               color: Colors.purple,
-                              //             ),
-                              //             child: new  Image.memory(
-                              //               snapshot.data!,
-                              //               width: 700,
-                              //               height: 1300,
-                              //               fit: BoxFit.cover,
-                              //             )
-                              //         // ),
-                              //       )
-
-                              // Container(
-                                    //       decoration: BoxDecoration(
-                                    //           image: DecorationImage(
-                                    //             image: FileImage(File(snapshot.data
-                                    //                 .toString())), //FileImage(File(data.path)),
-                                    //             fit: BoxFit.cover,
-                                    //           ),
-                                    //           color: const Color.fromARGB(
-                                    //               255, 236, 235, 230),
-                                    //           borderRadius:
-                                    //               BorderRadius.circular(10)),
-                                    //     ),
-                                    //   )
-
-                                    //   Container(
-                                    //     decoration: BoxDecoration(
-                                    //         image: DecorationImage(
-                                    //           image: FileImage(File(snapshot.data
-                                    //               .toString())), //FileImage(File(data.path)),
-                                    //           fit: BoxFit.cover,
-                                    //         ),
-                                    //         color: const Color.fromARGB(
-                                    //             255, 236, 235, 230),
-                                    //         borderRadius:
-                                    //             BorderRadius.circular(10)),
-                                    //   ),
-                                    // )
-
-                                    // Center(
-                                    //   child:
-                                    //   // snapshot.hasData
-                                    //   //     ? CircularProgressIndicator()
-                                    //   //     : snapshot.data != null
-                                    //   //     ?
-                                    //   Image.memory(
-                                    //     snapshot.data!,
-                                    //     // width: 300,
-                                    //     // height: 300,
-                                    //     fit: BoxFit.contain,
-                                    //   )
-                                    // //       : Text('Failed to load image'),
-                                    // ),
-                            )
+                            // GestureDetector(
+                            //         onTap: () {
+                            //           Navigator.push(
+                            //               context,
+                            //               CupertinoPageRoute(
+                            //                   builder: (_) => VideoView(
+                            //                         videoPath: data.path,
+                            //                       ),),);
+                            //
+                            //           // print('--+++--- in gesture' +
+                            //           //     snapshot.data.toString());
+                            //           // print(
+                            //           //     '--+++ ' + snapshot.data.toString());
+                            //           // print(snapshot.data!);
+                            //
+                            //           // print("Provider_2 ${Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile}");
+                            //
+                            //         },
+                            //         child: Container(
+                            //           // height: MediaQuery.of(context).size.height * 0.5,
+                            //           decoration: BoxDecoration(
+                            //               image: DecorationImage(
+                            //                 image: FileImage(File(snapshot.data.toString())),
+                            //                 fit: BoxFit.cover,
+                            //               ),
+                            //               color: const Color.fromARGB(255, 236, 235, 230),
+                            //               borderRadius: BorderRadius.circular(2)),
+                            //
+                            //           child: Stack(
+                            //             children: [
+                            //               // Your image is already inside the container with the decoration
+                            //
+                            //               // Positioned widget for the video icon
+                            //               Positioned(
+                            //                 top: 10, // Adjust to your preference
+                            //                 right: 10, // Adjust to your preference
+                            //                 child: Icon(
+                            //                   Icons.videocam_sharp, // You can replace it with any other video icon
+                            //                   color: Colors.white, // Icon color
+                            //                   size: 20, // Icon size
+                            //                 ),
+                            //               ),
+                            //             ],
+                            //           ),
+                            //               // height: 500,
+                            //         ),
+                            //         // Image.memory(
+                            //         //   snapshot.data!,
+                            //         //
+                            //         //   fit: BoxFit.cover,
+                            //         // )
+                            //         // new Center(
+                            //         //   child:
+                            //   // new Container(
+                            //   //             decoration: new BoxDecoration(
+                            //   //
+                            //   //               color: Colors.purple,
+                            //   //             ),
+                            //   //             child: new  Image.memory(
+                            //   //               snapshot.data!,
+                            //   //               width: 700,
+                            //   //               height: 1300,
+                            //   //               fit: BoxFit.cover,
+                            //   //             )
+                            //   //         // ),
+                            //   //       )
+                            //
+                            //   // Container(
+                            //         //       decoration: BoxDecoration(
+                            //         //           image: DecorationImage(
+                            //         //             image: FileImage(File(snapshot.data
+                            //         //                 .toString())), //FileImage(File(data.path)),
+                            //         //             fit: BoxFit.cover,
+                            //         //           ),
+                            //         //           color: const Color.fromARGB(
+                            //         //               255, 236, 235, 230),
+                            //         //           borderRadius:
+                            //         //               BorderRadius.circular(10)),
+                            //         //     ),
+                            //         //   )
+                            //
+                            //         //   Container(
+                            //         //     decoration: BoxDecoration(
+                            //         //         image: DecorationImage(
+                            //         //           image: FileImage(File(snapshot.data
+                            //         //               .toString())), //FileImage(File(data.path)),
+                            //         //           fit: BoxFit.cover,
+                            //         //         ),
+                            //         //         color: const Color.fromARGB(
+                            //         //             255, 236, 235, 230),
+                            //         //         borderRadius:
+                            //         //             BorderRadius.circular(10)),
+                            //         //   ),
+                            //         // )
+                            //
+                            //         // Center(
+                            //         //   child:
+                            //         //   // snapshot.hasData
+                            //         //   //     ? CircularProgressIndicator()
+                            //         //   //     : snapshot.data != null
+                            //         //   //     ?
+                            //         //   Image.memory(
+                            //         //     snapshot.data!,
+                            //         //     // width: 300,
+                            //         //     // height: 300,
+                            //         //     fit: BoxFit.contain,
+                            //         //   )
+                            //         // //       : Text('Failed to load image'),
+                            //         // ),
+                            // )
                             : Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
