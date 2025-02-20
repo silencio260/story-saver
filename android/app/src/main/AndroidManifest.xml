@@ -17,7 +17,7 @@
 
 
     <application
-        android:label="story_saver"
+        android:label="Story Saver"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="true"
