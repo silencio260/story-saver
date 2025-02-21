@@ -325,6 +325,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
     );
 
 
+
     if (videoAlbums.isNotEmpty) {
 
 
@@ -335,23 +336,23 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       print('provider assetEntityCount ${await specificAlbum.assetCountAsync}');
 
-      final List<AssetEntity> videos = await specificAlbum.getAssetListRange(
-        start: 0,
-        end: await specificAlbum.assetCountAsync, // Number of videos to fetch
-      );
-
-      print('in loadVideos $videos');
-
-      _getMediaFile = videos;
-      print('_getMediaFile $_getMediaFile');
-      notifyListeners();
-
-      print('end of loadAllVideos');
+      // final List<AssetEntity> videos = await specificAlbum.getAssetListRange(
+      //   start: 0,
+      //   end: await specificAlbum.assetCountAsync, // Number of videos to fetch
+      // );
+      //
+      // print('in loadVideos $videos');
+      //
+      // _getMediaFile = videos;
+      // print('_getMediaFile $_getMediaFile');
+      // notifyListeners();
+      //
+      // print('end of loadAllVideos');
 
 
       ///////////////
       final int totalAssets = await specificAlbum.assetCountAsync;
-      const int batchSize = 1000;
+      const int batchSize = 10;
 
       for (int i = 0; i < totalAssets; i += batchSize) {
         // Calculate the end index for the current batch

@@ -40,15 +40,19 @@ class _SplashScreenState extends State<SplashScreen> {
           context,
           CupertinoPageRoute(builder: (_) => const MainActivity()),
           (route) => false);
-    });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: FlutterLogo(),
-      ),
+        child:  ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(50)),
+          child: Image(image: AssetImage("assets/images/app-logo.png"), width: 200, height: 200, fit: BoxFit.cover, )
+        ),
+      )
     );
   }
 }
