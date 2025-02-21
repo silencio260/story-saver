@@ -9,9 +9,13 @@ import 'package:storysaver/Widget/LocalCachedImage.dart';
 class MediaListItem extends StatefulWidget {
   final String mediaPath;
   final bool isVideo;
+  final String? videoFilePath;
   // final Future<bool> Function(String mediaPath) checkMediaSaved;
 
-  const MediaListItem({Key? key, required this.mediaPath, this.isVideo = false
+  const MediaListItem({Key? key,
+      required this.mediaPath,
+      this.isVideo = false,
+      this.videoFilePath = null,
       // required this.checkMediaSaved,
       })
       : super(key: key);
@@ -68,10 +72,11 @@ class _MediaListItemState extends State<MediaListItem> {
             onTap: () {
 
               if (widget.isVideo) {
+                if(widget.videoFilePath != null)
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => VideoView(videoPath: widget.mediaPath),
+                    builder: (_) => VideoView(videoPath: widget.videoFilePath),
                   ),
                 );
               } else {

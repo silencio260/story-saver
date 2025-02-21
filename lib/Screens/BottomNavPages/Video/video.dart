@@ -185,10 +185,12 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                           future: file.generateThumbnailFromListAllVideosForFutureBuilder(data.path),
                           builder: (context, snapshot) {
 
+                            print(snapshot.data.toString());
+
                             return
                               snapshot.hasData
                                 ?
-                             MediaListItem(mediaPath: snapshot.data.toString(), isVideo: true)
+                             MediaListItem(mediaPath: snapshot.data.toString(), isVideo: true, videoFilePath: data.path)
 
                             // GestureDetector(
                             //         onTap: () {
