@@ -22,6 +22,7 @@ class MediaStoreVideos extends StatefulWidget {
 class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepAliveClientMixin {
   List<AssetEntity> videoAssets = [];
   bool isLoading = true;
+  int reBuildCount = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -137,7 +138,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
               ? Center(child: CircularProgressIndicator())
               : file.getMediaFile.isNotEmpty
               ?
-          GridView(
+          GridView.builder(
             gridDelegate:
             const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 300, // Each item max width = 150
@@ -145,7 +146,9 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
               mainAxisSpacing: 8,
               childAspectRatio: 0.95,
             ),
-            children: List.generate(file.getMediaFile.length, (index) {
+            itemCount: file.getMediaFile.length,
+              itemBuilder: (BuildContext context, int index) {
+
                 // print('GetSavedMediaProvider().getMediaFile[index] $video');
 
                 final video = file.getMediaFile[index];
@@ -162,12 +165,15 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                     // if(video.type == AssetType.image)
                     //   print("Path: ${} ${video.title}");
 
+                    print(snapshot.data);
+                    reBuildCount += 1;
+
                     return video.type == AssetType.video ?
                     VideoTile(snapshot: snapshot) :
                     ImageTile(snapshot: snapshot);
                   },
                 );
-            }),
+              },
           )
               : Center(child: Text("No Videos Found"));
         }
