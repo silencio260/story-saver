@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/bottom_nav_provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
+import 'package:storysaver/Screens/OnBoarding/onboardingPage.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/firebase_options.dart';
@@ -43,7 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
       ],
       child: const MaterialApp(
-        home: SplashScreen(),
+        home: OnboardingPage(), //SplashScreen(),
       ),
     );
   }
