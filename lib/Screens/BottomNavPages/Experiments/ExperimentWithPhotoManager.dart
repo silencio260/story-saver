@@ -8,6 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/GridMediaItems.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/image_tile.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/video_tile.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
@@ -154,7 +155,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                 final video = file.getMediaFile[index];
 
                 // print('saved_status_file ${video} - ${''}');
-
+                return VideoThumbnailWidget(video: video);
                 return FutureBuilder<dynamic>(
                   future: video.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
                   builder: (context, snapshot) {

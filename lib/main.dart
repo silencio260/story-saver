@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
       ],
       child: const MaterialApp(
-        home: OnboardingPage(), //SplashScreen(),
+        home: SplashScreen(),
       ),
     );
   }
