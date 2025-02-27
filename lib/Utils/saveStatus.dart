@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:media_store_plus/media_store_plus.dart';
@@ -8,12 +9,14 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Utils/deviceDirectory.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:media_scanner/media_scanner.dart';
 
-
-
 import 'package:permission_handler/permission_handler.dart';
+
+
+
 
 Future<void> saveStatus(BuildContext context, String filePath) async {
   try {
@@ -40,7 +43,8 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
 
 
     // ✅ Step 3: Define target save directory
-    String saveDirectory = "/storage/emulated/0/Pictures/YourApp/Saved Statuses";
+    // String saveDirectory = "/storage/emulated/0/Pictures/YourApp/Saved Statuses";
+    String saveDirectory = await DeviceFileInfo().GetSavedMediaAbsolutePath();
     Directory directory = Directory(saveDirectory);
 
     // ✅ Step 4: Ensure directory exists
@@ -53,29 +57,42 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     String newFilePath = "$saveDirectory/$fileName";
     File newFile = File(newFilePath);
 
+    var path = await DeviceFileInfo().GetSavedMediaAbsolutePath();
+    var path2 = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
+    // checkVersion();
+    print('ExternalPath $path');
+    print('ExternalPath222 $path2');
+    print('File(filePath) ${File(filePath)}');
+    print('File Exist newFile.path ${newFile.path}');
+    print("newFile.existsSync() ${newFile.existsSync()}");
+    print('directory!.path ${directory!.path}');
     if (newFile.existsSync()) {
       // ✅ File already exists, delete it
+      print('File Exist ${newFile.path}');
       newFile.deleteSync();
     }
 
     // Step 4: Determine if it's an image or video
     String fileExtension = fileName.split('.').last.toLowerCase();
     AssetEntity? savedMedia;
+    var relativeFilePath = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
+    print('relativeFilePath2 ${relativeFilePath}');
 
 
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic'].contains(fileExtension)) {
       // Save image
       savedMedia = await PhotoManager.editor.saveImageWithPath(
-        filePath,
+        filePath,//await DeviceFileInfo().GetSavedMediaBasedOnDevice(),
         title: fileName,
-        relativePath: saveDirectory,
+        relativePath: relativeFilePath,
       );
+      print('savedMedia ${savedMedia.relativePath}');
     } else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv'].contains(fileExtension)) {
       // Save video
       savedMedia = await PhotoManager.editor.saveVideo(
         File(filePath),
         title: fileName,
-        relativePath: saveDirectory,
+        relativePath: await DeviceFileInfo().GetSavedMediaBasedOnDevice(),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
