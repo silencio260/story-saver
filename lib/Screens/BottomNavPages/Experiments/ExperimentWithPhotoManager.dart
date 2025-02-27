@@ -9,9 +9,10 @@ import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/GridMediaItems.dart';
-import 'package:storysaver/Screens/BottomNavPages/Experiments/image_tile.dart';
-import 'package:storysaver/Screens/BottomNavPages/Experiments/video_tile.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/image_tile.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/video_tile.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class MediaStoreVideos extends StatefulWidget {
   const MediaStoreVideos({Key? key}) : super(key: key);
@@ -126,6 +127,23 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
     }
   }
 
+  String extractKeyString(Key key) {
+    if (key is ValueKey<String>) {
+      return key.value;
+    }
+    return 'Unknown Key';
+  }
+
+  int? extractNumberAsInt(String input) {
+    RegExp regex = RegExp(r'\d+');
+    Match? match = regex.firstMatch(input);
+    return match != null ? int.parse(match.group(0)!) : null;
+  }
+
+  void loadMoreItem () {
+    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -134,7 +152,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
       body: Consumer<GetSavedMediaProvider>(builder: (context, file, child) {
       //(
       //   builder: (context) {
-        print("GetSavedMediaProvider__ ${file.getMediaFile}");
+      //   print("GetSavedMediaProvider__ ${file.getMediaFile}");
           return file.isLoading
               ? Center(child: CircularProgressIndicator())
               : file.getMediaFile.isNotEmpty
@@ -154,8 +172,48 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
 
                 final video = file.getMediaFile[index];
 
-                // print('saved_status_file ${video} - ${''}');
-                return VideoThumbnailWidget(video: video);
+                // print('saved_status_file ${file.nextLoadTrigger} - ${''}');
+
+                return VisibilityDetector(
+                  key: Key('item_$index'),
+                  onVisibilityChanged: (visibilityInfo) {
+                    var visiblePercentage = visibilityInfo.visibleFraction * 100;
+                    String nextLoadTriggerItem = 'item_${file.nextLoadTrigger}';
+
+                    debugPrint(
+                        'Widget ${visibilityInfo.key} is ${visiblePercentage}% visible');
+
+
+                    debugPrint(
+                        'NextTrigger - $nextLoadTriggerItem - ${file.nextLoadTrigger} =  key is ${extractKeyString(visibilityInfo.key)}');
+                    print('file.getMediaFile.length ${file.getMediaFile.length}');
+
+                    String keyAsString = extractKeyString(visibilityInfo.key);
+                    int? keyAsInt = extractNumberAsInt(keyAsString);
+
+                    if((keyAsString == nextLoadTriggerItem && visiblePercentage >= 50) ||
+                        ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger)
+                    ){
+
+
+                      if(file.numLoadedAssets <= file.totalNumAssets && !file.isProcessingMedia){
+                        loadMoreItem();
+                        file.setNewLoadTrigger();
+                        print('Load More Media Files nextLoadTrigger = ${file.nextLoadTrigger} - numLoadedAssets = ${file.numLoadedAssets} ');
+                      }
+
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      SavedMediaGridItem(video: video),
+
+                      Text(index.toString(), style: TextStyle(fontSize: 100, fontWeight: FontWeight.bold, color: Colors.red),),
+                    ],
+
+                  ),
+                );
+                return SavedMediaGridItem(video: video);
                 return FutureBuilder<dynamic>(
                   future: video.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
                   builder: (context, snapshot) {

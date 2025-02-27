@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     //   print("Hello from isolate: $message");
     // }, "Test Message");
 
-    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideosSegmented();
+    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
     // });
