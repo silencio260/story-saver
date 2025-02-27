@@ -92,7 +92,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
       savedMedia = await PhotoManager.editor.saveVideo(
         File(filePath),
         title: fileName,
-        relativePath: await DeviceFileInfo().GetSavedMediaBasedOnDevice(),
+        relativePath: relativeFilePath
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,6 +106,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     if (savedMedia != null) {
       // Update the provider with the new media
       final mediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);
+      mediaProvider.preventDuplicateAddition(savedMedia);
       mediaProvider.addNewMediaToTop(savedMedia);
 
       // Notify the user of success

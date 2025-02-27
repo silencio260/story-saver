@@ -85,6 +85,19 @@ class GetSavedMediaProvider extends ChangeNotifier {
     notifyListeners(); // Notify UI listeners
   }
 
+  void preventDuplicateAddition(AssetEntity newMedia) {
+    bool isAlreadySaved = _getMediaFile.any((file) => file.title == newMedia.title);
+    print('Alredy Saved ${isAlreadySaved}');
+    if(isAlreadySaved) {
+      final oldFile = _getMediaFile.removeWhere((item) =>
+      item.title == newMedia.title); // Insert at the top of the list
+
+      print('Old File');
+    }
+    notifyListeners(); // Notify UI listeners
+  }
+
+
   Future<void> loadVideosWithIsolate() async {
     _isLoading = false;
 
