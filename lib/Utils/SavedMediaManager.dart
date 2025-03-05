@@ -12,6 +12,7 @@ class SavedMediaManager {
     final savedMedia = prefs.getString(_mediaKey);
     if (savedMedia == null) return false;
 
+
     final mediaList = jsonDecode(savedMedia) as List<dynamic>;
     final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -42,6 +43,10 @@ class SavedMediaManager {
       mediaList.add({'path': mediaPath, 'timestamp': now});
       await prefs.setString(_mediaKey, jsonEncode(mediaList));
     }
+
+    // String fileName = path.split('/').last.split('.').first;
+
+    print('SavedMediaManager ${mediaList} -  ${mediaList.length}');
   }
 
   /// Delete media manually
@@ -51,9 +56,13 @@ class SavedMediaManager {
 
     if (savedMedia != null) {
       List<dynamic> mediaList = jsonDecode(savedMedia);
-      mediaList.removeWhere((media) => media['path'] == mediaPath);
+      mediaList.removeWhere((media) => media['path'] == mediaPath || media['path'].contains(mediaPath));
       await prefs.setString(_mediaKey, jsonEncode(mediaList));
+
+      print('deleteMedia ${mediaList} -  ${mediaList.length}');
+      // print('object');
     }
+
   }
 
   /// Remove expired media from shared preferences

@@ -89,7 +89,7 @@ class _ImageHomePageState extends State<ImageHomePage>
                               final data = file.getImages[index];
 
                               print('---- ${data.path}');
-                              final mediaManager = SavedMediaManager();
+                              // final mediaManager = SavedMediaManager();
 
                               // bool isSaved = mediaManager.isMediaSaved(data.path);
 

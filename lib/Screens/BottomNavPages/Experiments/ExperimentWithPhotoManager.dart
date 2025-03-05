@@ -12,6 +12,7 @@ import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/GridMediaIt
 import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/image_tile.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/video_tile.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -27,6 +28,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
   bool isLoading = true;
   int reBuildCount = 0;
   final ScrollController _scrollController = ScrollController();
+  final mediaManager = SavedMediaManager();
 
   bool _keepWidgetAlive = true;
 
@@ -336,6 +338,9 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                             onTap: () =>
                             {
                               // deleteSaveStatus(context, file.getMediaFile[index]),
+                              print('Media Manger ${file.getMediaFile[index].title.toString()}'),
+
+                              mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
                               file.removeFrom(index)
                             },
                             child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),

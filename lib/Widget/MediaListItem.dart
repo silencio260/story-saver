@@ -38,6 +38,11 @@ class _MediaListItemState extends State<MediaListItem> {
   }
 
   void _toggleSavedStatus() async {
+
+    if(_checkFileExists() == false){
+      return;
+    }
+
     // Handle the click event here
     print("Icon tapped!");
     final result = await mediaManager.saveMedia(widget.mediaPath);
@@ -47,6 +52,32 @@ class _MediaListItemState extends State<MediaListItem> {
     setState(() {
       isAlreadySaved = !isAlreadySaved; // Toggle the state
     });
+
+    _showErrorDialog("Status Saved");
+  }
+
+  bool _checkFileExists()  {
+    if (widget.mediaPath == null || widget.mediaPath!.isEmpty) {
+      _showErrorDialog("Media path is missing!");
+      return false;
+    }
+
+    File file = File(widget.mediaPath!);
+    bool exists =  file.existsSync();
+
+    if (!exists) {
+      _showErrorDialog("File does not exist at the given path!");
+      return false;
+    }
+
+    return true;
+  }
+
+  void _showErrorDialog(String message) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override

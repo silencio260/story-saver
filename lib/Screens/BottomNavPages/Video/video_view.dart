@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
+import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:video_player/video_player.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -31,6 +32,9 @@ class _VideoViewState extends State<VideoView> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    if(checkFileExists(widget.videoPath!) == false)
+      showErrorDialog(context, "File does not exists");
 
     _chewieController = ChewieController(
         videoPlayerController:

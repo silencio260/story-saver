@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
+import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 
 class ImageView extends StatefulWidget {
@@ -23,6 +24,15 @@ class _ImageViewState extends State<ImageView> {
     Icon(Icons.share),
     Icon(Icons.repeat_outlined),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if(checkFileExists(widget.imagePath!) == false)
+      showErrorDialog(context, "File does not exists");
+  }
+
 
   @override
   Widget build(BuildContext context) {
