@@ -3,11 +3,15 @@ import 'dart:math';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
+import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
@@ -38,18 +42,25 @@ class _ImageViewState extends State<ImageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
-        constraints: BoxConstraints(
-          maxHeight: 700
-        ),
-        // decoration: BoxDecoration(
-        //   color: Colors.black,
-        //   image: DecorationImage(
-        //     image: FileImage(File(widget.imagePath!)),
-        //     fit: BoxFit.contain,
-        //   ),
-        // ),
-        child: PhotoView(
+      body:
+      // Consumer<GetStatusProvider>(
+      //   builder: (context, file, child) {
+      //     return Container(
+      //       constraints: BoxConstraints(
+      //           maxHeight: 700
+      //       ),
+      //       // decoration: BoxDecoration(
+      //       //   color: Colors.black,
+      //       //   image: DecorationImage(
+      //       //     image: FileImage(File(widget.imagePath!)),
+      //       //     fit: BoxFit.contain,
+      //       //   ),
+      //       // ),
+      //       child: GalleryPhotoViewWrapper(galleryItems: file.getImages),
+      //     );
+      //   }),
+    // )
+        PhotoView(
           imageProvider: FileImage(File(widget.imagePath!)),
           minScale: PhotoViewComputedScale.contained,  // initial scale
           maxScale: PhotoViewComputedScale.covered * 2,  // maximum zoom in
@@ -63,7 +74,6 @@ class _ImageViewState extends State<ImageView> {
             return PhotoViewScaleState.initial;
           },
         ),
-      ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 70),
         child: Row(

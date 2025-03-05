@@ -93,7 +93,7 @@ class _ImageHomePageState extends State<ImageHomePage>
 
                               // bool isSaved = mediaManager.isMediaSaved(data.path);
 
-                              return MediaListItem(mediaPath: data.path);
+                              return MediaListItem(mediaPath: data.path, currentIndex: index,);
 
 
                               // return FutureBuilder<bool>(

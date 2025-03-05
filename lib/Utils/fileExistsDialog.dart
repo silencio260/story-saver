@@ -25,7 +25,7 @@ void showErrorDialog(BuildContext context, String message) {
   Future.delayed(Duration.zero, () {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevents user from tapping outside to dismiss
+      // barrierDismissible: false, // Prevents user from tapping outside to dismiss
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text("Error"),

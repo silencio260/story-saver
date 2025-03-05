@@ -1,21 +1,26 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
 
 class MediaListItem extends StatefulWidget {
   final String mediaPath;
   final bool isVideo;
   final String? videoFilePath;
+  final int? currentIndex;
   // final Future<bool> Function(String mediaPath) checkMediaSaved;
 
   const MediaListItem({Key? key,
       required this.mediaPath,
       this.isVideo = false,
       this.videoFilePath = null,
+      this.currentIndex = 0,
       // required this.checkMediaSaved,
       })
       : super(key: key);
@@ -114,7 +119,8 @@ class _MediaListItemState extends State<MediaListItem> {
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => ImageView(imagePath: widget.mediaPath),
+                    builder: (_) => GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!, galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getImages)
+                    //ImageView(imagePath: widget.mediaPath),
                   ),
                 );
               }
