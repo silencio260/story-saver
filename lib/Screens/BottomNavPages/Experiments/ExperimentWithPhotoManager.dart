@@ -12,6 +12,7 @@ import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/GridMediaIt
 import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/image_tile.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/video_tile.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
+import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class MediaStoreVideos extends StatefulWidget {
@@ -25,14 +26,29 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
   List<AssetEntity> videoAssets = [];
   bool isLoading = true;
   int reBuildCount = 0;
+  final ScrollController _scrollController = ScrollController();
+
+  bool _keepWidgetAlive = true;
+
+  void toggleKeepAlive(bool value) {
+    if(_keepWidgetAlive != value)
+    setState(() {
+      _keepWidgetAlive = value;
+    });
+  }
 
   @override
   bool get wantKeepAlive => true;
+
+  // @override
+  // bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     // loadVideos();
+
+    // print("MediaStoreVideos initState");
 
 
     // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
@@ -153,11 +169,39 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
       //(
       //   builder: (context) {
       //   print("GetSavedMediaProvider__ ${file.getMediaFile}");
+
+        // if(!file.isLoading){
+        //   // toggleKeepAlive(true);
+        //   toggleKeepAlive(false);
+        //   print("toggleKeepAlive");
+        // } else {
+        //   // toggleKeepAlive(false);
+        // }
+
+        // if (file.isLoading) {
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     if (mounted) {
+        //       // setState(() {
+        //         toggleKeepAlive(false);
+        //         file.setIsLoading(false);
+        //       // });
+        //     }
+        //   });
+        //   print("toggleKeepAlive");
+        // }
+        // else {
+        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+        //     if (mounted) {
+        //       toggleKeepAlive(true);
+        //     }
+        //   });
+        // }
           return file.isLoading
               ? Center(child: CircularProgressIndicator())
               : file.getMediaFile.isNotEmpty
               ?
           GridView.builder(
+            // key: ValueKey(file.getMediaFile.length),
             gridDelegate:
             const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 300, // Each item max width = 150
@@ -172,7 +216,152 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
 
                 final video = file.getMediaFile[index];
 
-                // print('saved_status_file ${file.nextLoadTrigger} - ${''}');
+                // // print('saved_status_file ${file.nextLoadTrigger} - ${''}');
+                // print('saved_status_file ${file.getMediaFile.length} - ${''}');
+                // print('saved_status_file_title ${file.getMediaFile[0].title} - ${''}');
+                // print('saved_status_file_video ${video.title} - ${index}');
+
+                // return Dismissible( // ✅ Allows swipe-to-remove without full rebuild
+                //   key: ValueKey(video),
+                //   direction: DismissDirection.up,
+                //   onDismissed: (_) => file.removeFrom(index),
+                //   background: Container(color: Colors.red),
+                //   child: SavedMediaGridItem(video: video),
+                // );
+
+                // return AnimatedSwitcher(
+                //   duration: Duration(milliseconds: 300),
+                //   child: VisibilityDetector(
+                //     onVisibilityChanged: (visibilityInfo) {
+                //       var visiblePercentage = visibilityInfo.visibleFraction * 100;
+                //       String nextLoadTriggerItem = 'item_${file.nextLoadTrigger}';
+                //
+                //       debugPrint(
+                //           'Widget ${visibilityInfo.key} is ${visiblePercentage}% visible');
+                //
+                //
+                //       debugPrint(
+                //           'NextTrigger - $nextLoadTriggerItem - ${file.nextLoadTrigger} =  key is ${extractKeyString(visibilityInfo.key)}');
+                //       print('file.getMediaFile.length ${file.getMediaFile.length}');
+                //
+                //       String keyAsString = extractKeyString(visibilityInfo.key);
+                //       int? keyAsInt = extractNumberAsInt(keyAsString);
+                //
+                //       if((keyAsString == nextLoadTriggerItem && visiblePercentage >= 50) ||
+                //           ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger)
+                //       ){
+                //
+                //
+                //         if(file.numLoadedAssets <= file.totalNumAssets && !file.isProcessingMedia){
+                //           loadMoreItem();
+                //           file.setNewLoadTrigger();
+                //           print('Load More Media Files nextLoadTrigger = ${file.nextLoadTrigger} - numLoadedAssets = ${file.numLoadedAssets} ');
+                //         }
+                //
+                //       }
+                //     },
+                //     key: Key('item_$index'),
+                //     child: Container(
+                //       key: ValueKey(file.getMediaFile[index]),
+                //       child: Column(
+                //         children: [
+                //           SizedBox(child: SavedMediaGridItem(video: video), height: 90),
+                //
+                //           GestureDetector(
+                //             // key: ValueKey(file.getMediaFile[index]),
+                //             onTap: () => {
+                //               print('index_to_delete ${index}'),
+                //               file.removeFrom(index)
+                //             },
+                //             child: Container(
+                //               alignment: Alignment.center,
+                //               color: Colors.blueAccent,
+                //               child: Text(file.getMediaFile[index].id, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
+                //               // child: Text(
+                //               //   '${file.getMediaFile[index]}',
+                //               //   style: TextStyle(color: Colors.white, fontSize: 20),
+                //               // ),
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // );
+
+                return AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  key: ValueKey(file.getMediaFile[index]),
+                  child: VisibilityDetector(
+                    key: Key('item_$index'),
+                    onVisibilityChanged: (visibilityInfo) {
+                      var visiblePercentage = visibilityInfo.visibleFraction * 100;
+                      String nextLoadTriggerItem = 'item_${file.nextLoadTrigger}';
+
+                      debugPrint(
+                          'Widget ${visibilityInfo.key} is ${visiblePercentage}% visible');
+
+
+                      debugPrint(
+                          'NextTrigger - $nextLoadTriggerItem - ${file.nextLoadTrigger} = extractKeyString key is ${extractKeyString(visibilityInfo.key)} // key = ${visibilityInfo.key}');
+                      print('file.getMediaFile.length ${file.getMediaFile.length}');
+
+                      String keyAsString = extractKeyString(visibilityInfo.key);
+                      int? keyAsInt = extractNumberAsInt(keyAsString);
+
+                      if((keyAsString == nextLoadTriggerItem && visiblePercentage >= 50) ||
+                          ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger)
+                      ){
+
+
+                        if(file.numLoadedAssets <= file.totalNumAssets && !file.isProcessingMedia){
+                          loadMoreItem();
+                          file.setNewLoadTrigger();
+                          print('Load More Media Files nextLoadTrigger = ${file.nextLoadTrigger} - numLoadedAssets = ${file.numLoadedAssets} ');
+                        }
+
+                      }
+                    },
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                      ),
+                      child: Column(
+                        children: [
+                          SizedBox(child: SavedMediaGridItem(video: video), height: 90),//160),
+
+
+                          GestureDetector(
+
+                            onTap: () =>
+                            {
+                              // deleteSaveStatus(context, file.getMediaFile[index]),
+                              file.removeFrom(index)
+                            },
+                            child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
+                          ),
+
+
+                          // GestureDetector(
+                          //   behavior: HitTestBehavior.opaque,
+                          //   onTap: () {
+                          //     file.removeFrom(index);
+                          //     // file.getMediaFile.removeAt(index);
+                          //
+                          //     setState(() {
+                          //       file.removeFrom(index);
+                          //     });
+                          //     print('Remove_Element $index ${file.getMediaFile.length}');
+                          //
+                          //   },
+                          //   child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
+                          // )
+                        ],
+
+                      ),
+                    ),
+                  ),
+                );
 
                 return VisibilityDetector(
                   key: Key('item_$index'),
@@ -204,13 +393,32 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
 
                     }
                   },
-                  child: Stack(
-                    children: [
-                      SavedMediaGridItem(video: video),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                    ),
+                    child: Column(
+                      children: [
+                        SizedBox(child: SavedMediaGridItem(video: video), height: 90),//160),
 
-                      Text(index.toString(), style: TextStyle(fontSize: 100, fontWeight: FontWeight.bold, color: Colors.red),),
-                    ],
 
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            file.removeFrom(index);
+                            // file.getMediaFile.removeAt(index);
+
+                            setState(() {
+                              file.removeFrom(index);
+                            });
+                            print('Remove_Element $index ${file.getMediaFile.length}');
+
+                          },
+                          child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
+                        )
+                      ],
+
+                    ),
                   ),
                 );
                 return SavedMediaGridItem(video: video);

@@ -103,11 +103,14 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
 
 
     // Step 5: Handle success or failure
-    if (savedMedia != null) {
+    if (await savedMedia.exists == true) {
       // Update the provider with the new media
-      final mediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);
-      mediaProvider.preventDuplicateAddition(savedMedia);
-      mediaProvider.addNewMediaToTop(savedMedia);
+      // final mediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);
+      // mediaProvider.preventDuplicateAddition(savedMedia);
+      // mediaProvider.addNewMediaToTop(savedMedia);
+      context.read<GetSavedMediaProvider>().preventDuplicateAddition(savedMedia);
+      context.read<GetSavedMediaProvider>().addNewMediaToTop(savedMedia);
+      // print("mediaProvider save ${await mediaProvider.getMediaFile[0].relativePath}");
 
       // Notify the user of success
       String successMessage = fileExtension.startsWith('mp4') || fileExtension.startsWith('mov')
@@ -131,6 +134,37 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
 }
 
 
+Future<void> deleteSaveStatus(BuildContext context, AssetEntity entity) async {
+
+  try{
+
+
+    final result = await PhotoManager.editor.deleteWithIds([entity.id]);
+    PhotoManager.clearFileCache();
+
+    print("Result of deleting media ${result}");
+
+
+    if (result.isNotEmpty) {
+      print("Media deleted successfully");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Media Successfully Deleted")),
+      );
+    } else {
+      print("Failed to delete media");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete file")),
+      );
+    }
+
+  }catch(e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error deleting file: $e")),
+    );
+  }
+
+
+}
 
 
 

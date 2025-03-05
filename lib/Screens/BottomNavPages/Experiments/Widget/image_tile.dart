@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/video_tile.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 
 class ImageTile extends StatefulWidget {
@@ -27,7 +28,14 @@ class _ImageTileState extends State<ImageTile> {
     //   );
     // }
 
-          if (!widget.snapshot!.hasData || widget.snapshot!.data == null) {
+    // if ( (widget.snapshot!.data!.type == AssetType.video)  ) {
+    //   return CircularProgressIndicator(); // Show loading indicator
+    // }
+
+
+    if (!widget.snapshot!.hasData || widget.snapshot!.data == null || widget.snapshot!.data is! File ) {
+          // print("FileType ${widget.snapshot!.data} ||| ${widget.snapshot!.data} ");
+          return VideoTile(snapshot: widget.snapshot);
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -37,6 +45,8 @@ class _ImageTileState extends State<ImageTile> {
               ],),
             );
           }
+          // print("path - ${widget.snapshot!.data!.path!}");
+
 
           return GestureDetector(
             onTap: () {
@@ -47,7 +57,7 @@ class _ImageTileState extends State<ImageTile> {
               // height: MediaQuery.of(context).size.height * 0.5,
               decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: FileImage(File(widget.snapshot!.data!.path)),
+                    image: FileImage(File(widget.snapshot!.data!.path!)),
                     // image: MemoryImage(widget.snapshot!.data.path!),
                     // image: FileImage(File(snapshot.data!)),
                     fit: BoxFit.cover,

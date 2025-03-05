@@ -17,7 +17,7 @@ class _VideoTileState extends State<VideoTile> {
   @override
   Widget build(BuildContext context) {
 
-      if (!(widget.snapshot!.hasData) || widget.snapshot!.data == null) {
+      if (!(widget.snapshot!.hasData) || widget.snapshot!.data == null || widget.snapshot!.data is! Uint8List )  {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -22,6 +22,13 @@ class GetSavedMediaProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
+
+  void setIsLoading(bool value) {
+    _isLoading = value;
+    notifyListeners(); // ✅ Notify UI when state changes
+  }
+
   bool _isProcessingMedia = false;
   bool get isProcessingMedia => _isProcessingMedia;
 
@@ -31,14 +38,21 @@ class GetSavedMediaProvider extends ChangeNotifier {
   List<AssetEntity> get getMediaFile => _getMediaFile;
   static AssetPathEntity? savedMediaAlbum = null;
 
-  int _loadAlbumSegmentBatchSize = 100;//500;
+  bool _buildCachedFirstItem = false;
+  bool get buildCachedFirstItem => _buildCachedFirstItem;
+  AssetEntity? _prevFirstItem = null;
+  AssetEntity? get prevFirstItem => _prevFirstItem;
+
+
+  int _loadAlbumSegmentBatchSize = 12;//500;
   int get loadAlbumSegmentBatchSize => _loadAlbumSegmentBatchSize;
+  int _loopBatchSize = 10;
 
   int _loadAlbumStartIndex = 0;
   int get loadAlbumStartIndex => _loadAlbumStartIndex;
 
-  int _loadTriggerInterval = 50;
-  int _nextLoadTrigger = 50;//250;
+  int _loadTriggerInterval = 10;
+  int _nextLoadTrigger = 10;//250;
   int get nextLoadTrigger => _nextLoadTrigger;
 
   int _totalNumAssets = 0;
@@ -80,10 +94,37 @@ class GetSavedMediaProvider extends ChangeNotifier {
   //   }
   // }
 
-  void addNewMediaToTop(AssetEntity newMedia) {
-    _getMediaFile.insert(0, newMedia); // Insert at the top of the list
+  void removeFrom(int index) {
+
+    _getMediaFile.removeAt(index);
+    // _isLoading = true;
+
     notifyListeners(); // Notify UI listeners
   }
+
+  void addNewMediaToTop(AssetEntity newMedia) {
+    // _isLoading = true;
+    // notifyListeners();
+    // _getMediaFile.insert(0, newMedia); // Insert at the top of the list
+    // final oldData = _getMediaFile;
+    // _getMediaFile = [];
+    // notifyListeners();
+    _prevFirstItem = _getMediaFile[0];
+    _buildCachedFirstItem = true;
+    _getMediaFile = [newMedia, ..._getMediaFile];
+    // _isLoading = false;
+
+    notifyListeners(); // Notify UI listeners
+  }
+
+  void reSetBuildVariables() {
+
+    _prevFirstItem = null;
+    _buildCachedFirstItem = false;
+    notifyListeners();
+  }
+
+
 
   void preventDuplicateAddition(AssetEntity newMedia) {
     bool isAlreadySaved = _getMediaFile.any((file) => file.title == newMedia.title);
@@ -282,8 +323,8 @@ class GetSavedMediaProvider extends ChangeNotifier {
   Future<void> loadVideos() async {
     final permission = await PhotoManager.requestPermissionExtend();
 
-    _isLoading = false;
-    notifyListeners();
+    // _isLoading = false;
+    // notifyListeners();
 
     // Fetch all video albums
     final List<AssetPathEntity> videoAlbums =
@@ -318,8 +359,8 @@ class GetSavedMediaProvider extends ChangeNotifier {
       print('end of loadAllVideos');
     }
 
-    _isLoading = false;
-    notifyListeners();
+    // _isLoading = false;
+    // notifyListeners();
 
     print('end of savedMediaProvide');
   }
@@ -338,7 +379,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
     if (videoAlbums.isNotEmpty) {
       final specificAlbum = videoAlbums.firstWhere(
-        (album) => album.name == "Story Saver",
+        (album) => album.name == "Saved Saver",
         orElse: () => throw Exception('Album "Story Saver" not found'),
       );
 
@@ -397,7 +438,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       if (mediaAlbums.isNotEmpty) {
         final specificAlbum = await mediaAlbums.firstWhere(
-          (album) => album.name == "Story Saver",
+          (album) => album.name == "Saved Statuses",
           orElse: () => throw Exception('Album "Story Saver" not found'),
         );
 
@@ -427,9 +468,9 @@ class GetSavedMediaProvider extends ChangeNotifier {
     }
 
     ///////////////
-    _totalNumAssets = 105;
+    _totalNumAssets = 135;
     final int totalAssets = _totalNumAssets; //await specificAlbum!.assetCountAsync;
-    const int batchSize = 10;
+    final int batchSize = _loopBatchSize;
 
     final int startIndex = _loadAlbumStartIndex;
 
@@ -446,6 +487,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
     print('count of endIndex -> $endIndex');
     print('count of totalCount -> $totalAssets');
     print('count of _nextLoadTrigger -> $_nextLoadTrigger');
+    print('count of _numLoadedAssets -> $_numLoadedAssets');
 
     if(_numLoadedAssets < totalAssets) {
       _numLoadedAssets += _loadAlbumSegmentBatchSize;
@@ -465,7 +507,8 @@ class GetSavedMediaProvider extends ChangeNotifier {
         print('Fetched ${videos.length} items in batch from $i to $end');
 
         // Add fetched videos to the media list
-        _getMediaFile.addAll(videos);
+        // if(_getMediaFile.length < totalAssets)
+        _getMediaFile = updateMediaFiles(_getMediaFile, videos); //.addAll(videos);
         // if ((_loadAlbumStartIndex + _loadAlbumSegmentBatchSize) < totalAssets) {
         //   _loadAlbumStartIndex += _loadAlbumSegmentBatchSize;
         // }
@@ -488,3 +531,19 @@ class GetSavedMediaProvider extends ChangeNotifier {
     print('end of savedMediaProvide');
   }
 }
+
+List<AssetEntity>  updateMediaFiles(List<AssetEntity>  _getMediaFile, List<AssetEntity>  newFiles) {
+  // Convert _getMediaFile to a Set for quick lookup
+  Set<AssetEntity> existingFiles = _getMediaFile.toSet();
+
+  // Remove duplicates: Keep only items in `videos` that are NOT in `_getMediaFile`
+  List<AssetEntity> uniqueVideos = newFiles.where((file) => !existingFiles.contains(file)).toList();
+
+  // Add unique videos to _getMediaFile
+  _getMediaFile.addAll(uniqueVideos);
+
+  // print("Updated _getMediaFile: $_getMediaFile");
+  return _getMediaFile;
+}
+
+
