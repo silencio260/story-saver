@@ -1,27 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-// import 'package:flutter_svg/svg.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
-// import 'package:photo_view_example/screens/common/app_bar.dart';
-// import 'package:photo_view_example/screens/examples/gallery/gallery_example_item.dart';
+import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 
-//
-// class GalleryScrollView extends StatefulWidget {
-//   const GalleryScrollView({Key? key,}) : super(key: key);
-//
-//   @override
-//   State<GalleryScrollView> createState() => _GalleryScrollViewState();
-// }
-//
-// class _GalleryScrollViewState extends State<GalleryScrollView> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Placeholder();
-//   }
-// }
 
 
 class GalleryPhotoViewWrapper extends StatefulWidget {
@@ -32,6 +16,7 @@ class GalleryPhotoViewWrapper extends StatefulWidget {
     this.maxScale,
     this.initialIndex = 0,
     required this.galleryItems,
+    this.isVideoView = false,
     this.scrollDirection = Axis.horizontal,
   }) : pageController = PageController(initialPage: initialIndex);
 
@@ -42,6 +27,7 @@ class GalleryPhotoViewWrapper extends StatefulWidget {
   final int initialIndex;
   final PageController pageController;
   final List<FileSystemEntity> galleryItems;
+  final isVideoView ;
   final Axis scrollDirection;
 
   @override
@@ -106,8 +92,12 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
     final FileSystemEntity item = widget.galleryItems[index];
 
+    print('PhotoViewGalleryPageOptions widget.videoFilePath ${item.path}');
+
     return PhotoViewGalleryPageOptions.customChild(
-          child: ImageView(imagePath: item.path!),
+          child: !widget.isVideoView ?
+            ImageView(imagePath: item.path) :
+              VideoView(videoPath:  item.path),
     );
 
     //   return PhotoViewGalleryPageOptions(

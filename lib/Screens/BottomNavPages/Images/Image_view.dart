@@ -42,25 +42,7 @@ class _ImageViewState extends State<ImageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body:
-      // Consumer<GetStatusProvider>(
-      //   builder: (context, file, child) {
-      //     return Container(
-      //       constraints: BoxConstraints(
-      //           maxHeight: 700
-      //       ),
-      //       // decoration: BoxDecoration(
-      //       //   color: Colors.black,
-      //       //   image: DecorationImage(
-      //       //     image: FileImage(File(widget.imagePath!)),
-      //       //     fit: BoxFit.contain,
-      //       //   ),
-      //       // ),
-      //       child: GalleryPhotoViewWrapper(galleryItems: file.getImages),
-      //     );
-      //   }),
-    // )
-        PhotoView(
+      body: PhotoView(
           imageProvider: FileImage(File(widget.imagePath!)),
           minScale: PhotoViewComputedScale.contained,  // initial scale
           maxScale: PhotoViewComputedScale.covered * 2,  // maximum zoom in

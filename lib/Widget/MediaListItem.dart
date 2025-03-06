@@ -108,18 +108,23 @@ class _MediaListItemState extends State<MediaListItem> {
             onTap: () {
 
               if (widget.isVideo) {
+                print('widget.videoFilePath ${widget.videoFilePath}');
                 if(widget.videoFilePath != null)
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => VideoView(videoPath: widget.videoFilePath),
+                    builder: (_) =>
+                        GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!, isVideoView: true,
+                        galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getVideos)
+                    // VideoView(videoPath: widget.videoFilePath),
                   ),
                 );
               } else {
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!, galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getImages)
+                    builder: (_) => GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!,
+                        galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getImages)
                     //ImageView(imagePath: widget.mediaPath),
                   ),
                 );

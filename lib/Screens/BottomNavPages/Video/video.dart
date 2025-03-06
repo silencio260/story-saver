@@ -190,7 +190,7 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                             return
                               snapshot.hasData
                                 ?
-                             MediaListItem(mediaPath: snapshot.data.toString(), isVideo: true, videoFilePath: data.path)
+                             MediaListItem(currentIndex: index, mediaPath: snapshot.data.toString(), isVideo: true, videoFilePath: data.path)
 
                             // GestureDetector(
                             //         onTap: () {
