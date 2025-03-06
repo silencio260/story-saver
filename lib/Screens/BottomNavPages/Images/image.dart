@@ -9,6 +9,7 @@ import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
+import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 class ImageHomePage extends StatefulWidget {
   const ImageHomePage({Key? key}) : super(key: key);
@@ -18,9 +19,11 @@ class ImageHomePage extends StatefulWidget {
 }
 
 class _ImageHomePageState extends State<ImageHomePage>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, RouteAware {
   @override
   bool get wantKeepAlive => true;
+
+  // final GlobalKey<MediaListItem> mediaListItemKey = GlobalKey();
 
   @override
   void initState() {
@@ -41,6 +44,34 @@ class _ImageHomePageState extends State<ImageHomePage>
 
     _refreshController.refreshCompleted();
   }
+
+
+  final MyRouteObserver routeObserver = MyRouteObserver();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    // if (route is PageRoute && routeObserver.) {
+    //   print('Subscribing');
+    //   routeObserver.subscribe(this, route);
+    // }
+    // print('Subscribing2');
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    print('unSubscribing');
+    super.dispose();
+  }
+  //
+  // @override
+  // void didPopNext() {
+  //   // Called when the user navigates back to this page
+  //   print('Navigated back to SecondPage');
+  // }
+
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +124,10 @@ class _ImageHomePageState extends State<ImageHomePage>
 
                               // bool isSaved = mediaManager.isMediaSaved(data.path);
 
-                              return MediaListItem(mediaPath: data.path, currentIndex: index,);
+                              return MediaListItem(
+                                // key: mediaListItemKey,
+                                // key: ValueKey(index),
+                                mediaPath: data.path, currentIndex: index,);
 
 
                               // return FutureBuilder<bool>(
@@ -182,3 +216,4 @@ class _ImageHomePageState extends State<ImageHomePage>
     );
   }
 }
+

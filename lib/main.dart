@@ -8,11 +8,17 @@ import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/OnBoarding/onboardingPage.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Widget/MyRouteObserver.dart';
 import 'package:storysaver/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('ensureInitialized');
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
 
   AnalyticsService.init();
 
@@ -35,6 +41,8 @@ class MyApp extends StatelessWidget {
   //     home: SplashScreen(),
   //   );
   // }
+  final MyRouteObserver routeObserver = MyRouteObserver();
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -43,8 +51,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GetStatusProvider()),
         ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
       ],
-      child: const MaterialApp(
-        home: SplashScreen(),
+      child: MaterialApp(
+        navigatorObservers: [routeObserver],
+        home: const SplashScreen(),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
@@ -25,8 +26,34 @@ class _VideoViewState extends State<VideoView> {
     Icon(Icons.share),
     Icon(Icons.repeat_outlined),
   ];
+  final mediaManager = SavedMediaManager();
 
   ChewieController? _chewieController;
+
+  void _toggleSavedStatus() async {
+
+    if(checkFileExists(widget.videoPath!) == false){
+      showErrorDialog(context, "Error: Files does not exist");
+      return;
+    }
+
+    // Handle the click event here
+    print("Icon tapped!");
+    final result = await mediaManager.saveMedia(widget.videoPath!);
+
+    saveStatus(context, widget.videoPath!);
+
+    // isAlreadySaved = true;
+    print('Aready Saved');
+
+
+    // _showErrorDialog("Status Saved");
+  }
+
+  void saveMedia () async {
+    _toggleSavedStatus();
+  }
+
 
   @override
   void initState() {
@@ -100,7 +127,8 @@ class _VideoViewState extends State<VideoView> {
                   case 1:
                     print("Save");
 
-                    saveStatus(context, widget.videoPath!);
+                    saveMedia();
+                    // saveStatus(context, widget.videoPath!);
                     // ImageGallerySaver.saveFile(widget.videoPath!+'/ppp').then((value) {
                     //   ScaffoldMessenger.of(context).showSnackBar(
                     //       const SnackBar(content: Text("Image Saved")));

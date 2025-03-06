@@ -13,6 +13,7 @@ import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
+import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 // import 'package:file_selector/file_selector.dart';
 // import 'package:image_picker/image_picker.dart';
@@ -26,7 +27,7 @@ class VideoHomePage extends StatefulWidget {
   State<VideoHomePage> createState() => _VideoHomePageState();
 }
 
-class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveClientMixin {
+class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveClientMixin, RouteAware {
 
   @override
   bool get wantKeepAlive => true;
@@ -59,6 +60,32 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
     _refreshController.refreshCompleted();
   }
+
+  final MyRouteObserver routeObserver = MyRouteObserver();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    // if (route is PageRoute && routeObserver.) {
+    //   print('Subscribing');
+    //   routeObserver.subscribe(this, route);
+    // }
+    print('Subscribing2');
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    print('unSubscribing');
+    super.dispose();
+  }
+  //
+  // @override
+  // void didPopNext() {
+  //   // Called when the user navigates back to this page
+  //   print('Navigated back to SecondPage');
+  // }
 
 //   Future<void> _compressVideo() async {
 //     var file;

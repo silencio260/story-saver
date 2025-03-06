@@ -6,6 +6,7 @@ import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
 
@@ -29,10 +30,12 @@ class MediaListItem extends StatefulWidget {
   _MediaListItemState createState() => _MediaListItemState();
 }
 
-class _MediaListItemState extends State<MediaListItem> {
+class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveClientMixin {
   late bool isAlreadySaved;
   late Future<bool> _future;
   final mediaManager = SavedMediaManager();
+
+  bool get wantKeepAlive => false;
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _MediaListItemState extends State<MediaListItem> {
   void _toggleSavedStatus() async {
 
     if(_checkFileExists() == false){
+      // _showErrorDialog("Error: Files does not exist");
       return;
     }
 
@@ -52,13 +56,19 @@ class _MediaListItemState extends State<MediaListItem> {
     print("Icon tapped!");
     final result = await mediaManager.saveMedia(widget.mediaPath);
 
+    saveStatus(context, widget.mediaPath);
+
     // isAlreadySaved = true;
     print('Aready Saved');
     setState(() {
       isAlreadySaved = !isAlreadySaved; // Toggle the state
     });
 
-    _showErrorDialog("Status Saved");
+    // _showErrorDialog("Status Saved");
+  }
+
+  void saveMedia () async {
+    _toggleSavedStatus();
   }
 
   bool _checkFileExists()  {
@@ -87,8 +97,11 @@ class _MediaListItemState extends State<MediaListItem> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return FutureBuilder<bool>(
-        future: mediaManager.isMediaSaved(widget.mediaPath),
+        future: widget.videoFilePath != null ?
+          mediaManager.isMediaSaved(widget.videoFilePath!) :
+          mediaManager.isMediaSaved(widget.mediaPath),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
@@ -104,11 +117,12 @@ class _MediaListItemState extends State<MediaListItem> {
 
           bool isAlreadySaved = snapshot.data ?? false;
 
+          print('widget.videoFilePath ${snapshot.data} $isAlreadySaved - ${widget.videoFilePath}');
           return GestureDetector(
             onTap: () {
 
               if (widget.isVideo) {
-                print('widget.videoFilePath ${widget.videoFilePath}');
+                print('widget.videoFilePath $isAlreadySaved - ${widget.videoFilePath}');
                 if(widget.videoFilePath != null)
                 Navigator.push(
                   context,
@@ -120,6 +134,7 @@ class _MediaListItemState extends State<MediaListItem> {
                   ),
                 );
               } else {
+                // print('widget.ImagePath $isAlreadySaved - ${widget.mediaPath}');
                 Navigator.push(
                   context,
                   CupertinoPageRoute(

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
@@ -28,6 +29,7 @@ class _ImageViewState extends State<ImageView> {
     Icon(Icons.share),
     Icon(Icons.repeat_outlined),
   ];
+  final mediaManager = SavedMediaManager();
 
   @override
   void initState() {
@@ -35,6 +37,33 @@ class _ImageViewState extends State<ImageView> {
 
     if(checkFileExists(widget.imagePath!) == false)
       showErrorDialog(context, "File does not exists");
+  }
+
+  void _toggleSavedStatus() async {
+
+    if(checkFileExists(widget.imagePath!) == false){
+      showErrorDialog(context, "Error: Files does not exist");
+      return;
+    }
+
+    // Handle the click event here
+    print("Icon tapped!");
+    final result = await mediaManager.saveMedia(widget.imagePath!);
+
+    saveStatus(context, widget.imagePath!);
+
+    // isAlreadySaved = true;
+    print('Aready Saved');
+
+
+    // _showErrorDialog("Status Saved");
+  }
+
+  void saveMedia () async {
+    _toggleSavedStatus();
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+    // context.read<GetStatusProvider>(). preventDuplicateAddition();
   }
 
 
@@ -77,7 +106,9 @@ class _ImageViewState extends State<ImageView> {
                     break;
                   case 1:
                     print("download");
-                    saveStatus(context, widget.imagePath!);
+
+                    saveMedia();
+                    // saveStatus(context, widget.imagePath!);
                     // ImageGallerySaver.saveFile(widget.imagePath!).then((value) {
                     //   ScaffoldMessenger.of(context).showSnackBar(
                     //       const SnackBar(content: Text("Image Saved")));

@@ -44,9 +44,22 @@ class SavedMediaManager {
       await prefs.setString(_mediaKey, jsonEncode(mediaList));
     }
 
+
+
+
     // String fileName = path.split('/').last.split('.').first;
 
     print('SavedMediaManager ${mediaList} -  ${mediaList.length}');
+    print('SavedMediaManagerLength -  ${mediaList.length}');
+    for (var media in mediaList) {
+      int currentTime = DateTime.now().millisecondsSinceEpoch;
+      final differenceMs = currentTime - media['timestamp'];
+      double differenceHours = differenceMs / (1000 * 60 * 60);
+      bool isOlderThan24Hours = differenceHours > 24;
+
+      print("object ${media['path']} - ${differenceHours.toStringAsFixed(1)} Hrs (${isOlderThan24Hours ? 'Older' : 'Newer'} than 24h)");
+
+    }
   }
 
   /// Delete media manually
