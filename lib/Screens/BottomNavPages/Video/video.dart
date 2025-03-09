@@ -55,8 +55,9 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   void _onRefresh() async{
 
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+    Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
     _refreshController.refreshCompleted();
   }

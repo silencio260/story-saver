@@ -39,8 +39,10 @@ class _ImageHomePageState extends State<ImageHomePage>
       RefreshController(initialRefresh: false);
 
   void _onRefresh() async {
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
-    Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
+    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
+
+    Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
     _refreshController.refreshCompleted();
   }
