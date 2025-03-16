@@ -162,6 +162,43 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
     Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
   }
 
+  void confirmFileDeleteDialog(BuildContext context, String message, String fileName, GetSavedMediaProvider file, int index) {
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        // barrierDismissible: false, // Prevents user from tapping outside to dismiss
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            title: Text("Error"),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.popUntil(dialogContext, (route) => route.isFirst);
+                },
+                child: Text("Cancel", style: TextStyle(color: Colors.grey),),
+              ),
+              TextButton(
+                onPressed: () {
+                  deleteMedia(fileName, file, index);
+                  Navigator.popUntil(dialogContext, (route) => route.isFirst);
+                },
+                child: Text("OK", style: TextStyle(color: Colors.red),),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
+
+  void deleteMedia(String fileName, GetSavedMediaProvider file, int index) {
+
+    mediaManager.deleteMedia(fileName);
+    file.removeFrom(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -340,8 +377,16 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                               // deleteSaveStatus(context, file.getMediaFile[index]),
                               print('Media Manger ${file.getMediaFile[index].title.toString()}'),
 
-                              mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
-                              file.removeFrom(index)
+                              confirmFileDeleteDialog(
+                                  context,
+                                  'Are you sure you want to delete?',
+                                  file.getMediaFile[index].title.toString(),
+                                file,
+                                index
+                              ),
+
+                              // mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
+                              // file.removeFrom(index)
                             },
                             child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
                           ),
