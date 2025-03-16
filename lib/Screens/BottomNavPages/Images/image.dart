@@ -7,6 +7,8 @@ import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Utils/getStoragePermission.dart';
+import 'package:storysaver/Widget/GrantPermissionButton.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
@@ -29,11 +31,19 @@ class _ImageHomePageState extends State<ImageHomePage>
   void initState() {
     // TODO: implement initState
     super.initState();
+    checkIfWeHaveStoragePermission().then((value) {
+      setState(() {
+        print('hasPermission - $value');
+        hasPermission = value;
+      });
+    });
 
     // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
   }
 
   bool _isFetched = false;
+  bool hasPermission = false;
+
 
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
@@ -81,7 +91,17 @@ class _ImageHomePageState extends State<ImageHomePage>
     return Scaffold(
       body: Consumer<GetStatusProvider>(
         builder: (context, file, child) {
-          return file.isWhatsappAvailable == false
+          return hasPermission != true ?
+            GrantPermissionButton(
+                context,
+                onPermissionGranted: () {
+                  setState(() {
+                    hasPermission = true;
+                  });
+                }
+            )
+            :
+            file.isWhatsappAvailable == false
               ? const Center(
                   child: Text('Whatsapp not available'),
                 )

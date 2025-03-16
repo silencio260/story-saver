@@ -16,3 +16,21 @@ Future<bool> getStoragePermission() async {
     }
   }
 }
+
+Future<bool> checkIfWeHaveStoragePermission() async {
+
+  final status = await Permission.storage.request();
+  if (status.isGranted) {
+    return true;
+  } else {
+    final storagePermission = await Permission.manageExternalStorage.request();
+    if (storagePermission.isGranted) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  return false;
+
+}

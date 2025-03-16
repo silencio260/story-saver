@@ -11,7 +11,9 @@ import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/clearCache.dart';
+import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
+import 'package:storysaver/Widget/GrantPermissionButton.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
@@ -37,6 +39,13 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     // TODO: implement initState
     super.initState();
 
+    checkIfWeHaveStoragePermission().then((value) {
+      setState(() {
+        print('hasPermission - $value');
+        hasPermission = value;
+      });
+    });
+
     // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
     // print("Provider_2 ${Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos()}");
 
@@ -49,6 +58,7 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   String _counter = 'video';
   final String? title = 'vid';
+  bool hasPermission = false;
 
   RefreshController _refreshController =
   RefreshController(initialRefresh: false);
@@ -174,7 +184,17 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
           // final videoFiles = file.getExperimentalFiles;
 
-      return file.isWhatsappAvailable == false
+          return hasPermission != true ?
+          GrantPermissionButton(
+              context,
+              onPermissionGranted: () {
+                setState(() {
+                  hasPermission = true;
+                });
+              }
+          )
+          :
+       file.isWhatsappAvailable == false
           ? const Center(
               child: Text('Whatsapp not available'),
             )
