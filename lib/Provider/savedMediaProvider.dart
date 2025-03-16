@@ -438,7 +438,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       if (mediaAlbums.isNotEmpty) {
         final specificAlbum = await mediaAlbums.firstWhere(
-          (album) => album.name == "Saved Statuses",
+          (album) => album.name == AppConstants.SAVED_STORY_PATH,
           orElse: () => throw Exception('Album "Story Saver" not found'),
         );
 

@@ -2,10 +2,11 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
 import 'package:external_path/external_path.dart';
+import 'package:storysaver/Constants/constant.dart';
 
 class DeviceFileInfo {
 
-  String _savedMediaPath = "Pictures/YourApp/Saved Statuses";
+  String _savedMediaPath = "Pictures/${AppConstants.SAVED_STORY_PATH}";
   String get savedMediaPath => _savedMediaPath;
 
   Future<String> GetSavedMediaAbsolutePath() async {
