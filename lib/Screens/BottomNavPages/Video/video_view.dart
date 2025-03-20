@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
@@ -29,6 +30,7 @@ class _VideoViewState extends State<VideoView> {
   final mediaManager = SavedMediaManager();
 
   ChewieController? _chewieController;
+  late VideoPlayerController _videoPlayerController;
 
   void _toggleSavedStatus() async {
 
@@ -60,37 +62,84 @@ class _VideoViewState extends State<VideoView> {
     // TODO: implement initState
     super.initState();
 
+
     if(checkFileExists(widget.videoPath!) == false)
       showErrorDialog(context, "File does not exists");
 
-    _chewieController = ChewieController(
-        videoPlayerController:
-            VideoPlayerController.file(File(widget.videoPath!)),
+
+    if (widget.videoPath != null && widget.videoPath!.isNotEmpty) {
+      _initializePlayer();
+    }
+
+    // _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
+    //
+    // await _videoPlayerController.initialize();
+    //
+    //
+    // _chewieController = ChewieController(
+    //     videoPlayerController:
+    //         VideoPlayerController.file(
+    //             File(widget.videoPath!),
+    //           videoPlayerOptions: VideoPlayerOptions(
+    //             allowBackgroundPlayback: false, // Disable background playback to free memory
+    //             mixWithOthers: true,
+    //           ),
+    //         ),
+    //     autoInitialize: true,
+    //     autoPlay: true,
+    //
+    //     // looping: true,
+    //     // aspectRatio: 1,
+    //     aspectRatio: _chewieController!.videoPlayerController.value.aspectRatio,
+    //
+    //     materialProgressColors: ChewieProgressColors(
+    //       playedColor: const Color( CustomColors.ButtonColor), // Color of the played portion
+    //       handleColor: const Color( CustomColors.ButtonColor), // Color of the draggable handle
+    //       bufferedColor: Colors.grey, // Color of the buffered portion
+    //       backgroundColor: Colors.black, // Color of the remaining part
+    //     ),
+    //
+    //
+    //     errorBuilder: ((context, errorMessage) {
+    //       return Center(
+    //         child: Text(errorMessage),
+    //       );
+    //     }));
+  }
+
+  Future<void> _initializePlayer() async {
+    _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
+
+    await _videoPlayerController.initialize();
+
+    setState(() {
+      _chewieController = ChewieController(
+        videoPlayerController: _videoPlayerController,
         autoInitialize: true,
         autoPlay: true,
-
-        // looping: true,
-        aspectRatio: 1,
+        aspectRatio: _videoPlayerController.value.aspectRatio, // Fixed aspect ratio issue
         materialProgressColors: ChewieProgressColors(
-          playedColor: const Color( CustomColors.ButtonColor), // Color of the played portion
-          handleColor: const Color( CustomColors.ButtonColor), // Color of the draggable handle
-          bufferedColor: Colors.grey, // Color of the buffered portion
-          backgroundColor: Colors.black, // Color of the remaining part
+          playedColor: const Color(CustomColors.ButtonColor),
+          handleColor: const Color(CustomColors.ButtonColor),
+          bufferedColor: Colors.grey,
+          backgroundColor: Colors.black,
         ),
-
-
-        errorBuilder: ((context, errorMessage) {
+        errorBuilder: (context, errorMessage) {
           return Center(
             child: Text(errorMessage),
           );
-        }));
+        },
+      );
+    });
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
-
+    print('Dipose');
     _chewieController!.pause();
+    _videoPlayerController.dispose();
+    // _chewieController!.videoPlayerController.dispose();
     _chewieController!.dispose();
 
     super.dispose();
@@ -104,7 +153,10 @@ class _VideoViewState extends State<VideoView> {
         constraints: BoxConstraints(
             maxHeight: 700
         ),
-        child:  Chewie(controller: _chewieController!),
+        // child:  Chewie(controller: _chewieController!),
+        child: _chewieController != null
+            ? Chewie(controller: _chewieController!)
+            : const Center(child: CircularProgressIndicator()),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 70),
