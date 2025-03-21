@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -14,6 +15,7 @@ import 'package:storysaver/Screens/BottomNavPages/Experiments/Widget/video_tile.
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
+import 'package:storysaver/Widget/SavedMediaPhotoViewWrapper.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class MediaStoreVideos extends StatefulWidget {
@@ -349,9 +351,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                       int? keyAsInt = extractNumberAsInt(keyAsString);
 
                       if((keyAsString == nextLoadTriggerItem && visiblePercentage >= 50) ||
-                          ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger)
-                      ){
-
+                          ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger) ){
 
                         if(file.numLoadedAssets <= file.totalNumAssets && !file.isProcessingMedia){
                           loadMoreItem();
@@ -367,7 +367,25 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                       ),
                       child: Column(
                         children: [
-                          SizedBox(child: SavedMediaGridItem(video: video), height: 90),//160),
+                          SizedBox(
+                            height: 90,
+                            child: GestureDetector(
+
+                            onTap: () {
+
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                    builder: (_) =>
+                                        SavedMediaPhotoViewWrapper(initialIndex: index, isVideoView: true,
+                                            galleryItems: Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile)
+                                  // VideoView(videoPath: widget.videoFilePath),
+                                ),
+                              );
+                          },
+                          child: SavedMediaGridItem(video: video),
+                            ),
+                          ),//160),
 
 
                           GestureDetector(

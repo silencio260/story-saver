@@ -1,15 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
+import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 
 
 
-class GalleryPhotoViewWrapper extends StatefulWidget {
-  GalleryPhotoViewWrapper({
+class SavedMediaPhotoViewWrapper extends StatefulWidget {
+  SavedMediaPhotoViewWrapper({
     this.loadingBuilder,
     this.backgroundDecoration,
     this.minScale,
@@ -26,17 +28,17 @@ class GalleryPhotoViewWrapper extends StatefulWidget {
   final dynamic maxScale;
   final int initialIndex;
   final PageController pageController;
-  final List<FileSystemEntity> galleryItems;
+  final List<AssetEntity> galleryItems;
   final isVideoView ;
   final Axis scrollDirection;
 
   @override
   State<StatefulWidget> createState() {
-    return _GalleryPhotoViewWrapperState();
+    return _SavedMediaPhotoViewWrapperState();
   }
 }
 
-class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
+class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper> {
   late int currentIndex = widget.initialIndex;
 
   @override
@@ -90,43 +92,39 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
   }
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
-    final FileSystemEntity item = widget.galleryItems[index];
+    final AssetEntity item = widget.galleryItems[index];
 
-    print('PhotoViewGalleryPageOptions widget.videoFilePath ${item.path}');
+    print('SavedMediaPhotoViewWrapper widget.videoFilePath ${item.file}');
     print('video_Index = ${index} - total_length = ${widget.galleryItems.length}');
 
     return PhotoViewGalleryPageOptions.customChild(
-          child: !widget.isVideoView ?
-            ImageView(imagePath: item.path) :
-              VideoView(videoPath:  item.path),
-    );
+      child: FutureBuilder<dynamic>(
+        future: getAssetEntityPath(item),//item.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
+        builder: (context, snapshot) {
 
-    //   return PhotoViewGalleryPageOptions(
-    //   imageProvider: FileImage(File(item.path)),//FileImage(item),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   // heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // );
-    // return item.isSvg
-    //     ? PhotoViewGalleryPageOptions.customChild(
-    //   child: Container(
-    //     width: 300,
-    //     height: 300,
-    //     child: Icon(Icons.abc)
-    //   ),
-    //   childSize: const Size(300, 300),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // )
-    //     : PhotoViewGalleryPageOptions(
-    //   imageProvider: AssetImage(item.resource),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // );
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              !snapshot.hasData) {
+            return Container();
+          }
+
+          if (snapshot.hasError) {
+            // If there was an error, show an error widget
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
+
+          // print('SavedMediaPhotoViewWrapper snapshot.data ${snapshot.data}');
+
+          return item.type == AssetType.video ?
+          VideoView(videoPath:  snapshot.data)
+          : ImageView(imagePath: snapshot.data);
+        }
+      ),
+      // !widget.isVideoView ?
+      // ImageView(imagePath: item.relativePath)
+            // :
+      // VideoView(videoPath:  item.path),
+    );
   }
 }
