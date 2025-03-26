@@ -370,9 +370,8 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                           SizedBox(
                             height: 90,
                             child: GestureDetector(
-
-
-                            onTap: () {
+                              // behavior: HitTestBehavior.opaque,
+                              onTap: () {
                               // print('--------------------*******************---------------------------');
 
                               Navigator.push(
@@ -389,7 +388,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                                 ),
                               );
                           },
-                          child: Container(color: Colors.red,)//Container(child: SavedMediaGridItem(video: video)),
+                          child: Container(child: SavedMediaGridItem(video: video)),
                             ),
                           ),//160),
 

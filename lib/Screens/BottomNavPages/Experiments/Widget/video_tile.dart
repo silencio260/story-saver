@@ -28,22 +28,7 @@ class _VideoTileState extends State<VideoTile> {
         );
       }
 
-    return GestureDetector(
-        onTap: () {
-
-
-          // print('--+++--- ' +
-          //     data.toString());
-          // print(
-          //     data);
-          // print('--+++--- ' +
-          //     data.path);
-          // print(
-          //     '--+++ ' + snapshot.data!);
-          print(
-              "--+++ ---- ${widget.snapshot!}");
-        },
-        child:  Container(
+    return Container(
           // height: MediaQuery.of(context).size.height * 0.5,
           decoration: BoxDecoration(
               image: DecorationImage(
@@ -70,7 +55,6 @@ class _VideoTileState extends State<VideoTile> {
             ],
           ),
           // height: 500,
-        ),
-      );;
+      );
   }
 }

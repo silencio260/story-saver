@@ -48,12 +48,7 @@ class _ImageTileState extends State<ImageTile> {
           // print("path - ${widget.snapshot!.data!.path!}");
 
 
-          return GestureDetector(
-            onTap: () {
-              // print(
-              //     "--+++ ---- ${widget.snapshot!}");
-            },
-            child: Container(
+          return Container(
               // height: MediaQuery.of(context).size.height * 0.5,
               decoration: BoxDecoration(
                   image: DecorationImage(
@@ -66,7 +61,6 @@ class _ImageTileState extends State<ImageTile> {
                   borderRadius: BorderRadius.circular(2)),
 
               // height: 500,
-            ),
           );
   }
 }
