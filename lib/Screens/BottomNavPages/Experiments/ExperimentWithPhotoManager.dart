@@ -371,19 +371,25 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                             height: 90,
                             child: GestureDetector(
 
+
                             onTap: () {
+                              // print('--------------------*******************---------------------------');
 
                               Navigator.push(
                                 context,
                                 CupertinoPageRoute(
                                     builder: (_) =>
-                                        SavedMediaPhotoViewWrapper(initialIndex: index, isVideoView: true,
-                                            galleryItems: Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile)
+                                        SavedMediaPhotoViewWrapper(
+                                            initialIndex: index,
+                                            isVideoView: true,
+                                            // file: file,
+                                            galleryItems: Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile
+                                        ),
                                   // VideoView(videoPath: widget.videoFilePath),
                                 ),
                               );
                           },
-                          child: SavedMediaGridItem(video: video),
+                          child: Container(color: Colors.red,)//Container(child: SavedMediaGridItem(video: video)),
                             ),
                           ),//160),
 

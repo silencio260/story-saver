@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
@@ -20,6 +21,7 @@ class SavedMediaPhotoViewWrapper extends StatefulWidget {
     required this.galleryItems,
     this.isVideoView = false,
     this.scrollDirection = Axis.horizontal,
+    // this.file,
   }) : pageController = PageController(initialPage: initialIndex);
 
   final LoadingBuilder? loadingBuilder;
@@ -29,8 +31,9 @@ class SavedMediaPhotoViewWrapper extends StatefulWidget {
   final int initialIndex;
   final PageController pageController;
   final List<AssetEntity> galleryItems;
-  final isVideoView ;
+  final isVideoView;
   final Axis scrollDirection;
+  // final GetSavedMediaProvider? file;
 
   @override
   State<StatefulWidget> createState() {
@@ -40,17 +43,37 @@ class SavedMediaPhotoViewWrapper extends StatefulWidget {
 
 class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper> {
   late int currentIndex = widget.initialIndex;
+  late String currentFilePath;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    // if(currentIndex == widget.initialIndex)
+      _loadFilePath();
+
   }
 
-  void onPageChanged(int index) {
+  void onPageChanged(int index) async {
+    final AssetEntity item = widget.galleryItems[index];
+    final filePath = await getAssetEntityPath(item);
+
     setState(() {
       currentIndex = index;
+      currentFilePath = filePath!;
     });
+  }
+
+  void _loadFilePath() async {
+
+    final AssetEntity item = widget.galleryItems[currentIndex];
+    final filePath = await getAssetEntityPath(item);
+
+    setState(() {
+      currentFilePath = filePath!;
+    });
+
   }
 
   @override
@@ -73,10 +96,12 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
               pageController: widget.pageController,
               onPageChanged: onPageChanged,
               scrollDirection: widget.scrollDirection,
+              // wantKeepAlive: true,
             ),
             Container(
               padding: const EdgeInsets.all(20.0),
               child: Text(
+                // "Image ${currentIndex + 1} - Files - ${widget!.file!.getMediaFile.length}",
                 "Image ${currentIndex + 1}",
                 style: const TextStyle(
                   color: Colors.white,
@@ -96,16 +121,27 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
 
     print('SavedMediaPhotoViewWrapper widget.videoFilePath ${item.file}');
     print('video_Index = ${index} - total_length = ${widget.galleryItems.length}');
+    print('/storage/emulated/0/${item.relativePath}/${item.title} --> ${index}');
+    print('currentFilePath ${currentFilePath} --> ${currentIndex} --> index = ${index}');
 
     return PhotoViewGalleryPageOptions.customChild(
-      child: FutureBuilder<dynamic>(
+    //   // child: ImageView(imagePath: filePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
+    //   child: item.type == AssetType.video ?
+    // VideoView(videoPath:  currentFilePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
+    //     :
+    // ImageView(imagePath: currentFilePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
+
+      child:  FutureBuilder<dynamic>(
         future: getAssetEntityPath(item),//item.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
         builder: (context, snapshot) {
 
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              !snapshot.hasData) {
-            return Container();
-          }
+          // if (snapshot.connectionState == ConnectionState.waiting ||
+          //     !snapshot.hasData) {
+          //   return CircularProgressIndicator();
+          //   // return Container(
+          //   //   color: Colors.transparent, // Fully transparent
+          //   // );
+          // }
 
           if (snapshot.hasError) {
             // If there was an error, show an error widget
@@ -115,15 +151,19 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
           }
 
           // print('SavedMediaPhotoViewWrapper snapshot.data ${snapshot.data}');
+          print('SavedMediaPhotoViewWrapper snapshot.data ${snapshot.data}');
 
           return item.type == AssetType.video ?
-          VideoView(videoPath:  snapshot.data)
-          : ImageView(imagePath: snapshot.data);
+         VideoView(videoPath:  snapshot.data, isLoading: snapshot.hasData ? false : true)
+              :
+           ImageView(imagePath: snapshot.data, isLoading: snapshot.hasData ? false : true);
         }
       ),
+
+
       // !widget.isVideoView ?
       // ImageView(imagePath: item.relativePath)
-            // :
+      //       :
       // VideoView(videoPath:  item.path),
     );
   }

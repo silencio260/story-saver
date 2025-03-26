@@ -16,7 +16,8 @@ import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
-  const ImageView({Key? key, this.imagePath}) : super(key: key);
+  final bool isLoading;
+  const ImageView({Key? key, this.imagePath, this.isLoading = false}) : super(key: key);
 
   @override
   State<ImageView> createState() => _ImageViewState();
@@ -35,6 +36,7 @@ class _ImageViewState extends State<ImageView> {
   void initState() {
     super.initState();
 
+    if(!widget.isLoading)
     if(checkFileExists(widget.imagePath!) == false)
       showErrorDialog(context, "File does not exists");
   }
@@ -60,18 +62,47 @@ class _ImageViewState extends State<ImageView> {
   }
 
   void saveMedia () async {
+    if(!widget.isLoading)
     _toggleSavedStatus();
     // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
     // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
     // context.read<GetStatusProvider>(). preventDuplicateAddition();
   }
 
+  void _shareMedia(BuildContext context){
+    // print("share");
+    if(!widget.isLoading) {
+      Share.shareXFiles([XFile(widget.imagePath!)],
+          text: 'Shared From WhatsApp Story Saver').then((value) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Image Sent")));
+      });
+    }
+  }
+
+  void _shareMediaToWhatsapp(BuildContext context){
+    if(!widget.isLoading) {
+      // print("share");
+      shareToWhatsApp('Shared From Status Saver', filePath: widget.imagePath!,
+          context: context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: PhotoView(
+      body: Container(
+         // decoration: ShapeDecoration(color: Colors.red, shape: isEven),
+        color: Colors.black,
+        constraints: BoxConstraints(
+        maxHeight: 700
+      ),
+   child:
+       widget.isLoading == true ?
+           Placeholder()
+           :
+      PhotoView(
           imageProvider: FileImage(File(widget.imagePath!)),
           minScale: PhotoViewComputedScale.contained,  // initial scale
           maxScale: PhotoViewComputedScale.covered * 2,  // maximum zoom in
@@ -85,6 +116,7 @@ class _ImageViewState extends State<ImageView> {
             return PhotoViewScaleState.initial;
           },
         ),
+       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 70),
         child: Row(
@@ -115,19 +147,12 @@ class _ImageViewState extends State<ImageView> {
                     // });
                     break;
                   case 2:
-                    print("share");
-                      Share.shareXFiles([XFile(widget.imagePath!)],
-                          text: 'Shared From WhatsApp Story Saver').then((value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Image Sent")));
-                    });
-
+                    _shareMedia(context);
                     break;
 
 
                   case 3:
-                    print("share");
-                    shareToWhatsApp('Shared From Status Saver', filePath: widget.imagePath!, context: context);
+                    _shareMediaToWhatsapp(context);
                     break;
                 }
               },

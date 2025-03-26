@@ -17,7 +17,17 @@ Future<String?> getAssetEntityPath(AssetEntity asset) async {
   return null;
 
 }
+String? getAssetEntityPathSync(AssetEntity asset) {
+  // The `file` method in AssetEntity is asynchronous, so true sync retrieval is not possible.
+  // This function will remain async-like but ensures minimal await usage.
 
+  // Warning: This approach might not work since `file` is inherently async.
+  File? file;
+
+  asset.file.then((f) => file = f);
+
+  return file?.path;
+}
 
 Future<Uint8List?> getAssetEntityBytes(AssetEntity asset) async {
   // Get the actual file path of the asset

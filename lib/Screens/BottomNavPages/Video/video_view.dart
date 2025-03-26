@@ -14,7 +14,8 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 class VideoView extends StatefulWidget {
   final String? videoPath;
-  const VideoView({Key? key, this.videoPath}) : super(key: key);
+  final bool isLoading;
+  const VideoView({Key? key, this.videoPath, this.isLoading = false}) : super(key: key);
 
   @override
   State<VideoView> createState() => _VideoViewState();
@@ -53,23 +54,35 @@ class _VideoViewState extends State<VideoView> {
   }
 
   void saveMedia () async {
+    if(!widget.isLoading)
     _toggleSavedStatus();
   }
 
+  void _shareMedia(BuildContext context){
+    if(!widget.isLoading) {
+      // print("share");
+      Share.shareXFiles([XFile(widget.videoPath!)],
+          text: 'Shared From WhatsApp Story Saver').then((value) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Video Sent")));
+      });
+    }
+  }
+
+  void _shareMediaToWhatsapp(BuildContext context){
+    if(!widget.isLoading) {
+      // print("share");
+      shareToWhatsApp('Shared From Status Saver', filePath: widget.videoPath!, context: context);
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
+    _onStart();
 
-    if(checkFileExists(widget.videoPath!) == false)
-      showErrorDialog(context, "File does not exists");
-
-
-    if (widget.videoPath != null && widget.videoPath!.isNotEmpty) {
-      _initializePlayer();
-    }
 
     // _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
     //
@@ -107,7 +120,20 @@ class _VideoViewState extends State<VideoView> {
     //     }));
   }
 
+  void _onStart() {
+    if(!widget.isLoading) {
+      if (checkFileExists(widget.videoPath!) == false)
+        showErrorDialog(context, "File does not exists");
+
+
+      if (widget.videoPath != null && widget.videoPath!.isNotEmpty) {
+        _initializePlayer();
+      }
+    }
+  }
+
   Future<void> _initializePlayer() async {
+    print('_initializePlayer ------- ');
     _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
 
     await _videoPlayerController.initialize();
@@ -133,6 +159,16 @@ class _VideoViewState extends State<VideoView> {
     });
   }
 
+
+  @override
+  void didUpdateWidget(VideoView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.isLoading != widget.isLoading) {
+      _onStart();
+    }
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -154,9 +190,12 @@ class _VideoViewState extends State<VideoView> {
             maxHeight: 700
         ),
         // child:  Chewie(controller: _chewieController!),
-        child: _chewieController != null
+        child: !widget.isLoading ?
+        (_chewieController != null
             ? Chewie(controller: _chewieController!)
-            : const Center(child: CircularProgressIndicator()),
+            : const Center(child: CircularProgressIndicator())
+        )
+            : Placeholder(),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 70),
@@ -191,17 +230,11 @@ class _VideoViewState extends State<VideoView> {
                     // });
                     break;
                   case 2:
-                    print("share");
-                    Share.shareXFiles([XFile(widget.videoPath!)],
-                        text: 'Shared From WhatsApp Story Saver').then((value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Video Sent")));
-                    });
+                    _shareMedia(context);
                     break;
 
                   case 3:
-                    print("share");
-                    shareToWhatsApp('Shared From Status Saver', filePath: widget.videoPath!, context: context);
+                   _shareMediaToWhatsapp(context);
                     break;
                 }
               },
