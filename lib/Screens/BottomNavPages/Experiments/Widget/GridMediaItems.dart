@@ -33,7 +33,7 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
 
   Future<dynamic> _getThumbnail() async {
     if (widget.video.type == AssetType.video) {
-      return await widget.video.thumbnailData; // Fetch video thumbnail
+      return await widget.video.thumbnailDataWithSize(const ThumbnailSize(500, 500)); // Fetch video thumbnail
     } else {
       return await widget.video.file; // Fetch video file
     }

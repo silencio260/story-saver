@@ -58,7 +58,7 @@ class _ImageTileState extends State<ImageTile> {
                     fit: BoxFit.cover,
                   ),
                   color: const Color.fromARGB(255, 236, 235, 230),
-                  borderRadius: BorderRadius.circular(2)),
+                  borderRadius: BorderRadius.circular(0)),
 
               // height: 500,
           );
