@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
@@ -21,7 +22,7 @@ class SavedMediaPhotoViewWrapper extends StatefulWidget {
     required this.galleryItems,
     this.isVideoView = false,
     this.scrollDirection = Axis.horizontal,
-    // this.file,
+    this.file,
   }) : pageController = PageController(initialPage: initialIndex);
 
   final LoadingBuilder? loadingBuilder;
@@ -33,7 +34,7 @@ class SavedMediaPhotoViewWrapper extends StatefulWidget {
   final List<AssetEntity> galleryItems;
   final isVideoView;
   final Axis scrollDirection;
-  // final GetSavedMediaProvider? file;
+  final GetSavedMediaProvider? file;
 
   @override
   State<StatefulWidget> createState() {
@@ -74,6 +75,22 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
       currentFilePath = filePath!;
     });
 
+  }
+
+  void loadMoreItem () {
+    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
+  }
+
+  void _shouldLoadMoreMedia (int index) {
+    if( index >= widget.file!.nextLoadTrigger ){
+
+      if(widget.file!.numLoadedAssets <= widget.file!.totalNumAssets && !widget.file!.isProcessingMedia){
+        loadMoreItem();
+        widget.file!.setNewLoadTrigger();
+        print('Load More Media Files nextLoadTrigger = ${widget.file!.nextLoadTrigger} - numLoadedAssets = ${widget.file!.numLoadedAssets} ');
+      }
+
+    }
   }
 
   @override
@@ -119,10 +136,12 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
     final AssetEntity item = widget.galleryItems[index];
 
-    print('SavedMediaPhotoViewWrapper widget.videoFilePath ${item.file}');
+    _shouldLoadMoreMedia(index);
+
+    // print('SavedMediaPhotoViewWrapper widget.videoFilePath ${item.file}');
     print('video_Index = ${index} - total_length = ${widget.galleryItems.length}');
-    print('/storage/emulated/0/${item.relativePath}/${item.title} --> ${index}');
-    print('currentFilePath ${currentFilePath} --> ${currentIndex} --> index = ${index}');
+    // print('/storage/emulated/0/${item.relativePath}/${item.title} --> ${index}');
+    // print('currentFilePath ${currentFilePath} --> ${currentIndex} --> index = ${index}');
 
     return PhotoViewGalleryPageOptions.customChild(
     //   // child: ImageView(imagePath: filePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')

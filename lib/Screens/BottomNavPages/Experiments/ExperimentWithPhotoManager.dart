@@ -381,7 +381,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                                         SavedMediaPhotoViewWrapper(
                                             initialIndex: index,
                                             isVideoView: true,
-                                            // file: file,
+                                            file: file,
                                             galleryItems: Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile
                                         ),
                                   // VideoView(videoPath: widget.videoFilePath),
