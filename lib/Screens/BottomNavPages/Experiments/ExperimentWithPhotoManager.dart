@@ -368,7 +368,7 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                       child: Column(
                         children: [
                           SizedBox(
-                            height: 90,
+                            height: 160,
                             child: GestureDetector(
                               // behavior: HitTestBehavior.opaque,
                               onTap: () {
@@ -411,7 +411,23 @@ class _MediaStoreVideosState extends State<MediaStoreVideos> with AutomaticKeepA
                               // mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
                               // file.removeFrom(index)
                             },
-                            child: Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
+                            child:  Align(
+                              alignment: Alignment.bottomRight,
+                              child: Padding(
+                                padding: const EdgeInsets.all(3.0), // Adjust distance
+                                child: Icon(
+                                  Icons.delete,
+                                  color: Colors.black,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            // child: Icon(
+                            //   Icons.delete, // Replace with your desired icon
+                            //   color:  Colors.black,
+                            //   size: 23,
+                            // ),
+                            //Text(index.toString(), style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold, color: Colors.red),),
                           ),
 
 
