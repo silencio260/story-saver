@@ -31,6 +31,9 @@
 .pub/
 /build/
 
+#google json
+/android/app/google-services.json
+
 #env
 *.env
 /env/
