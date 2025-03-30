@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDXoxplLaZWmAypzKrrhqWievRHSYV_Hl8',
+    apiKey: String.fromEnvironment("firebase_api_key_android"),
     appId: '1:213655052172:android:12c2a49a24bb5eca48c0a9',
     messagingSenderId: '213655052172',
     projectId: 'whatsapp-status-saver-fl-6c420',
@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB5MTFgMrZ6tZ-BNT88WsTWIVIrTlRpZrE',
+    apiKey: String.fromEnvironment("firebase_api_key_ios"),
     appId: '1:213655052172:ios:debca4eacac328aa48c0a9',
     messagingSenderId: '213655052172',
     projectId: 'whatsapp-status-saver-fl-6c420',
