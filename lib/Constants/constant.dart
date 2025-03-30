@@ -1,7 +1,7 @@
 class AppConstants {
   // static String WHATSAPP_PATH = "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
   static List<String> WHATSAPP_PATH_LIST = [
-  // "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
+  "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
   // "/storage/emulated/0/Pictures/Saved Statuses/",
     // "/storage/emulated/0/Pictures/Story Saver/"
     // "/storage/emulated/0/DCIM/Camera/"
@@ -13,7 +13,7 @@ class AppConstants {
 
     // "/storage/emulated/0/DCIM/Snapchat/",
 
-    "/storage/emulated/0/DCIM/InsTakeDownloader/",
+    // "/storage/emulated/0/DCIM/InsTakeDownloader/",
     // "/storage/emulated/0/Movies/Instagram/",
     // "/storage/emulated/0/Pictures/Screenshot/"
   ];
