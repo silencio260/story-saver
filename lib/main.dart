@@ -17,25 +17,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('ensureInitialized');
 
-  await dotenv.load(fileName: ".env");
   String envvar = const String.fromEnvironment("founders_version");
   String e = AppConstants.SAVED_STORY_PATH;
-  debugPrint('#### Staging Env - $envvar - ${e} - ${const String.fromEnvironment("founders_version")}');
-  // print("Staging ${dotenv.env['DEVERLOPER_MODE']}");
-
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  debugPrint('#### Staging Env - $envvar - ${e} -  ${const String.fromEnvironment("firebase_api_key_android")} '
+      '${const String.fromEnvironment("founders_version")}');
 
 
   AnalyticsService.init();
 
-  // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
-  // final getSavedMedia = GetSavedMediaProvider();
-  // print('getSavedMedia');
-  // await getSavedMedia.loadVideos();
-  // print('getSavedMedia.loadVideos in main');
 
   runApp(MyApp());
 
@@ -43,13 +32,6 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  // @override
-  // Widget build(BuildContext context) {
-  //   return MaterialApp(
-  //     home: SplashScreen(),
-  //   );
-  // }
   final MyRouteObserver routeObserver = MyRouteObserver();
 
   @override
