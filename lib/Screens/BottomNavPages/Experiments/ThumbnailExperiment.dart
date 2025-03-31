@@ -1,24 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get_thumbnail_video/index.dart';
-import 'package:get_thumbnail_video/video_thumbnail.dart';
-import 'package:list_all_videos/list_all_videos.dart';
-import 'package:list_all_videos/model/thumbnail_controller.dart';
-import 'package:list_all_videos/model/video_model.dart';
-import 'package:list_all_videos/thumbnail/ThumbnailTile.dart';
-import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
-import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/clearCache.dart';
-import 'package:storysaver/Utils/getThumbnails.dart';
 import 'package:video_compress/video_compress.dart';
-import 'package:video_player/video_player.dart';
 
 
 Stream<Uint8List> getThumbnails(List<FileSystemEntity> files) async* {
@@ -65,44 +52,6 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
   String _counter = 'video';
   final String? title = 'vid';
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("DemoList"),
-//       ),
-//       body: FutureBuilder(
-//         future: ListAllVideos().getAllVideosPath(),
-//         builder: (context, snapshot) {
-//           final List<VideoDetails> videos = snapshot.data! as List<VideoDetails>;
-//           print("Videos ${snapshot.data!}");
-//           return snapshot.connectionState == ConnectionState.waiting
-//               ? const Center(
-//             child: CircularProgressIndicator(),
-//           )
-//               : ListView.separated(
-//               itemBuilder: (context, index) {
-//
-//
-//                 VideoDetails currentVideo = videos[index];
-//
-//                 // VideoDetails currentVideo = snapshot.data![index];
-//                 return ListTile(
-//                     title: Text(currentVideo.videoName),
-//                     subtitle: Text(currentVideo.videoSize),
-//                     leading: ThumbnailTile(
-//                       thumbnailController: currentVideo.thumbnailController,
-//                       height: 80,
-//                       width: 100,
-//                     ));
-//               },
-//               separatorBuilder: (context, index) => const Divider(),
-//               itemCount: videos.length);
-//         },
-//       ),
-//     );
-//   }
-// }
 
   @override
   Widget build(BuildContext context) {
@@ -123,12 +72,6 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
               provider.generateThumbnailFromListAllVideos(videoPath);
               print(" +++++++++++++++++ index of current image $index ${provider.thumbnailCacheV2[videoPath]}");
               // final result = generateThumbnailInIsolate(videoPath).then((onValue) {
-              //
-              //   // print('show result in .then $onValue');
-              //   thumbnail = provider.thumbnailCache[videoPath];
-              // });
-
-              // print('show result $result');
 
               return ListTile(
                 title: Text("Video Loading $index"),
