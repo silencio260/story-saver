@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Screens/TopNavPages/SavedMedia/ExperimentWithPhotoManager.dart';
+import 'package:storysaver/Screens/TopNavPages/SavedMedia/SavedMediaListView.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
@@ -40,7 +40,7 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
     super.dispose();
   }
 
-  List<Widget> pages = const [ImageHomePage(), VideoHomePage(), MediaStoreVideos()];
+  List<Widget> pages = const [ImageHomePage(), VideoHomePage(), SavedMediaListView()];
 
   Future<bool?> _showExitDialog(BuildContext context) async {
     return showDialog<bool>(
