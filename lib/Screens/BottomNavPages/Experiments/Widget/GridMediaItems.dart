@@ -1,6 +1,3 @@
-
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
@@ -47,18 +44,11 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
 
     Future<dynamic> _shouldRebuildCachedItem() async {
 
-    // final mediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);
 
     if (mediaProvider!.buildCachedFirstItem &&
         mediaProvider!.prevFirstItem!.title != mediaProvider!.getMediaFile[0].title) {
-      print('buildCachedFirstItem');
+      // print('buildCachedFirstItem');
       mediaProvider!.reSetBuildVariables();
-
-      // WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   if (mounted) {
-      //     mediaProvider!.reSetBuildVariables();
-      //   }
-      // });
 
       return await _getThumbnail(); // Fetch video thumbnail
     } else {
@@ -67,19 +57,11 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
     // return _thumbnailFuture;
   }
 
-  // Future<dynamic> _shouldRebuildCachedItem() async {
-  //   // _cachedThumbnailFuture ??= _thumbnailFuture; // ✅ Reuse cached Future
-  //   return _thumbnailFuture!;
-  // }
 
 
   @override
   Widget build(BuildContext context) {
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) { // ✅ Prevent unnecessary state updates
-    //     fetchItem();
-    //   }
-    // });
+
 
     return FutureBuilder<dynamic>(
       future: _thumbnailFuture, // Use cached Future
@@ -99,17 +81,11 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
           // If video thumbnail, display it
           if (widget.video.type == AssetType.video) {
             return VideoTile(snapshot: snapshot);
-            // return Image.memory(
-            //   snapshot.data!,
-            //   fit: BoxFit.cover,
-            // );
+
           } else {
             // If not a video, display file
             return ImageTile(snapshot: snapshot);
-            return Image.file(
-              snapshot.data!,
-              fit: BoxFit.cover,
-            );
+
           }
         }
         return const SizedBox();
