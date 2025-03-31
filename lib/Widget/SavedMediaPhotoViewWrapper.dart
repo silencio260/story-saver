@@ -4,8 +4,8 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
-import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
-import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
+import 'package:storysaver/Screens/TopNavPages/Images/Image_view.dart';
+import 'package:storysaver/Screens/TopNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
 
 

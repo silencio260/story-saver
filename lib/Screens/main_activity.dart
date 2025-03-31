@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Screens/BottomNavPages/Experiments/ExperimentWithPhotoManager.dart';
-import 'package:storysaver/Screens/BottomNavPages/Images/image.dart';
-import 'package:storysaver/Screens/BottomNavPages/Video/video.dart';
+import 'package:storysaver/Screens/TopNavPages/Experiments/ExperimentWithPhotoManager.dart';
+import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
+import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
 
 class MainActivity extends StatefulWidget {
