@@ -1,8 +1,6 @@
 import 'dart:io';
-
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
@@ -10,7 +8,6 @@ import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:video_player/video_player.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 class VideoView extends StatefulWidget {
   final String? videoPath;
@@ -82,42 +79,6 @@ class _VideoViewState extends State<VideoView> {
     super.initState();
 
     _onStart();
-
-
-    // _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
-    //
-    // await _videoPlayerController.initialize();
-    //
-    //
-    // _chewieController = ChewieController(
-    //     videoPlayerController:
-    //         VideoPlayerController.file(
-    //             File(widget.videoPath!),
-    //           videoPlayerOptions: VideoPlayerOptions(
-    //             allowBackgroundPlayback: false, // Disable background playback to free memory
-    //             mixWithOthers: true,
-    //           ),
-    //         ),
-    //     autoInitialize: true,
-    //     autoPlay: true,
-    //
-    //     // looping: true,
-    //     // aspectRatio: 1,
-    //     aspectRatio: _chewieController!.videoPlayerController.value.aspectRatio,
-    //
-    //     materialProgressColors: ChewieProgressColors(
-    //       playedColor: const Color( CustomColors.ButtonColor), // Color of the played portion
-    //       handleColor: const Color( CustomColors.ButtonColor), // Color of the draggable handle
-    //       bufferedColor: Colors.grey, // Color of the buffered portion
-    //       backgroundColor: Colors.black, // Color of the remaining part
-    //     ),
-    //
-    //
-    //     errorBuilder: ((context, errorMessage) {
-    //       return Center(
-    //         child: Text(errorMessage),
-    //       );
-    //     }));
   }
 
   void _onStart() {
@@ -189,7 +150,6 @@ class _VideoViewState extends State<VideoView> {
         constraints: BoxConstraints(
             maxHeight: 700
         ),
-        // child:  Chewie(controller: _chewieController!),
         child: !widget.isLoading ?
         (_chewieController != null
             ? Chewie(controller: _chewieController!)
@@ -217,18 +177,9 @@ class _VideoViewState extends State<VideoView> {
                     break;
                   case 1:
                     print("Save");
-
                     saveMedia();
-                    // saveStatus(context, widget.videoPath!);
-                    // ImageGallerySaver.saveFile(widget.videoPath!+'/ppp').then((value) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //       const SnackBar(content: Text("Image Saved")));
-                    // }).catchError((onError) {
-                    //
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //   const SnackBar(content: Text("Error Saving File")));
-                    // });
                     break;
+
                   case 2:
                     _shareMedia(context);
                     break;
