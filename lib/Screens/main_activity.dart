@@ -3,15 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
-import 'package:storysaver/Provider/bottom_nav_provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Experiments/ExperimentWithPhotoManager.dart';
-import 'package:storysaver/Screens/BottomNavPages/Experiments/ThumbnailExperiment.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/image.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
-import 'package:storysaver/Services/AppRatingService.dart';
 
 class MainActivity extends StatefulWidget {
   const MainActivity({Key? key}) : super(key: key);
@@ -32,16 +28,8 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
 
     Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
-    // Provider.of<GetSavedMediaProvider>(context, listen: false).loadVideos();
-
-
 
     controller = TabController(length: 3, vsync: this);
-    // controller.addListener(() {
-    //   setState(() {
-    //
-    //   });
-    // });
   }
 
   @override
@@ -86,12 +74,6 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
   void _onLoading() async{
     // monitor network fetch
     await Future.delayed(Duration(milliseconds: 1000));
-    // if failed,use loadFailed(),if no data return,use LoadNodata()
-    // items.add((items.length+1).toString());
-    // if(mounted)
-    //   setState(() {
-    //
-    //   });
     _refreshController.loadComplete();
   }
 
@@ -114,10 +96,6 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
       
       
         child: Scaffold(
-          // floatingActionButton: FloatingActionButton(onPressed: (){
-          //   print('in app review click');
-          //   AppRatingService.init();
-          // }),
           appBar: AppBar(
             title: Text("Story Saver"),
             bottom: TabBar(
@@ -139,39 +117,10 @@ class _MainActivityState extends State<MainActivity> with SingleTickerProviderSt
             backgroundColor: const Color(CustomColors.AppBarColor),
             foregroundColor: Colors.white,
           ),
-          body:
-          // CustomPullToRefresh(
-          //   onRefresh: _handleRefresh,
-          //   child: ListView.builder(
-          //     itemCount: _items.length,
-          //     itemBuilder: (context, index) => ListTile(
-          //       title: Text(_items[index]),
-          //     ),
-          //   ),
-          // ),
-          TabBarView(controller: controller, children: pages),
+          body: TabBarView(controller: controller, children: pages),
 
         ),
       ),
     );
-
-    //   Consumer<BottomNavProvider>(builder: (context, nav, child) {
-    //   return Scaffold(
-    //     body: pages[nav.currentIndex],
-    //     bottomNavigationBar: BottomNavigationBar(
-    //         onTap: (value) {
-    //           nav.changeIndex(value);
-    //         },
-    //         currentIndex: nav.currentIndex,
-    //         items: const [
-    //           BottomNavigationBarItem(icon: Icon(Icons.image), label: "Image"),
-    //           BottomNavigationBarItem(
-    //               icon: Icon(Icons.video_call), label: "Video"),
-    //           BottomNavigationBarItem(icon: Icon(Icons.access_alarm_outlined), label: "Experiments"),
-    //           // BottomNavigationBarItem(icon: Icon(Icons.access_alarm_outlined), label: "PhotoManger"),
-    //         ],
-    //     ),
-    //   );
-    // });
   }
 }
