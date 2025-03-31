@@ -6,9 +6,9 @@ import 'package:storysaver/Screens/TopNavPages/SavedMedia//Widget/image_tile.dar
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/Widget/video_tile.dart';
 
 class SavedMediaGridItem extends StatefulWidget {
-  final AssetEntity video;
+  final AssetEntity mediaFile;
 
-  const SavedMediaGridItem({required this.video, Key? key}) : super(key: key);
+  const SavedMediaGridItem({required this.mediaFile, Key? key}) : super(key: key);
 
   @override
   _SavedMediaGridItemState createState() => _SavedMediaGridItemState();
@@ -29,10 +29,10 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
   }
 
   Future<dynamic> _getThumbnail() async {
-    if (widget.video.type == AssetType.video) {
-      return await widget.video.thumbnailDataWithSize(const ThumbnailSize(500, 500)); // Fetch video thumbnail
+    if (widget.mediaFile.type == AssetType.video) {
+      return await widget.mediaFile.thumbnailDataWithSize(const ThumbnailSize(500, 500)); // Fetch video thumbnail
     } else {
-      return await widget.video.file; // Fetch video file
+      return await widget.mediaFile.file; // Fetch video file
     }
   }
 
@@ -79,7 +79,7 @@ class _SavedMediaGridItemState extends State<SavedMediaGridItem> {
           );
         } else if (snapshot.hasData && snapshot.data != null) {
           // If video thumbnail, display it
-          if (widget.video.type == AssetType.video) {
+          if (widget.mediaFile.type == AssetType.video) {
             return VideoTile(snapshot: snapshot);
 
           } else {

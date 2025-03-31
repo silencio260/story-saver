@@ -146,7 +146,7 @@ class _SavedMediaListViewState extends State<SavedMediaListView> with AutomaticK
 
                 // print('GetSavedMediaProvider().getMediaFile[index] $video');
 
-                final video = file.getMediaFile[index];
+                final mediaFile = file.getMediaFile[index];
 
 
                 return AnimatedSwitcher(
@@ -206,7 +206,7 @@ class _SavedMediaListViewState extends State<SavedMediaListView> with AutomaticK
                                 ),
                               );
                           },
-                          child: Container(child: SavedMediaGridItem(video: video)),
+                          child: Container(child: SavedMediaGridItem(mediaFile: mediaFile)),
                             ),
                           ),//160),
 
