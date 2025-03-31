@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
-import 'package:storysaver/Screens/TopNavPages/Experiments/Widget/image_tile.dart';
-import 'package:storysaver/Screens/TopNavPages/Experiments/Widget/video_tile.dart';
+import 'package:storysaver/Screens/TopNavPages/SavedMedia//Widget/image_tile.dart';
+import 'package:storysaver/Screens/TopNavPages/SavedMedia/Widget/video_tile.dart';
 
 class SavedMediaGridItem extends StatefulWidget {
   final AssetEntity video;

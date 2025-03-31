@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:storysaver/Screens/TopNavPages/Experiments/Widget/video_tile.dart';
+import 'package:storysaver/Screens/TopNavPages/SavedMedia/Widget/video_tile.dart';
 
 
 class ImageTile extends StatefulWidget {
