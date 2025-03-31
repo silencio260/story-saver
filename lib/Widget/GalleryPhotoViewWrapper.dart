@@ -1,11 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
-
 
 
 class GalleryPhotoViewWrapper extends StatefulWidget {
@@ -101,32 +99,5 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
               VideoView(videoPath:  item.path),
     );
 
-    //   return PhotoViewGalleryPageOptions(
-    //   imageProvider: FileImage(File(item.path)),//FileImage(item),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   // heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // );
-    // return item.isSvg
-    //     ? PhotoViewGalleryPageOptions.customChild(
-    //   child: Container(
-    //     width: 300,
-    //     height: 300,
-    //     child: Icon(Icons.abc)
-    //   ),
-    //   childSize: const Size(300, 300),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // )
-    //     : PhotoViewGalleryPageOptions(
-    //   imageProvider: AssetImage(item.resource),
-    //   initialScale: PhotoViewComputedScale.contained,
-    //   minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
-    //   maxScale: PhotoViewComputedScale.covered * 4.1,
-    //   heroAttributes: PhotoViewHeroAttributes(tag: item.id),
-    // );
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_view/photo_view.dart';
@@ -9,7 +7,6 @@ import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/GetAssetEntityPath.dart';
-
 
 
 class SavedMediaPhotoViewWrapper extends StatefulWidget {
@@ -144,23 +141,9 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
     // print('currentFilePath ${currentFilePath} --> ${currentIndex} --> index = ${index}');
 
     return PhotoViewGalleryPageOptions.customChild(
-    //   // child: ImageView(imagePath: filePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
-    //   child: item.type == AssetType.video ?
-    // VideoView(videoPath:  currentFilePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
-    //     :
-    // ImageView(imagePath: currentFilePath)//'/storage/emulated/0/${item.relativePath}/${item.title}')
-
       child:  FutureBuilder<dynamic>(
         future: getAssetEntityPath(item),//item.type == AssetType.video ? video.thumbnailData : video.file, // Fetch thumbnail data
         builder: (context, snapshot) {
-
-          // if (snapshot.connectionState == ConnectionState.waiting ||
-          //     !snapshot.hasData) {
-          //   return CircularProgressIndicator();
-          //   // return Container(
-          //   //   color: Colors.transparent, // Fully transparent
-          //   // );
-          // }
 
           if (snapshot.hasError) {
             // If there was an error, show an error widget
@@ -178,12 +161,6 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
            ImageView(imagePath: snapshot.data, isLoading: snapshot.hasData ? false : true);
         }
       ),
-
-
-      // !widget.isVideoView ?
-      // ImageView(imagePath: item.relativePath)
-      //       :
-      // VideoView(videoPath:  item.path),
     );
   }
 }

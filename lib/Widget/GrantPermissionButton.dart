@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 
@@ -8,13 +6,7 @@ Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGr
 
   void refreshApp(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.isFirst);
-    // Navigator.of(context).push(SplashScreen());
-    // Navigator.(
-    //   context,
-    //   CupertinoPageRoute(
-    //       builder: (_) => SplashScreen(),
-    //   ),
-    // );
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const SplashScreen()),

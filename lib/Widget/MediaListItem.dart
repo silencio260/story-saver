@@ -3,8 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Screens/BottomNavPages/Images/Image_view.dart';
-import 'package:storysaver/Screens/BottomNavPages/Video/video_view.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
@@ -144,15 +142,6 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                   ),
                 );
               }
-
-              // print('--+++--- ' +
-              //     data.toString());
-              // print(
-              //     data);
-              // print('--+++--- ' +
-              //     data.path);
-              // print(
-              //     '--+++ ' + snapshot.data.toString());
             },
             child: Stack(
               children: [
@@ -199,54 +188,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                   ),
               ],
             ),
-
-            // Container(
-            //   decoration: BoxDecoration(
-            //       image: DecorationImage(
-            //         image: FileImage(File(data.path)),
-            //         fit: BoxFit.cover,
-            //       ),
-            //       color: const Color.fromARGB(
-            //           255, 255, 255, 255),
-            //       borderRadius: BorderRadius.circular(2)),
-            // ),
           );
         });
-
-    FutureBuilder<bool>(
-      future: _future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return ListTile(
-            title: Text("Loading..."),
-            trailing: CircularProgressIndicator(),
-          );
-        } else if (snapshot.hasError) {
-          return ListTile(
-            title: Text("Error loading"),
-          );
-        } else if (snapshot.hasData) {
-          isAlreadySaved = snapshot.data!; // Initialize the state
-          return ListTile(
-            title: Text(widget.mediaPath),
-            trailing: IconButton(
-              icon: Icon(
-                Icons.download,
-                color: isAlreadySaved
-                    ? Colors.green // Change color if saved
-                    : Colors.grey,
-              ),
-              onPressed: () {
-                _toggleSavedStatus(); // Toggle and rebuild
-              },
-            ),
-          );
-        } else {
-          return ListTile(
-            title: Text("No data available"),
-          );
-        }
-      },
-    );
   }
 }

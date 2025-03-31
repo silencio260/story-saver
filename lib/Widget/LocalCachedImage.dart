@@ -20,7 +20,6 @@ class LocalImageCache extends StatelessWidget {
           children: [
             Icon(Icons.broken_image,
                 color: Colors.grey),
-            // Text("Image not available", style: TextStyle(color: Colors.grey),)
           ],
         ),
       );
@@ -39,7 +38,6 @@ class LocalImageCache extends StatelessWidget {
               children: [
                 Icon(Icons.broken_image,
                     color: Colors.grey),
-                // Text("Image not available", style: TextStyle(color: Colors.grey),)
               ],
             ),
           );
