@@ -4,17 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_isolate/flutter_isolate.dart';
-import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:storysaver/Constants/constant.dart';
-import 'package:storysaver/Utils/getThumbnails.dart';
-import 'package:video_compress/video_compress.dart';
 
-// import 'package:flutter_isolate/flutter_isolate.dart';
-// import 'package:flutter/foundation.dart';  // For Isolates
 
 class GetSavedMediaProvider extends ChangeNotifier {
   bool _isFolderAvailable = false;
@@ -68,51 +60,21 @@ class GetSavedMediaProvider extends ChangeNotifier {
     }
   }
 
-  // Fetch WhatsApp Status files based on extension
-  // void loadFiles(String ext) async {
-  //   if (await getStoragePermission() == true) {
-  //     final directory = Directory(AppConstants.WHATSAPP_PATH);
-  //     if (directory.existsSync()) {
-  //       final items = directory.listSync();
-  //
-  //
-  //       // Sort by last modified time (newest first)
-  //       // items.sort((a, b) {
-  //       //   return File(b.path).lastModifiedSync().compareTo(File(a.path).lastModifiedSync());
-  //       // });
-  //
-  //       if (ext == ".mp4") {
-  //         _getVideos = items.where((element) => element.path.endsWith(ext)).toList();
-  //         notifyListeners();
-  //       } else {
-  //         _getImages = items.where((element) => element.path.endsWith('.jpg')).toList();
-  //         notifyListeners();
-  //       }
-  //     }
-  //     _isWhatsappAvailable = true;
-  //     notifyListeners();
-  //   }
-  // }
+
+
 
   void removeFrom(int index) {
 
     _getMediaFile.removeAt(index);
-    // _isLoading = true;
 
     notifyListeners(); // Notify UI listeners
   }
 
   void addNewMediaToTop(AssetEntity newMedia) {
-    // _isLoading = true;
-    // notifyListeners();
-    // _getMediaFile.insert(0, newMedia); // Insert at the top of the list
-    // final oldData = _getMediaFile;
-    // _getMediaFile = [];
-    // notifyListeners();
+
     _prevFirstItem = _getMediaFile[0];
     _buildCachedFirstItem = true;
     _getMediaFile = [newMedia, ..._getMediaFile];
-    // _isLoading = false;
 
     notifyListeners(); // Notify UI listeners
   }
@@ -142,16 +104,13 @@ class GetSavedMediaProvider extends ChangeNotifier {
   Future<void> loadVideosWithIsolate() async {
     _isLoading = false;
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   notifyListeners();
-    // });
 
-    print('---------------***--- step 1');
+    // print('---------------***--- step 1');
 
     try {
       final receivePort = ReceivePort();
       var rootToken = RootIsolateToken.instance!;
-      print('---------------***--- step 1.1 ${receivePort.sendPort}');
+      // print('---------------***--- step 1.1 ${receivePort.sendPort}');
       final isolate = await Isolate.spawn(
         _fetchInBatchIsolate,
         {
@@ -165,7 +124,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       // Listening to the messages from the isolate
       receivePort.listen((message) {
-        print('---------------***--- step 4');
+        // print('---------------***--- step 4');
         if (message == 'done') {
           print('Isolate finished processing.');
           receivePort.close(); // Close the port when done
@@ -186,61 +145,8 @@ class GetSavedMediaProvider extends ChangeNotifier {
       print('Call Isolate.spawn $e, $st');
     }
 
-    // try {
-    //   print('---------------***--- step 1.1.1');
-    //   // if(receivePort.sendPort != null)
-    //     await Isolate.spawn(
-    //     isolateFunction,
-    //         {'sendPort': receivePort.sendPort}, // Pass the SendPort to the isolate
-    //   );
-    //   print('---------------***--- step 1.1.2');
-    // } catch (e, st) {
-    //   print('Call Isolate.spawn $e, $st');
-    // }
+    // print('object_ok');
 
-    // await FlutterIsolate.spawn(
-    //   isolateFunction,
-    //   [receivePort.sendPort], // Pass the SendPort to the isolate
-    // );
-    // await FlutterIsolate.spawn(_generateThumbnailTask, [videoPath, receivePort.sendPort]);
-
-    // Clean up when you're done
-    // isolate.kill(priority: Isolate.immediate);
-    // receivePort.close();
-
-    // for (int i = 0; i < totalAssets; i += batchSize) {
-    //   // Calculate the end index for the current batch
-    //   int end = (i + batchSize) > totalAssets ? totalAssets : (i + batchSize);
-    //
-    //   // Fetch assets in the current batch
-    //   final List<AssetEntity> videos = await specificAlbum.getAssetListRange(
-    //     start: i,
-    //     end: end,
-    //   );
-    //
-    //   print('Fetched ${videos.length} items in batch from $i to $end');
-    //
-    //   // Add fetched videos to the media list
-    //   _getMediaFile.addAll(videos);
-    //   notifyListeners();
-    // }
-
-    print('object_ok');
-
-    // print('provider assetEntityCount ${await specificAlbum.assetCountAsync}');
-    //
-    // final List<AssetEntity> videos = await specificAlbum.getAssetListRange(
-    //   start: 0,
-    //   end: 1000//await specificAlbum.assetCountAsync, // Number of videos to fetch
-    // );
-    //
-    // print('in loadVideos $videos');
-    //
-    // _getMediaFile = videos;
-    // print('_getMediaFile $_getMediaFile');
-    // notifyListeners();
-    //
-    // print('end of loadAllVideos');
 
     _isLoading = false;
     notifyListeners();
@@ -263,12 +169,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
         // type: RequestType.fromTypes([RequestType.image]),
       );
 
-      // for (final AssetPathEntity album in videoAlbums) {
-      //
-      //   print(album.name);
-      // }
-
-      print('---------------***--- step 2.3');
+      // print('---------------***--- step 2.3');
 
       if (videoAlbums.isNotEmpty) {
         final specificAlbum = videoAlbums.firstWhere(
@@ -323,19 +224,12 @@ class GetSavedMediaProvider extends ChangeNotifier {
   Future<void> loadVideos() async {
     final permission = await PhotoManager.requestPermissionExtend();
 
-    // _isLoading = false;
-    // notifyListeners();
-
     // Fetch all video albums
     final List<AssetPathEntity> videoAlbums =
         await PhotoManager.getAssetPathList(
       type: RequestType.video, // Only fetch videos
     );
 
-    // for (final AssetPathEntity album in videoAlbums) {
-    //
-    //   print(album.name);
-    // }
 
     if (videoAlbums.isNotEmpty) {
       final specificAlbum = videoAlbums.firstWhere(
@@ -358,9 +252,6 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       print('end of loadAllVideos');
     }
-
-    // _isLoading = false;
-    // notifyListeners();
 
     print('end of savedMediaProvide');
   }
@@ -385,18 +276,6 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
       print('provider assetEntityCount ${await specificAlbum.assetCountAsync}');
 
-      // final List<AssetEntity> videos = await specificAlbum.getAssetListRange(
-      //   start: 0,
-      //   end: await specificAlbum.assetCountAsync, // Number of videos to fetch
-      // );
-      //
-      // print('in loadVideos $videos');
-      //
-      // _getMediaFile = videos;
-      // print('_getMediaFile $_getMediaFile');
-      // notifyListeners();
-      //
-      // print('end of loadAllVideos');
 
       ///////////////
       final int totalAssets = await specificAlbum.assetCountAsync;
@@ -481,19 +360,19 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
     final int endIndex = checkRemainingAssetCount;
 
-    print('count of _loadAlbumStartIndex -> $_loadAlbumStartIndex');
-    print('count of startIndex -> $startIndex');
-    print('count of _loadAlbumSegmentBatchSize -> $_loadAlbumSegmentBatchSize');
-    print('count of endIndex -> $endIndex');
-    print('count of totalCount -> $totalAssets');
-    print('count of _nextLoadTrigger -> $_nextLoadTrigger');
-    print('count of _numLoadedAssets -> $_numLoadedAssets');
+    // print('count of _loadAlbumStartIndex -> $_loadAlbumStartIndex');
+    // print('count of startIndex -> $startIndex');
+    // print('count of _loadAlbumSegmentBatchSize -> $_loadAlbumSegmentBatchSize');
+    // print('count of endIndex -> $endIndex');
+    // print('count of totalCount -> $totalAssets');
+    // print('count of _nextLoadTrigger -> $_nextLoadTrigger');
+    // print('count of _numLoadedAssets -> $_numLoadedAssets');
 
     if(_numLoadedAssets < totalAssets) {
       _numLoadedAssets += _loadAlbumSegmentBatchSize;
       notifyListeners();
-      print('inside LoadMedia _numLoadedAssets =  $_numLoadedAssets totalAssets = $totalAssets');
-      print('inside LoadMedia_2 startIndex =  $startIndex endIndex =  $endIndex checkRemainingAssetCount = $checkRemainingAssetCount');
+      // print('inside LoadMedia _numLoadedAssets =  $_numLoadedAssets totalAssets = $totalAssets');
+      // print('inside LoadMedia_2 startIndex =  $startIndex endIndex =  $endIndex checkRemainingAssetCount = $checkRemainingAssetCount');
       for (int i = startIndex; i < endIndex; i += batchSize) {
         // Calculate the end index for the current batch
         int end = (i + batchSize) > totalAssets ? totalAssets : (i + batchSize);
@@ -504,19 +383,15 @@ class GetSavedMediaProvider extends ChangeNotifier {
           end: end,
         );
 
-        print('Fetched ${videos.length} items in batch from $i to $end');
+        // print('Fetched ${videos.length} items in batch from $i to $end');
 
-        // Add fetched videos to the media list
-        // if(_getMediaFile.length < totalAssets)
         _getMediaFile = updateMediaFiles(_getMediaFile, videos); //.addAll(videos);
-        // if ((_loadAlbumStartIndex + _loadAlbumSegmentBatchSize) < totalAssets) {
-        //   _loadAlbumStartIndex += _loadAlbumSegmentBatchSize;
-        // }
+
 
         notifyListeners();
       }
-      print('inside LoadMedia _getMediaFile = ${_getMediaFile.length}');
-      print('inside LoadMedia start = $startIndex | end = $endIndex');
+      // print('inside LoadMedia _getMediaFile = ${_getMediaFile.length}');
+      // print('inside LoadMedia start = $startIndex | end = $endIndex');
 
       _loadAlbumStartIndex += _loadAlbumSegmentBatchSize;
 
@@ -528,7 +403,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
     _isProcessingMedia = false;
     notifyListeners();
 
-    print('end of savedMediaProvide');
+    // print('end of savedMediaProvide');
   }
 }
 
