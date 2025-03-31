@@ -1,18 +1,12 @@
 import 'dart:io';
-import 'dart:math';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
-import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
-import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
@@ -64,9 +58,6 @@ class _ImageViewState extends State<ImageView> {
   void saveMedia () async {
     if(!widget.isLoading)
     _toggleSavedStatus();
-    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.jpg');
-    // Provider.of<GetStatusProvider>(context, listen: false).getStatus('.mp4');
-    // context.read<GetStatusProvider>(). preventDuplicateAddition();
   }
 
   void _shareMedia(BuildContext context){
@@ -138,18 +129,12 @@ class _ImageViewState extends State<ImageView> {
                     break;
                   case 1:
                     print("download");
-
                     saveMedia();
-                    // saveStatus(context, widget.imagePath!);
-                    // ImageGallerySaver.saveFile(widget.imagePath!).then((value) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //       const SnackBar(content: Text("Image Saved")));
-                    // });
                     break;
+
                   case 2:
                     _shareMedia(context);
                     break;
-
 
                   case 3:
                     _shareMediaToWhatsapp(context);
