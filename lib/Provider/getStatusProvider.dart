@@ -1,17 +1,8 @@
 import 'dart:io';
-import 'dart:isolate';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
-// import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
-import 'package:video_compress/video_compress.dart';
-
-import 'package:flutter_isolate/flutter_isolate.dart';
 import 'package:flutter/foundation.dart'; // For Isolates
 
 class GetStatusProvider extends ChangeNotifier {
