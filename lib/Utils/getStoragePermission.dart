@@ -32,5 +32,4 @@ Future<bool> checkIfWeHaveStoragePermission() async {
   }
 
   return false;
-
 }

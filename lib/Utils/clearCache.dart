@@ -1,6 +1,3 @@
-
-
-
 import 'package:path_provider/path_provider.dart';
 
 Future<void> clearOldCachedFiles() async {

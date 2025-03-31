@@ -1,7 +1,4 @@
-
-
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 bool checkFileExists(String? filePath)  {

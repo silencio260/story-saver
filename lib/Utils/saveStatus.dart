@@ -1,20 +1,11 @@
 import 'dart:io';
-import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:media_store_plus/media_store_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/deviceDirectory.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
-import 'package:media_scanner/media_scanner.dart';
-
-import 'package:permission_handler/permission_handler.dart';
-
 
 
 
@@ -105,12 +96,8 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     // Step 5: Handle success or failure
     if (await savedMedia.exists == true) {
       // Update the provider with the new media
-      // final mediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);
-      // mediaProvider.preventDuplicateAddition(savedMedia);
-      // mediaProvider.addNewMediaToTop(savedMedia);
       context.read<GetSavedMediaProvider>().preventDuplicateAddition(savedMedia);
       context.read<GetSavedMediaProvider>().addNewMediaToTop(savedMedia);
-      // print("mediaProvider save ${await mediaProvider.getMediaFile[0].relativePath}");
 
       // Notify the user of success
       String successMessage = fileExtension.startsWith('mp4') || fileExtension.startsWith('mov')
@@ -162,7 +149,6 @@ Future<void> deleteSaveStatus(BuildContext context, AssetEntity entity) async {
       SnackBar(content: Text("Error deleting file: $e")),
     );
   }
-
 
 }
 
