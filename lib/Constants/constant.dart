@@ -33,9 +33,4 @@ class AppConstants {
   
   static String SAVED_STORY_PATH =  (const String.fromEnvironment("founders_version ") == "true") ? DEVELOPER_SPECIAL_SAVED_STORY_PATH :
   USER_SAVED_STORY_PATH;
-  // static String DEVELOPER_SPECIAL_SAVED_STORY_PATH =
-  //     "/storage/emulated/0/Pictures/Story Saver/";
-  //
-  // static String SAVED_STORY_PATH =
-  //     "/storage/emulated/0/Pictures/Saved Statuses/";
 }
