@@ -9,14 +9,14 @@ import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Widget/SavedMediaPhotoViewWrapper.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
-class SavedMediaListView extends StatefulWidget {
-  const SavedMediaListView({Key? key}) : super(key: key);
+class SavedMediaPage extends StatefulWidget {
+  const SavedMediaPage({Key? key}) : super(key: key);
 
   @override
-  _SavedMediaListViewState createState() => _SavedMediaListViewState();
+  _SavedMediaPageState createState() => _SavedMediaPageState();
 }
 
-class _SavedMediaListViewState extends State<SavedMediaListView> with AutomaticKeepAliveClientMixin {
+class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAliveClientMixin {
   List<AssetEntity> videoAssets = [];
   bool isLoading = true;
   int reBuildCount = 0;
@@ -41,7 +41,7 @@ class _SavedMediaListViewState extends State<SavedMediaListView> with AutomaticK
     super.initState();
     // loadVideos();
 
-    // print("SavedMediaListView initState");
+    // print("SavedMediaPage initState");
   }
 
   Future<void> clearOldCachedFiles() async {
