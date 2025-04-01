@@ -70,17 +70,17 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
               onPageChanged: onPageChanged,
               scrollDirection: widget.scrollDirection,
             ),
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                "Image ${currentIndex + 1}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17.0,
-                  decoration: null,
-                ),
-              ),
-            )
+            // Container(
+            //   padding: const EdgeInsets.all(20.0),
+            //   child: Text(
+            //     "Image ${currentIndex + 1}",
+            //     style: const TextStyle(
+            //       color: Colors.white,
+            //       fontSize: 17.0,
+            //       decoration: null,
+            //     ),
+            //   ),
+            // )
           ],
         ),
       ),
