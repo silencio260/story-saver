@@ -63,7 +63,7 @@ class SavedMediaManager {
   }
 
   /// Delete media manually
-  Future<void> deleteMedia(String mediaPath) async {
+  Future<void> deleteMediaFromCache(String mediaPath) async {
     final prefs = await SharedPreferences.getInstance();
     final savedMedia = prefs.getString(_mediaKey);
 
@@ -80,7 +80,7 @@ class SavedMediaManager {
 
   /// Remove expired media from shared preferences
   Future<void> _removeExpiredMedia(String mediaPath) async {
-    await deleteMedia(mediaPath);
+    await deleteMediaFromCache(mediaPath);
   }
 
   /// Delete all expired media from shared preferences

@@ -52,7 +52,11 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
 
     // Handle the click event here
     print("Icon tapped!");
-    final result = await mediaManager.saveMedia(widget.mediaPath);
+    final result = await mediaManager.saveMedia(
+        widget.videoFilePath != null ?
+        widget.videoFilePath! :
+        widget.mediaPath)
+    ;
 
     saveStatus(context, widget.mediaPath);
 
@@ -151,26 +155,45 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                   ),
                 ),
                 Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    color: Color.fromRGBO(0, 0, 0, 0.3),
+                    width: 200,
+                    height: 50,
+                    // child: Placeholder(),
+                    // child: Text('data'),
+                  ),
+                ),
+                Positioned(
                   // top: 10, // Adjust the position as needed
-                  right: 10,
-                  bottom: 10,
-                  child: GestureDetector(
-                    onTap: () async {
-                      _toggleSavedStatus();
-                    },
-                    child: Container(
-                      // color: isAlreadySaved ? Colors.green : Colors.grey,
-                      width: 40,
-                      height: 40,
-                      child: !isAlreadySaved ? Icon(
-                        Icons.download, // Replace with your desired icon
-                        color: const Color.fromARGB(255, 236, 235, 230),
-                        size: 20,
-                      ) :
-                      Icon(
-                        Icons.done_all, // Replace with your desired icon
-                        color:  Colors.green,
-                        size: 20,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    // color: Colors.blue,//Color.fromRGBO(0, 0, 0, 0.3),
+                    width: 80,
+                    child: GestureDetector(
+                      onTap: () async {
+                        _toggleSavedStatus();
+                      },
+                      child: Container(
+                        // color: Colors.red,
+                        alignment: Alignment.bottomRight,
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: 50, maxHeight: 50),
+                          width: 50,
+                          height: 50,
+                          child: !isAlreadySaved ? Icon(
+                            Icons.download, // Replace with your desired icon
+                            color: const Color.fromARGB(255, 236, 235, 230),
+                            size: 20,
+                          ) :
+                          Icon(
+                            Icons.done_all, // Replace with your desired icon
+                            color:  Colors.green,
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -192,3 +215,4 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
         });
   }
 }
+

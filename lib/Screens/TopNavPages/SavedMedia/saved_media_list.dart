@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/TopNavPages//SavedMedia/Widget/GridMediaItems.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/SavedMediaPhotoViewWrapper.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -104,6 +107,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
               ),
               TextButton(
                 onPressed: () {
+                  // _deleteMedia(context, file.getMediaFile[index])
                   deleteMedia(fileName, file, index);
                   Navigator.popUntil(dialogContext, (route) => route.isFirst);
                 },
@@ -116,11 +120,20 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     });
   }
 
-  void deleteMedia(String fileName, GetSavedMediaProvider file, int index) {
+  void deleteMedia(String fileName, GetSavedMediaProvider file, int index) async {
 
-    mediaManager.deleteMedia(fileName);
+    File? fileToDelete = await file.getMediaFile[index].file;
+    String? filePath = fileToDelete?.path;
+    // print('delete_path ${filePath?.path}');
+
+    deleteSaveStatusFromDevice(context, filePath!);
+    mediaManager.deleteMediaFromCache(fileName);
     file.removeFrom(index);
   }
+
+  // void _deleteMedia(BuildContext context, AssetEntity entity){
+  //   deleteSaveStatusWithPhotoManager(context, entity);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +239,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
                                 index
                               ),
 
+                              // _deleteMedia(context, file.getMediaFile[index])
                               // mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
                               // file.removeFrom(index)
                             },

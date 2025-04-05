@@ -126,7 +126,8 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                     future: file.generateThumbnailFromListAllVideosForFutureBuilder(data.path),
                     builder: (context, snapshot) {
 
-                      print(snapshot.data.toString());
+                      print('video File path - snapshot.data.toString() -> ${snapshot.data.toString()}'
+                          ' - videoFilePath -> ${data.path}');
 
                       return
                         snapshot.hasData
