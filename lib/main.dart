@@ -39,6 +39,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.light(
+            primary: Colors.green, // Set the custom primary color
+          ),
+        ),
         navigatorObservers: [routeObserver],
         home: const SplashScreen(),
       ),
