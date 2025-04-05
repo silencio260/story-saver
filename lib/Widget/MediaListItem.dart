@@ -157,12 +157,15 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                 Positioned(
                   right: 0,
                   bottom: 0,
-                  child: Container(
-                    color: Color.fromRGBO(0, 0, 0, 0.3),
-                    width: 200,
-                    height: 50,
-                    // child: Placeholder(),
-                    // child: Text('data'),
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      color: Color.fromRGBO(0, 0, 0, 0.3),
+                      width: 200,
+                      height: 50,
+                      // child: Placeholder(),
+                      // child: Text('data'),
+                    ),
                   ),
                 ),
                 Positioned(
