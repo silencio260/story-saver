@@ -1,18 +1,29 @@
 import 'dart:io';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
+import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoView extends StatefulWidget {
   final String? videoPath;
   final bool isLoading;
-  const VideoView({Key? key, this.videoPath, this.isLoading = false}) : super(key: key);
+  final isSavedMedia;
+  final int? currentIndex;
+
+  const VideoView({
+    Key? key, this.videoPath,
+    this.isLoading = false,
+    this.isSavedMedia = false,
+    this.currentIndex = null,
+  }) : super(key: key);
 
   @override
   State<VideoView> createState() => _VideoViewState();
@@ -24,6 +35,7 @@ class _VideoViewState extends State<VideoView> {
     Icon(Icons.download),
     Icon(Icons.share),
     Icon(Icons.repeat_outlined),
+    Icon(Icons.delete),
   ];
   final mediaManager = SavedMediaManager();
 
@@ -162,35 +174,55 @@ class _VideoViewState extends State<VideoView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
-            return FloatingActionButton(
-              foregroundColor: Colors.white,
-              backgroundColor: const Color( CustomColors.ButtonColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(70), // Adjust radius here
-              ),
-              elevation: 0,
-              heroTag: '$index',
-              onPressed: () {
-                switch (index) {
-                  case 0:
-                    Navigator.pop(context);
-                    break;
-                  case 1:
-                    print("Save");
-                    saveMedia();
-                    break;
+            if((widget.isSavedMedia == false && index != 4) ||
+            (widget.isSavedMedia == true && index != 1)
+            ) {
+              return FloatingActionButton(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(CustomColors.ButtonColor),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(70), // Adjust radius here
+                ),
+                elevation: 0,
+                heroTag: '$index',
+                onPressed: () {
+                  switch (index) {
+                    case 0:
+                      Navigator.pop(context);
+                      break;
+                    case 1:
+                      print("Save");
+                      saveMedia();
+                      break;
 
-                  case 2:
-                    _shareMedia(context);
-                    break;
+                    case 2:
+                      _shareMedia(context);
+                      break;
 
-                  case 3:
-                   _shareMediaToWhatsapp(context);
-                    break;
-                }
-              },
-              child: buttonsList[index],
-            );
+                    case 3:
+                      _shareMediaToWhatsapp(context);
+                      break;
+
+                    case 4:
+                      if(widget.isSavedMedia && widget.currentIndex != null) {
+                        final mediaProvider = Provider.of<
+                            GetSavedMediaProvider>(context, listen: false);
+                        deleteSavedMeidaUtils()
+                            .confirmFileDeleteDialog(
+                          context,
+                          'Are you sure you want to delete?',
+                          mediaProvider,
+                          widget.currentIndex!,
+                        );
+                      }
+                      break;
+                  }
+                },
+                child: buttonsList[index],
+              );
+            }
+            else
+              return Container(child: Text(''),);
           }),
         ),
       ),
