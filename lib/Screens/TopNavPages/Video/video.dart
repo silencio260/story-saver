@@ -26,9 +26,9 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     // TODO: implement initState
     super.initState();
 
-    checkIfWeHaveStoragePermission().then((value) {
+    checkForStoragePermissionOnly().then((value) {
       setState(() {
-        print('hasPermission - $value');
+        print('hasPermission video - $value');
         hasPermission = value;
       });
     });

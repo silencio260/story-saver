@@ -262,7 +262,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
                 );
               },
           )
-              : Center(child: Text("No Videos Found"));
+              : Center(child: Text("No Saved Media Found"));
         }
       ),
     );

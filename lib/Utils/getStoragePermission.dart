@@ -33,3 +33,15 @@ Future<bool> checkIfWeHaveStoragePermission() async {
 
   return false;
 }
+
+Future<bool> checkForStoragePermissionOnly() async {
+
+  final status = await Permission.storage.request();
+  if (status.isGranted) {
+    return true;
+  }
+  else {
+
+      return false;
+  }
+}
