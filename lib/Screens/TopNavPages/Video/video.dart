@@ -26,14 +26,6 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     // TODO: implement initState
     super.initState();
 
-    checkForStoragePermissionOnly().then((value) {
-      setState(() {
-        print('hasPermission video - $value');
-        hasPermission = value;
-      });
-    });
-
-
     print('init in video ');
     clearOldCachedFiles();
     print('end of init video ');
@@ -43,7 +35,6 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   String _counter = 'video';
   final String? title = 'vid';
-  bool hasPermission = false;
 
   RefreshController _refreshController =
   RefreshController(initialRefresh: false);
@@ -78,17 +69,7 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     return Scaffold(
         body: Consumer<GetStatusProvider>(builder: (context, file, child) {
 
-          return hasPermission != true ?
-          GrantPermissionButton(
-              context,
-              onPermissionGranted: () {
-                setState(() {
-                  hasPermission = true;
-                });
-              }
-          )
-          :
-       file.isWhatsappAvailable == false
+      return file.isWhatsappAvailable == false
           ? const Center(
               child: Text('Whatsapp not available'),
             )
