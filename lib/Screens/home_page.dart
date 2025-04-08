@@ -40,7 +40,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  List<Widget> pages = const [ImageHomePage(), VideoHomePage(), SavedMediaPage()];
+  List<Widget> pages = const [
+    ImageHomePage(),
+    VideoHomePage(),
+    SavedMediaPage()
+  ];
 
   Future<bool?> _showExitDialog(BuildContext context) async {
     return showDialog<bool>(

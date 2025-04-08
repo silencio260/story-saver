@@ -43,14 +43,12 @@ class _ImageViewState extends State<ImageView> {
   void initState() {
     super.initState();
 
-    if(!widget.isLoading)
-    if(checkFileExists(widget.imagePath!) == false)
+    if (!widget.isLoading) if (checkFileExists(widget.imagePath!) == false)
       showErrorDialog(context, "File does not exists");
   }
 
   void _toggleSavedStatus() async {
-
-    if(checkFileExists(widget.imagePath!) == false){
+    if (checkFileExists(widget.imagePath!) == false) {
       showErrorDialog(context, "Error: Files does not exist");
       return;
     }
@@ -64,31 +62,30 @@ class _ImageViewState extends State<ImageView> {
     // isAlreadySaved = true;
     print('Aready Saved');
 
-
     // _showErrorDialog("Status Saved");
   }
 
-  void saveMedia () async {
-    if(!widget.isLoading)
-    _toggleSavedStatus();
+  void saveMedia() async {
+    if (!widget.isLoading) _toggleSavedStatus();
   }
 
-  void _shareMedia(BuildContext context){
+  void _shareMedia(BuildContext context) {
     // print("share");
-    if(!widget.isLoading) {
+    if (!widget.isLoading) {
       Share.shareXFiles([XFile(widget.imagePath!)],
-          text: 'Shared From WhatsApp Story Saver').then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Image Sent")));
+              text: 'Shared From WhatsApp Story Saver')
+          .then((value) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Image Sent")));
       });
     }
   }
 
-  void _shareMediaToWhatsapp(BuildContext context){
-    if(!widget.isLoading) {
+  void _shareMediaToWhatsapp(BuildContext context) {
+    if (!widget.isLoading) {
       // print("share");
-      shareToWhatsApp('Shared From Status Saver', filePath: widget.imagePath!,
-          context: context);
+      shareToWhatsApp('Shared From Status Saver',
+          filePath: widget.imagePath!, context: context);
     }
   }
 
@@ -97,39 +94,34 @@ class _ImageViewState extends State<ImageView> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
-         // decoration: ShapeDecoration(color: Colors.red, shape: isEven),
+        // decoration: ShapeDecoration(color: Colors.red, shape: isEven),
         color: Colors.black,
-        constraints: BoxConstraints(
-        maxHeight: 700
+        constraints: BoxConstraints(maxHeight: 700),
+        child: widget.isLoading == true
+            ? Placeholder()
+            : PhotoView(
+                imageProvider: FileImage(File(widget.imagePath!)),
+                minScale: PhotoViewComputedScale.contained, // initial scale
+                maxScale: PhotoViewComputedScale.covered * 2, // maximum zoom in
+                initialScale:
+                    PhotoViewComputedScale.contained, // start at contained size
+                scaleStateController: PhotoViewScaleStateController(),
+                scaleStateCycle: (actual) {
+                  // Only allow zooming in
+                  if (actual == PhotoViewScaleState.initial) {
+                    return PhotoViewScaleState.zoomedIn;
+                  }
+                  return PhotoViewScaleState.initial;
+                },
+              ),
       ),
-   child:
-       widget.isLoading == true ?
-           Placeholder()
-           :
-      PhotoView(
-          imageProvider: FileImage(File(widget.imagePath!)),
-          minScale: PhotoViewComputedScale.contained,  // initial scale
-          maxScale: PhotoViewComputedScale.covered * 2,  // maximum zoom in
-          initialScale: PhotoViewComputedScale.contained,  // start at contained size
-          scaleStateController: PhotoViewScaleStateController(),
-          scaleStateCycle: (actual) {
-            // Only allow zooming in
-            if (actual == PhotoViewScaleState.initial) {
-              return PhotoViewScaleState.zoomedIn;
-            }
-            return PhotoViewScaleState.initial;
-          },
-        ),
-       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 70),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-
           children: List.generate(buttonsList.length, (index) {
-            if((widget.isSavedMedia == false && index != 4) ||
-                (widget.isSavedMedia == true && index != 1)
-            ){
+            if ((widget.isSavedMedia == false && index != 4) ||
+                (widget.isSavedMedia == true && index != 1)) {
               return FloatingActionButton(
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(CustomColors.ButtonColor),
@@ -157,15 +149,15 @@ class _ImageViewState extends State<ImageView> {
                       break;
 
                     case 4:
-                      if(widget.isSavedMedia && widget.currentIndex != null) {
-                        final mediaProvider = Provider.of<
-                            GetSavedMediaProvider>(context, listen: false);
-                        deleteSavedMeidaUtils()
-                            .confirmFileDeleteDialog(
-                            context,
-                            'Are you sure you want to delete?',
-                            mediaProvider,
-                            widget.currentIndex!,
+                      if (widget.isSavedMedia && widget.currentIndex != null) {
+                        final mediaProvider =
+                            Provider.of<GetSavedMediaProvider>(context,
+                                listen: false);
+                        deleteSavedMeidaUtils().confirmFileDeleteDialog(
+                          context,
+                          'Are you sure you want to delete?',
+                          mediaProvider,
+                          widget.currentIndex!,
                         );
                       }
                       break;
@@ -173,9 +165,10 @@ class _ImageViewState extends State<ImageView> {
                 },
                 child: buttonsList[index],
               );
-            }
-            else
-              return Container(child: Text(''),);
+            } else
+              return Container(
+                child: Text(''),
+              );
           }),
         ),
       ),

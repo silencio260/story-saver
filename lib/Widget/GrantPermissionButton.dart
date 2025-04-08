@@ -21,14 +21,14 @@ Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGr
     //works for android 11+
     final status = await getStoragePermission(); //await Permission.manageExternalStorage.request(); //await Permission.storage.request();
 
-    refreshApp(context);
-
 
     if (status == true) {
       onPermissionGranted?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Permission Granted ✅")),
       );
+
+      refreshApp(context);
 
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

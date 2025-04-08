@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/TopNavPages//SavedMedia/Widget/GridMediaItems.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
@@ -45,6 +46,13 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     // loadVideos();
 
     // print("SavedMediaPage initState");
+    final savedMediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);//.loadVMediaInStaggeredBatches();
+    // print("SavedMediaPage ${savedMediaProvider.getMediaFile.length}");
+    if(savedMediaProvider.getMediaFile.isEmpty){
+      // print('savedMediaProvider.getMediaFile.isNotEmpty 1');
+      savedMediaProvider.loadVMediaInStaggeredBatches();
+      // print('savedMediaProvider.getMediaFile.isNotEmpty 2 ${savedMediaProvider.getMediaFile.length}');
+    }
   }
 
   Future<void> clearOldCachedFiles() async {
@@ -141,7 +149,14 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     return Scaffold(
       // appBar: AppBar(title: Text("MediaStore Videos")),
       body: Consumer<GetSavedMediaProvider>(builder: (context, file, child) {
-          return file.isLoading
+
+        final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+        return permission.hasStoragePermission != true ?
+          const Center(
+            child: Text('No Storage Permission'),
+          )
+            : file.isLoading
               ? Center(child: CircularProgressIndicator())
               : file.getMediaFile.isNotEmpty
               ?

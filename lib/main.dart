@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/topNavProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Utils/globalNavigationKey.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 
@@ -37,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TopNavProvider()),
         ChangeNotifierProvider(create: (_) => GetStatusProvider()),
         ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
+        ChangeNotifierProvider(create: (_) => PermissionProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -46,6 +49,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         navigatorObservers: [routeObserver],
+        navigatorKey: myGlobalNavigatorKey,
         home: const SplashScreen(),
       ),
     );

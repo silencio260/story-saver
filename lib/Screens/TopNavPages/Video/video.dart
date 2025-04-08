@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
@@ -69,7 +70,14 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     return Scaffold(
         body: Consumer<GetStatusProvider>(builder: (context, file, child) {
 
-      return file.isWhatsappAvailable == false
+       final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+       return permission.hasStoragePermission != true ?
+         const Center(
+           child: Text('No Storage Permission'),
+         )
+       :
+        file.isWhatsappAvailable == false
           ? const Center(
               child: Text('Whatsapp not available'),
             )

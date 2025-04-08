@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Widget/GrantPermissionButton.dart';
@@ -25,6 +26,7 @@ class _ImageHomePageState extends State<ImageHomePage>
   void initState() {
     // TODO: implement initState
     super.initState();
+
     checkIfWeHaveStoragePermission().then((value) {
       setState(() {
         print('hasPermission - $value');
@@ -72,13 +74,14 @@ class _ImageHomePageState extends State<ImageHomePage>
     return Scaffold(
       body: Consumer<GetStatusProvider>(
         builder: (context, file, child) {
-          return hasPermission != true ?
+          final permission = Provider.of<PermissionProvider>(context, listen: false);
+          return permission.hasStoragePermission != true ?
             GrantPermissionButton(
                 context,
                 onPermissionGranted: () {
-                  setState(() {
-                    hasPermission = true;
-                  });
+                  // setState(() {
+                  //   hasPermission = true;
+                  // });
                 }
             )
             :
