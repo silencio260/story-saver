@@ -112,18 +112,18 @@ class _SavedMediaPhotoViewWrapperState extends State<SavedMediaPhotoViewWrapper>
               scrollDirection: widget.scrollDirection,
               // wantKeepAlive: true,
             ),
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                // "Image ${currentIndex + 1} - Files - ${widget!.file!.getMediaFile.length}",
-                "Image ${currentIndex + 1}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17.0,
-                  decoration: null,
-                ),
-              ),
-            )
+            // Container(
+            //   padding: const EdgeInsets.all(20.0),
+            //   child: Text(
+            //     // "Image ${currentIndex + 1} - Files - ${widget!.file!.getMediaFile.length}",
+            //     "Image ${currentIndex + 1}",
+            //     style: const TextStyle(
+            //       color: Colors.white,
+            //       fontSize: 17.0,
+            //       decoration: null,
+            //     ),
+            //   ),
+            // )
           ],
         ),
       ),
