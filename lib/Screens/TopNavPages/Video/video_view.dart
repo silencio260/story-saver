@@ -10,6 +10,7 @@ import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
+import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoView extends StatefulWidget {
@@ -111,12 +112,46 @@ class _VideoViewState extends State<VideoView> {
 
     await _videoPlayerController.initialize();
 
+    // Get video dimensions
+    // Get video dimensions
+    final videoWidth = _videoPlayerController.value.size.width;
+    final videoHeight = _videoPlayerController.value.size.height;
+
+    double aspectRatio = 1.0; // Default aspect ratio (fallback value)
+
+    // Check if video dimensions are valid
+    if (videoWidth > 0 && videoHeight > 0) {
+      aspectRatio = videoWidth / videoHeight;
+    } else {
+
+      MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(widget.videoPath!);
+
+      if (mediaInfo != null && mediaInfo.width != null && mediaInfo.height != null) {
+        double videoWidth = mediaInfo.width!.toDouble();
+        double videoHeight = mediaInfo.height!.toDouble();
+
+        if (videoWidth > 0 && videoHeight > 0) {
+          aspectRatio = videoHeight / videoWidth;
+        }
+      } else
+        print("Invalid video dimensions, using fallback aspect ratio.");
+    }
+
+    MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(widget.videoPath!);
+
+    // print('Aspect_Ratio : ${_videoPlayerController.value.aspectRatio}, '
+    //     'height ${videoHeight}, width ${videoWidth}'
+    //     ',size ${_videoPlayerController.value.size} || ${mediaInfo.width!.toDouble()} || '
+    //     '${mediaInfo.height!.toDouble()}, ${aspectRatio}');
+
+
     setState(() {
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,
         autoInitialize: true,
         autoPlay: true,
-        aspectRatio: _videoPlayerController.value.aspectRatio, // Fixed aspect ratio issue
+        aspectRatio: aspectRatio,//0.8,
+        // aspectRatio: _videoPlayerController.value.aspectRatio, // Fixed aspect ratio issue
         materialProgressColors: ChewieProgressColors(
           playedColor: const Color(CustomColors.ButtonColor),
           handleColor: const Color(CustomColors.ButtonColor),
@@ -130,6 +165,7 @@ class _VideoViewState extends State<VideoView> {
         },
       );
     });
+
   }
 
 
