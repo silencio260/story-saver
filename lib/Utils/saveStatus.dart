@@ -6,6 +6,7 @@ import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/deviceDirectory.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
+import 'package:media_scanner/media_scanner.dart';
 
 
 
@@ -67,7 +68,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     String fileExtension = fileName.split('.').last.toLowerCase();
     AssetEntity? savedMedia;
     var relativeFilePath = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
-    print('relativeFilePath2 ${relativeFilePath}');
+    print('relativeFilePath2 ${relativeFilePath} ${fileName} ${filePath}');
 
 
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic'].contains(fileExtension)) {
@@ -85,6 +86,20 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
         title: fileName,
         relativePath: relativeFilePath
       );
+
+      // final MediaInfo mediaInfo = MediaInf();
+
+      // if (await savedMedia.videoDuration == 0) {
+      //   File? savedFile = await savedMedia.file;
+      //
+      //   final length = await savedFile?.length();
+      //   // if (length! < 1000) { // adjust threshold if needed
+      //     print("Likely broken or incomplete video.");
+      //   // }
+      //
+      //   await MediaScanner.loadMedia(path: savedFile?.path ?? filePath);
+      // }
+
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Unsupported file format.")),
@@ -144,7 +159,9 @@ Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath) a
     if (originalFile.existsSync()) {
       // ✅ File already exists, delete it
       print('File Exist ${originalFile.path}');
+      final String filePath = originalFile.path;
       originalFile.deleteSync();
+      await MediaScanner.loadMedia(path: filePath);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Media Successfully Deleted")),
@@ -162,33 +179,6 @@ Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath) a
     );
   }
 
-
-
-  // try{
-  //
-  //   final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-  //   PhotoManager.clearFileCache();
-  //
-  //   print("Result of deleting media ${result}");
-  //
-  //
-  //   if (result.isNotEmpty) {
-  //     print("Media deleted successfully");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Media Successfully Deleted")),
-  //     );
-  //   } else {
-  //     print("Failed to delete media");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Failed to delete file")),
-  //     );
-  //   }
-  //
-  // }catch(e) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(content: Text("Error deleting file: $e")),
-  //   );
-  // }
 }
 
 

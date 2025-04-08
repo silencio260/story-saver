@@ -122,8 +122,8 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                         snapshot.hasData
                           ?
                        MediaListItem(currentIndex: index, mediaPath: snapshot.data.toString(), isVideo: true, videoFilePath: data.path)
-
-                      : Center(
+                      :
+                        Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

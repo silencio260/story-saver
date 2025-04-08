@@ -55,10 +55,15 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
     final result = await mediaManager.saveMedia(
         widget.videoFilePath != null ?
         widget.videoFilePath! :
-        widget.mediaPath)
-    ;
+        widget.mediaPath,
+    );
 
-    saveStatus(context, widget.mediaPath);
+
+    saveStatus(context,
+        widget.isVideo == true ?
+        widget.videoFilePath! :
+        widget.mediaPath
+    );
 
     // isAlreadySaved = true;
     print('Aready Saved');
