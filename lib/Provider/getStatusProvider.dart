@@ -56,22 +56,17 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
 
     if (await getStoragePermission() == true) {
+
+      List<FileSystemEntity> allStatus = [];
+
       for (final folder in AppConstants.WHATSAPP_PATH_LIST) {
+        print('------ Folder -> ${folder}');
         final directory = Directory(folder);
         if (directory.existsSync()) {
           final items = directory.listSync();
 
           // Sort by last modified time (newest first)
-          items.sort((a, b) {
-            return File(b.path)
-                .lastModifiedSync()
-                .compareTo(File(a.path).lastModifiedSync());
-          });
-
-          _getVideos =
-              items.where((element) => element.path.endsWith('.mp4')).toList();
-          _getImages =
-              items.where((element) => element.path.endsWith('.jpg')).toList();
+          allStatus.addAll(items);
 
           // final fakeFileMP = File('/path/to/fake_file.mp4');
           // _getVideos.insert(0, fakeFileMP);
@@ -79,8 +74,20 @@ class GetStatusProvider extends ChangeNotifier {
           // final fakeFileIMG = File('/path/to/fake_file.jpg');
           // _getImages.insert(0, fakeFileIMG);
         }
-        _isWhatsappAvailable = true;
+
+        allStatus.sort((a, b) {
+          return File(b.path)
+              .lastModifiedSync()
+              .compareTo(File(a.path).lastModifiedSync());
+        });
       }
+
+      _getVideos =
+          allStatus.where((element) => element.path.endsWith('.mp4')).toList();
+      _getImages =
+          allStatus.where((element) => element.path.endsWith('.jpg')).toList();
+
+      _isWhatsappAvailable = true;
       _isLoading = false;
       notifyListeners();
     }
