@@ -104,7 +104,7 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
         builder: (BuildContext dialogContext) {
           return AlertDialog(
             backgroundColor: Colors.white,
-            title: Text("Error"),
+            title: Text("Confirm"),
             content: Text(message),
             actions: [
               TextButton(
