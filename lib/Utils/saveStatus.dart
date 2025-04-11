@@ -22,7 +22,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     }
 
     // Step 2: Request storage permissions using permission_handler
-    if (await getStoragePermission() == false) {
+    if (await AppStoragePermission().getStoragePermission() == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Storage permission required")),
       );
@@ -148,7 +148,7 @@ Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath) a
     }
 
     // Step 2: Request storage permissions using permission_handler
-    if (await getStoragePermission() == false) {
+    if (await AppStoragePermission().getStoragePermission() == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Storage permission required")),
       );

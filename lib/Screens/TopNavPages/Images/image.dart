@@ -27,7 +27,7 @@ class _ImageHomePageState extends State<ImageHomePage>
     // TODO: implement initState
     super.initState();
 
-    checkIfWeHaveStoragePermission().then((value) {
+    AppStoragePermission().checkIfWeHaveStoragePermission().then((value) {
       setState(() {
         print('hasPermission - $value');
         hasPermission = value;

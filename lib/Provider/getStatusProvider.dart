@@ -26,7 +26,7 @@ class GetStatusProvider extends ChangeNotifier {
 
   // Fetch WhatsApp Status files based on extension
   void getStatus(String ext) async {
-    if (await getStoragePermission() == true) {
+    if (await AppStoragePermission().getStoragePermission() == true) {
       final directory = Directory(AppConstants.WHATSAPP_PATH);
       if (directory.existsSync()) {
         final items = directory.listSync();
@@ -55,7 +55,7 @@ class GetStatusProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    if (await getStoragePermission() == true) {
+    if (await AppStoragePermission().getStoragePermission() == true) {
 
       List<FileSystemEntity> allStatus = [];
 
@@ -97,7 +97,7 @@ class GetStatusProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    if (await getStoragePermission() == true) {
+    if (await AppStoragePermission().getStoragePermission() == true) {
       final directory = Directory(AppConstants.WHATSAPP_PATH);
       if (directory.existsSync()) {
         final items = directory.listSync();
@@ -143,7 +143,7 @@ class GetStatusProvider extends ChangeNotifier {
 
   // Fetch files from another directory for experimental use
   void getExperimentalStatus(String ext) async {
-    if (await getStoragePermission() == true) {
+    if (await AppStoragePermission().getStoragePermission() == true) {
       final directory = Directory(AppConstants.TEST_STORYSAVER_PATH);
       if (directory.existsSync()) {
         final items = await directory.list().toList();

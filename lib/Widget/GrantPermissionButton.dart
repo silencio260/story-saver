@@ -19,7 +19,7 @@ Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGr
   Future<void> _requestPermission() async {
 
     //works for android 11+
-    final status = await getStoragePermission(); //await Permission.manageExternalStorage.request(); //await Permission.storage.request();
+    final status = await AppStoragePermission().getStoragePermission(); //await Permission.manageExternalStorage.request(); //await Permission.storage.request();
 
 
     if (status == true) {
