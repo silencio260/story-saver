@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Screens/TopNavPages/Widget/LoadStatusUtils.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Widget/GrantPermissionButton.dart';
@@ -42,7 +43,7 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   void _onRefresh() async{
 
-    Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
+    Provider.of<GetStatusProvider>(context, listen: false).getStatusWithSaf();
 
     _refreshController.refreshCompleted();
   }
@@ -78,16 +79,26 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
          )
        :
         file.isWhatsappAvailable == false
-          ? const Center(
-              child: Text('Whatsapp not available'),
-            )
+          ? LoadStatusUtils().TextWithStatusRefresh(
+          context: context,
+          text: "Whatsapp not available"
+        )
+        // const Center(
+        //       child: Text('Whatsapp not available'),
+        //     )
           : file.getImages.isEmpty
-              ? Center(
-                  child: Text("No Videos available"),
-                )
-              :   Container(
-                  padding: const EdgeInsets.all(5),
-                  child: SmartRefresher(
+            ? LoadStatusUtils().TextWithStatusRefresh(
+            context: context,
+            text: "No Videos available"
+        )
+        //TextWithStatusRefresh("No Videos available")
+              // ? Center(
+              //     child: Text("No Videos available"),
+
+              //   )
+      : Container(
+          padding: const EdgeInsets.all(5),
+          child: SmartRefresher(
           enablePullDown: true,
           // enablePullUp: true,
           header: WaterDropHeader(
@@ -121,7 +132,12 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
                       return
                         snapshot.hasData
                           ?
-                       MediaListItem(currentIndex: index, mediaPath: snapshot.data.toString(), isVideo: true, videoFilePath: data.path)
+                       MediaListItem(
+                           currentIndex: index,
+                           mediaPath: snapshot.data.toString(),
+                           isVideo: true,
+                           videoFilePath: data.path
+                       )
                       :
                         Center(
                           child: Column(

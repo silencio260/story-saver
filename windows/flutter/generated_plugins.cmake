@@ -4,7 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
-  list_all_videos
   permission_handler_windows
   share_plus
   url_launcher_windows

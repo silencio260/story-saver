@@ -28,7 +28,7 @@ Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGr
         SnackBar(content: Text("Permission Granted ✅")),
       );
 
-      refreshApp(context);
+      // refreshApp(context);
 
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

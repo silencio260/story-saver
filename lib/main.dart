@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
@@ -20,6 +21,8 @@ void main() async {
   debugPrint('#### Staging Env - $envvar - ${e} -  ${const String.fromEnvironment("firebase_api_key_android")} '
       '${const String.fromEnvironment("founders_version")}');
 
+  //Init MediaStore
+  await MediaStore.ensureInitialized();
 
   AnalyticsService.init();
 

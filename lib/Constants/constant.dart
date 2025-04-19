@@ -1,8 +1,13 @@
 class AppConstants {
   // static String WHATSAPP_PATH = "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
+
+  final IS_WHATSAPP_STATUS_PERMISSION = "is_whatsapp_status_folder_permission_granted";
+
   static List<String> WHATSAPP_PATH_LIST = [
+    // "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/",
+
     "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
-    "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses",
+    // "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses",
 
 
     // "/storage/emulated/0/Pictures/Saved Statuses/",
@@ -21,7 +26,7 @@ class AppConstants {
     // "/storage/emulated/0/Pictures/Screenshot/"
 
     ////////////////////////////// Screenshot app set dressing
-    "/storage/emulated/0/App_Screenshots/Story Saver/stories_1",
+    // "/storage/emulated/0/App_Screenshots/Story Saver/stories_1",
 
   ];
 

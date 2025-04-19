@@ -129,7 +129,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
             onTap: () {
 
               if (widget.isVideo) {
-                print('widget.videoFilePath $isAlreadySaved - ${widget.videoFilePath}');
+                print('widget.videoFilePath_ $isAlreadySaved - ${widget.videoFilePath}');
                 if(widget.videoFilePath != null)
                 Navigator.push(
                   context,

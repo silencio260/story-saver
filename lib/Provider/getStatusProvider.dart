@@ -3,6 +3,7 @@ import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
+import 'package:saf/saf.dart';
 import 'package:flutter/foundation.dart'; // For Isolates
 
 class GetStatusProvider extends ChangeNotifier {
@@ -23,6 +24,49 @@ class GetStatusProvider extends ChangeNotifier {
   Map<String, Uint8List?> get thumbnailCache => _thumbnailCache;
   Map<String, String?> get thumbnailCacheV2 => _thumbnailCacheV2;
   bool get isLoading => _isLoading;
+
+
+  //////
+  void getStatusWithSaf() async {
+    _isLoading = true;
+    notifyListeners();
+
+    Saf saf  = Saf("Android/media/com.whatsapp/WhatsApp/Media/.Statuses");
+    final isSync =  await saf.sync();
+
+    final accessiblePath = await Saf.getPersistedPermissionDirectories();
+
+    List<String>? paths = await saf.getFilesPath(fileType: FileTypes.media);
+
+    final isCached = await saf.cache();
+
+    List<String>? cachedFilesPath = await saf.getCachedFilesPath();
+
+    print("accessiblePath  ${accessiblePath}");
+    print('object ${cachedFilesPath}');
+
+
+    // cachedFilesPath?.sort((a, b) {
+    //   return File(b)
+    //       .lastModifiedSync()
+    //       .compareTo(File(a).lastModifiedSync());
+    // });
+
+    _getVideos = cachedFilesPath!
+        .where((path) => path.endsWith('.mp4'))
+        .map((path) => File(path))
+        .toList();
+
+    _getImages = cachedFilesPath!
+        .where((path) => path.endsWith('.jpg'))
+        .map((path) => File(path))
+        .toList();
+
+
+    _isWhatsappAvailable = true;
+    _isLoading = false;
+    notifyListeners();
+  }
 
   // Fetch WhatsApp Status files based on extension
   void getStatus(String ext) async {
@@ -65,6 +109,7 @@ class GetStatusProvider extends ChangeNotifier {
         if (directory.existsSync()) {
           final items = directory.listSync();
 
+          print('------ items -> ${items}');
           // Sort by last modified time (newest first)
           allStatus.addAll(items);
 
