@@ -72,7 +72,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
 
   void addNewMediaToTop(AssetEntity newMedia) {
 
-    _prevFirstItem = _getMediaFile[0];
+    // _prevFirstItem = _getMediaFile[0];
     _buildCachedFirstItem = true;
     _getMediaFile = [newMedia, ..._getMediaFile];
 
