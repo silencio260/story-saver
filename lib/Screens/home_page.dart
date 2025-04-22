@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // print('init myHomePage');
 
-    Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
+    // Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
 
 
     controller = TabController(length: 3, vsync: this);

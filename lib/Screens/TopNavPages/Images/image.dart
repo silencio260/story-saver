@@ -57,11 +57,11 @@ class _ImageHomePageState extends State<ImageHomePage>
 
     final statuses = Provider.of<GetStatusProvider>(context, listen: false);
 
-    if(statuses.getVideos.isEmpty && statuses.getImages.isEmpty){
-      // statuses.getAllStatus();
-    }
+    // if(statuses.getVideos.isEmpty && statuses.getImages.isEmpty){
+    //   // statuses.getAllStatus();
+    // }
 
-    statuses.getStatusWithSaf();
+    // statuses.getStatusWithSaf();
   }
 
   bool _isFetched = false;
