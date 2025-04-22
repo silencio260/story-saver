@@ -10,6 +10,7 @@ import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart'
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -84,11 +85,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void _shareAppLink(BuildContext context) {
-      Share.share('Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
-          .then((value) {
-        // ScaffoldMessenger.of(context)
-        //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
-      });
+    Share.share('Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
+        .then((value) {
+      // ScaffoldMessenger.of(context)
+      //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
+    });
+  }
+
+  void _launchPlayStoreLink() async {
+    final uri = Uri.parse(AppConstants().GOOGLE_PLAY_STORE_LINK);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch ${uri}';
+    }
   }
 
 
@@ -124,11 +134,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ]
             ),
             actions: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
+              // IconButton(onPressed: () {}, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
               IconButton(onPressed: () {
                 _shareAppLink(context);
               }, icon: Icon(Icons.share, color: Colors.white)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.more_vert, color: Colors.white)),
+              IconButton(onPressed: () {
+                _launchPlayStoreLink();
+              }, icon: Icon(Icons.star_border_purple500_sharp, color: Colors.white)),
             ],
             backgroundColor: const Color(CustomColors.AppBarColor),
             foregroundColor: Colors.white,
