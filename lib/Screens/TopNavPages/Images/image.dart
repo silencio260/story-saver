@@ -61,7 +61,7 @@ class _ImageHomePageState extends State<ImageHomePage>
     //   // statuses.getAllStatus();
     // }
 
-    // statuses.getStatusWithSaf();
+    statuses.getStatusWithSaf();
   }
 
   bool _isFetched = false;

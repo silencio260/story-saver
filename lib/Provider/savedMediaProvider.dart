@@ -36,7 +36,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
   AssetEntity? get prevFirstItem => _prevFirstItem;
 
 
-  int _loadAlbumSegmentBatchSize = 12;//500;
+  int _loadAlbumSegmentBatchSize = 50;//500;
   int get loadAlbumSegmentBatchSize => _loadAlbumSegmentBatchSize;
   int _loopBatchSize = 10;
 
@@ -44,7 +44,7 @@ class GetSavedMediaProvider extends ChangeNotifier {
   int get loadAlbumStartIndex => _loadAlbumStartIndex;
 
   int _loadTriggerInterval = 10;
-  int _nextLoadTrigger = 10;//250;
+  int _nextLoadTrigger = 20;//250;
   int get nextLoadTrigger => _nextLoadTrigger;
 
   int _totalNumAssets = 0;
@@ -347,9 +347,11 @@ class GetSavedMediaProvider extends ChangeNotifier {
     }
 
     ///////////////
-    _totalNumAssets = 135;
-    final int totalAssets = _totalNumAssets; //await specificAlbum!.assetCountAsync;
+    _totalNumAssets = await specificAlbum!.assetCountAsync; //135;
+    final int totalAssets = _totalNumAssets;
     final int batchSize = _loopBatchSize;
+    print('assetCountAsync ${totalAssets}');
+
 
     final int startIndex = _loadAlbumStartIndex;
 
