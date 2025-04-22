@@ -1,6 +1,8 @@
 class AppConstants {
   // static String WHATSAPP_PATH = "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
+  final GOOGLE_PLAY_STORE_LINK = "https://play.google.com/store/apps/details?id=com.genrevibes.whatsappstorysaver";
+
   final IS_WHATSAPP_STATUS_PERMISSION = "is_whatsapp_status_folder_permission_granted";
 
   static List<String> WHATSAPP_PATH_LIST = [

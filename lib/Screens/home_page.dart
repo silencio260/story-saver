@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
@@ -81,6 +83,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _refreshController.loadComplete();
   }
 
+  void _shareAppLink(BuildContext context) {
+      Share.share('Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
+          .then((value) {
+        // ScaffoldMessenger.of(context)
+        //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
+      });
+  }
+
 
 
 
@@ -115,7 +125,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ),
             actions: [
               IconButton(onPressed: () {}, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
-              IconButton(onPressed: () {}, icon: Icon(Icons.share, color: Colors.white)),
+              IconButton(onPressed: () {
+                _shareAppLink(context);
+              }, icon: Icon(Icons.share, color: Colors.white)),
               IconButton(onPressed: () {}, icon: Icon(Icons.more_vert, color: Colors.white)),
             ],
             backgroundColor: const Color(CustomColors.AppBarColor),

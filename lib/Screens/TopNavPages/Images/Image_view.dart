@@ -4,6 +4,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
@@ -73,10 +74,10 @@ class _ImageViewState extends State<ImageView> {
     // print("share");
     if (!widget.isLoading) {
       Share.shareXFiles([XFile(widget.imagePath!)],
-              text: 'Shared From WhatsApp Story Saver')
+              text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
           .then((value) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Image Sent")));
+        // ScaffoldMessenger.of(context)
+        //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
       });
     }
   }
@@ -84,7 +85,7 @@ class _ImageViewState extends State<ImageView> {
   void _shareMediaToWhatsapp(BuildContext context) {
     if (!widget.isLoading) {
       // print("share");
-      shareToWhatsApp('Shared From Status Saver',
+      shareToWhatsApp('Shared From the Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
           filePath: widget.imagePath!, context: context);
     }
   }

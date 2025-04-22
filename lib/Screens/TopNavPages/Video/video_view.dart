@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
@@ -72,17 +73,17 @@ class _VideoViewState extends State<VideoView> {
     if(!widget.isLoading) {
       // print("share");
       Share.shareXFiles([XFile(widget.videoPath!)],
-          text: 'Shared From WhatsApp Story Saver').then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Video Sent")));
-      });
+          text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}').then((value) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(content: Text("Video Sent")));
+        });
     }
   }
 
   void _shareMediaToWhatsapp(BuildContext context){
     if(!widget.isLoading) {
       // print("share");
-      shareToWhatsApp('Shared From Status Saver', filePath: widget.videoPath!, context: context);
+      shareToWhatsApp('Shared From Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}', filePath: widget.videoPath!, context: context);
     }
   }
 
