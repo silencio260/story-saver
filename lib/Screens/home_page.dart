@@ -11,6 +11,7 @@ import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart'
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'package:storysaver/Widget/HelpModal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
@@ -182,10 +183,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       whatsAppsSvgIcon,
                   color: Colors.white,
               ),
-              // IconButton(onPressed: () {
-              //   _switchToBusinessMode();
-              // }, icon: Icon(_isBusinessMode == false ? Icons.help_outline_sharp :
-              //   Icons.help, color: Colors.white)),
+              IconButton(onPressed: () {
+                // _switchToBusinessMode();
+                HelpModal().showHelpDialog(context);
+              }, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
               IconButton(onPressed: () {
                 _shareAppLink(context);
               }, icon: Icon(Icons.share, color: Colors.white)),
