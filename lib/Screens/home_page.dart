@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:share_plus/share_plus.dart';
@@ -23,6 +24,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   late TabController controller;
 
+  final Widget whatsAppsSvgIcon = SvgPicture.asset(
+    "assets/icons/whatsapp.svg",
+    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+    // semanticsLabel: 'Red dash paths',
+  );
+
+  final Widget businessWhatsAppsSvgIcon = SvgPicture.asset(
+    "assets/icons/whatsapp-business.svg",
+    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+    // semanticsLabel: 'Red dash paths',
+  );
+
   void initState() {
     // TODO: implement initState
     super.initState();
@@ -30,6 +43,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // print('init myHomePage');
 
     // Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
+    _checkIsBusinessMode();
 
 
     controller = TabController(length: 3, vsync: this);
@@ -101,11 +115,32 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }
   }
 
+  void _switchToBusinessMode() {
+    final provider = Provider.of<GetStatusProvider>(context, listen: false);
 
+    provider.setIsBusinessMode(!provider.isBusinessMode);
+    // Provider.of<GetStatusProvider>(context, listen: false).setIsBusinessMode();
+
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext ctx) => const HomePage(),
+      ),
+    );
+  }
+
+  Future<void> _checkIsBusinessMode() async {
+    await Provider.of<GetStatusProvider>(context, listen: false).checkIsBusinessMode();
+
+    // print("_checkIsBusinessMode ${Provider.of<GetStatusProvider>(context, listen: false).isBusinessMode}");
+  }
 
 
   @override
-  Widget build(BuildContext context) {  //WillPopScope
+  Widget build(BuildContext context) {
+    final _isBusinessMode = Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
+    // print(object)
+
     return  DoubleTapToExit(
       child: PopScope(
         canPop: false, // Prevents app from closing automatically
@@ -121,7 +156,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       
         child: Scaffold(
           appBar: AppBar(
-            title: Text("Story Saver"),
+            title:
+            Text(
+                _isBusinessMode == false ?
+                "Story Saver" :
+                "WB Story Saver"
+            ),
+            automaticallyImplyLeading: false,
             bottom: TabBar(
               controller: controller,
               indicatorColor: Colors.white,
@@ -134,7 +175,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ]
             ),
             actions: [
-              // IconButton(onPressed: () {}, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
+              IconButton(onPressed: () {
+                _switchToBusinessMode();
+              }, icon: _isBusinessMode == false ?
+                      businessWhatsAppsSvgIcon :
+                      whatsAppsSvgIcon,
+                  color: Colors.white,
+              ),
+              // IconButton(onPressed: () {
+              //   _switchToBusinessMode();
+              // }, icon: Icon(_isBusinessMode == false ? Icons.help_outline_sharp :
+              //   Icons.help, color: Colors.white)),
               IconButton(onPressed: () {
                 _shareAppLink(context);
               }, icon: Icon(Icons.share, color: Colors.white)),

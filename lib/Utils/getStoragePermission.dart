@@ -117,9 +117,11 @@ class AppStoragePermission {
     return false;
   }
 
-  Future<bool> isWhatsAppStatusFolderPermissionAvailable() async {
+  Future<bool> isWhatsAppStatusFolderPermissionAvailable({bool isBusinessMode = false}) async {
     bool isGranted = false;
-    String statusFolder = "Android/media/com.whatsapp/WhatsApp/Media/.Statuses";
+    String statusFolder = isBusinessMode == false ?
+    "Android/media/com.whatsapp/WhatsApp/Media/.Statuses" :
+    "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
     Saf saf  = Saf(statusFolder);
     final isSync =  await saf.sync();
@@ -137,9 +139,15 @@ class AppStoragePermission {
     return isGranted;
   }
 
-  Future<void> pickWhatsAppStatusFolder() async {
+  Future<void> pickWhatsAppStatusFolder({bool isBusinessMode = false}) async {
     // Saf saf = Saf("/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses");
-    Saf saf = Saf("/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/");
+    final folderPath = isBusinessMode == false ?
+      "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/" :
+      "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses/";
+
+    Saf saf = Saf(folderPath);
+
+    // Saf saf = Saf("/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/");
 
     bool? isGranted = await saf.getDirectoryPermission(isDynamic: true);
 

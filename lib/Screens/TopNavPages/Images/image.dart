@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Screens/GrantStatusFolderAccess/grant_business_status_access_page.dart';
 import 'package:storysaver/Screens/GrantStatusFolderAccess/grant_status_access_page.dart';
 import 'package:storysaver/Screens/TopNavPages/Widget/LoadStatusUtils.dart';
 import 'package:storysaver/Screens/home_page.dart';
@@ -31,6 +32,33 @@ class _ImageHomePageState extends State<ImageHomePage>
     // TODO: implement initState
     super.initState();
 
+    // final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+    // AppStoragePermission().checkIfWeHaveStoragePermission().then((value) {
+    //   setState(() {
+    //     print('hasPermission - $value');
+    //     hasPermission = value;
+    //   });
+    // });
+    //
+    // AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable().then((value) {
+    //
+    //   print('isWhatsAppStatusFolderPermissionAvailable --> $value');
+    //
+    //   permission.setIsWhatsAppStatusSafAvailable(value);
+    // });
+    //
+    // _getWhatsAppStatusFolderPermission();
+
+    getStatusesFoldersPermissions();
+
+    _loadStories();
+
+  }
+
+  void getStatusesFoldersPermissions () async {
+
+    final statuses = Provider.of<GetStatusProvider>(context, listen: false);
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
     AppStoragePermission().checkIfWeHaveStoragePermission().then((value) {
@@ -40,18 +68,31 @@ class _ImageHomePageState extends State<ImageHomePage>
       });
     });
 
-    AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable().then((value) {
+    await statuses.checkIsBusinessMode();
 
-      print('isWhatsAppStatusFolderPermissionAvailable --> $value');
+    if(statuses.isBusinessMode == false){
 
-      permission.setIsWhatsAppStatusSafAvailable(value);
-    });
+      AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable().then((value) {
 
-    _getWhatsAppStatusFolderPermission();
+        print('isWhatsAppStatusFolderPermissionAvailable --> $value');
 
-    _loadStories();
+        permission.setIsWhatsAppStatusSafAvailable(value);
+      });
 
+      _getWhatsAppStatusFolderPermission();
+    } else {
+
+      AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true).then((value) {
+
+        print('isWhatsAppStatusFolderPermissionAvailable --> $value');
+
+        permission.setIsBusinessWhatsAppStatusSafAvailable(value);
+      });
+
+      _getBusinessWhatsAppStatusFolderPermission();
+    }
   }
+
 
   void _loadStories() {
 
@@ -61,7 +102,7 @@ class _ImageHomePageState extends State<ImageHomePage>
     //   // statuses.getAllStatus();
     // }
 
-    statuses.getStatusWithSaf();
+    statuses.getAllStatusesWithSaf();
   }
 
   bool _isFetched = false;
@@ -87,12 +128,27 @@ class _ImageHomePageState extends State<ImageHomePage>
     //   isWhatsAppStatusFolderPermissionGranted = false;
   }
 
+  void _getBusinessWhatsAppStatusFolderPermission () async {
+
+    final permission = Provider.of<PermissionProvider>(context, listen: false);
+    final isGranted = await AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true);
+
+    print('_getWhatsAppStatusFolderPermission 1 permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+        ' isGranted - ${isGranted}');
+
+    if(isGranted == true)
+      permission.setIsBusinessWhatsAppStatusSafAvailable(true);
+
+    print('_getWhatsAppStatusFolderPermission permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+        ' isGranted - ${isGranted}');
+  }
+
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
   void _onRefresh() async {
 
-    Provider.of<GetStatusProvider>(context, listen: false).getStatusWithSaf();
+    Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
 
     _refreshController.refreshCompleted();
   }
@@ -114,24 +170,73 @@ class _ImageHomePageState extends State<ImageHomePage>
     super.dispose();
   }
 
-  Widget RequestFolderPermission(BuildContext context) {
+  Widget RequestWhatsappFolderPermission(BuildContext context) {
 
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
-    if(permission.isWhatsAppStatusSafAvailable == false)
-    // Trigger navigation after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.push(
-        context,
-        CupertinoPageRoute(
-          builder: (_) => WhatsAppStatusFolderPermission(),
-        ),
-      );
-    });
+    void _goToSafPage () {
+      if(permission.isWhatsAppStatusSafAvailable == false)
+        // Trigger navigation after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => WhatsAppStatusFolderPermission(),
+            ),
+          );
+        });
+    }
 
     // Return fallback UI while the navigation is happening
     return Center(
-      child: Text('Whatsapp not available/Permission not granted'),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+            ),
+            onPressed: _goToSafPage,
+            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget RequestBusinessWhatsappFolderPermission(BuildContext context) {
+
+    final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+    void _goToSafPage () {
+      if(permission.isBusinessWhatsAppStatusSafAvailable == false)
+        // Trigger navigation after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => BusinessWhatsAppStatusFolderPermission(),
+            ),
+          );
+        });
+    }
+
+    // Return fallback UI while the navigation is happening
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+            ),
+            onPressed: _goToSafPage,
+            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -159,14 +264,15 @@ class _ImageHomePageState extends State<ImageHomePage>
                   _loadStories();
                 }
             )
-              : permission.isWhatsAppStatusSafAvailable == false ?
-            // : await AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable() ?
-            // : isWhatsAppStatusFolderPermissionGranted == false ?
-            // : permission.hasStoragePermission == true ?
-          // (permission.hasStoragePermission != true && (
-            //   file.getImages.isEmpty &&
-            //   file.getVideos.isEmpty)) ?
-                RequestFolderPermission(context)
+            :
+          file.isBusinessMode == true &&
+              permission.isBusinessWhatsAppStatusSafAvailable == false ?
+                // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
+                RequestBusinessWhatsappFolderPermission(context)
+
+
+            : permission.isWhatsAppStatusSafAvailable == false ?
+                RequestWhatsappFolderPermission(context)
 
             : file.isLoading == true && file.getImages.isEmpty
               ? const Center(

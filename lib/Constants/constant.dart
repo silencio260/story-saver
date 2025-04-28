@@ -3,6 +3,8 @@ class AppConstants {
 
   final GOOGLE_PLAY_STORE_LINK = "https://play.google.com/store/apps/details?id=com.genrevibes.whatsappstorysaver";
 
+  final IS_BUSINESS_MODE = "is_app_in_whatsapp_business_mode";
+
   final IS_WHATSAPP_STATUS_PERMISSION = "is_whatsapp_status_folder_permission_granted";
 
   static List<String> WHATSAPP_PATH_LIST = [

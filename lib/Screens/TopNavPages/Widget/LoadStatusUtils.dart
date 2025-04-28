@@ -24,7 +24,7 @@ class LoadStatusUtils {
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
                   // handle tap here
-                  Provider.of<GetStatusProvider>(context, listen: false).getStatusWithSaf();
+                  Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
                 },
             ),
           ],

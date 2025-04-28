@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:list_all_videos/thumbnail/generate_thumpnail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Utils/getThumbnails.dart';
@@ -25,9 +26,83 @@ class GetStatusProvider extends ChangeNotifier {
   Map<String, String?> get thumbnailCacheV2 => _thumbnailCacheV2;
   bool get isLoading => _isLoading;
 
+  bool _isBusinessMode = false;
+  bool get isBusinessMode => _isBusinessMode;
+
+  Future<void> checkIsBusinessMode () async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.getBool(AppConstants().IS_BUSINESS_MODE);
+
+    _isBusinessMode = val == null ? false : val;
+    print("checkIsBusinessMode $val");
+    notifyListeners();
+  }
+
+  void setIsBusinessMode (bool newValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    final val = prefs.setBool(AppConstants().IS_BUSINESS_MODE, newValue);
+
+    _isBusinessMode = newValue;
+    notifyListeners();
+  }
+
+  void clearAllStatus() async {
+    _getVideos = [];
+    _getImages = [];
+    notifyListeners();
+  }
+
+  void getAllStatusesWithSaf() async {
+
+    await checkIsBusinessMode();
+
+    if(_isBusinessMode == false){
+
+      getWhatsAppStatusWithSaf();
+    } else {
+
+      getBusinessStatusWithSaf();
+    }
+  }
+
 
   //////
-  void getStatusWithSaf() async {
+  void getBusinessStatusWithSaf() async {
+    _isLoading = true;
+    notifyListeners();
+
+    Saf saf  = Saf("Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses");
+    final isSync =  await saf.sync();
+
+    final accessiblePath = await Saf.getPersistedPermissionDirectories();
+
+    List<String>? paths = await saf.getFilesPath(fileType: FileTypes.media);
+
+    final isCached = await saf.cache();
+
+    List<String>? cachedFilesPath = await saf.getCachedFilesPath();
+
+    print("accessiblePath  ${accessiblePath}");
+    print('object ${cachedFilesPath}');
+
+    _getVideos = cachedFilesPath!
+        .where((path) => path.endsWith('.mp4'))
+        .map((path) => File(path))
+        .toList();
+
+    _getImages = cachedFilesPath!
+        .where((path) => path.endsWith('.jpg'))
+        .map((path) => File(path))
+        .toList();
+
+
+    _isWhatsappAvailable = true;
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  //////
+  void getWhatsAppStatusWithSaf() async {
     _isLoading = true;
     notifyListeners();
 
