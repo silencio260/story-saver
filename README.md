@@ -14,3 +14,13 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter, view our
 [online documentation](https://flutter.dev/docs), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+adb connect 192.168.171.228:5555
+
+flutter emulators
+flutter emulators --launch Pixel_9_Pro_API_35-ext15
+
+flutter clean build  
+flutter build appbundle --dart-define-from-file=env/release.json
+
+zip -d Archive.zip "__MACOSX*" 

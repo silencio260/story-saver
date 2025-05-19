@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Monetization/Ads/admob_helper.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
@@ -24,6 +26,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
 
   late TabController controller;
+  BannerAd? _bannerAd;
+  InterstitialAd? _interstitialAd;
 
   final Widget whatsAppsSvgIcon = SvgPicture.asset(
     "assets/icons/whatsapp.svg",
@@ -48,6 +52,42 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
 
     controller = TabController(length: 3, vsync: this);
+
+    BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _bannerAd = ad as BannerAd;
+          });
+        },
+        onAdFailedToLoad: (ad, err){
+          print('Failed to load a banner ad: ${err.message}');
+          ad.dispose();
+        }
+      )
+    )..load();
+
+    InterstitialAd.load(
+        adUnitId: AdHelper.InterstitialAdUnitId,
+        request: AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+            onAdLoaded: (ad) {
+              ad.fullScreenContentCallback = FullScreenContentCallback(
+                onAdDismissedFullScreenContent: (ad){}
+              );
+              setState(() {
+                _interstitialAd = ad;
+              });
+            },
+            onAdFailedToLoad: (err){
+              print('Failed to load a InterstitialAd  ad: ${err.message}');
+              // ad.dispose();
+            }
+        )
+    );
   }
 
   @override
@@ -55,7 +95,50 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // TODO: implement dispose
     controller.dispose();
 
+    _bannerAd!.dispose();
+    _interstitialAd!.dispose();
+
     super.dispose();
+  }
+
+  void _showInterstitialAd() {
+    if(_interstitialAd != null){
+      _interstitialAd!.show();
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad){
+          ad.dispose();
+
+          ////////////
+          InterstitialAd.load(
+              adUnitId: AdHelper.InterstitialAdUnitId,
+              request: AdRequest(),
+
+              adLoadCallback: InterstitialAdLoadCallback(
+                  onAdLoaded: (ad) {
+                    ad.fullScreenContentCallback = FullScreenContentCallback(
+                      onAdFailedToShowFullScreenContent: (ad, err){
+                        ad.dispose();
+
+                      },
+                        onAdDismissedFullScreenContent: (ad){}
+                    );
+                    setState(() {
+                      _interstitialAd = ad;
+
+                    });
+                  },
+                  onAdFailedToLoad: (err){
+                    print('Failed to load a InterstitialAd  ad: ${err.message}');
+                    // ad.dispose();
+                  }
+              ),
+
+          );
+
+        }
+      );
+
+    }
   }
 
   List<Widget> pages = const [
@@ -142,6 +225,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final _isBusinessMode = Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
     // print(object)
 
+    // _showInterstitialAd();
+
     return  DoubleTapToExit(
       child: PopScope(
         canPop: false, // Prevents app from closing automatically
@@ -153,8 +238,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             SystemChannels.platform.invokeMethod('SystemNavigator.pop');
           }
         },
-      
-      
+
         child: Scaffold(
           appBar: AppBar(
             title:
@@ -197,7 +281,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             backgroundColor: const Color(CustomColors.AppBarColor),
             foregroundColor: Colors.white,
           ),
-          body: TabBarView(controller: controller, children: pages),
+          body: Stack(
+            children: [
+              TabBarView(controller: controller, children: pages),
+
+              // if (_bannerAd != null)
+              //   Align(
+              //     alignment: Alignment.bottomCenter,
+              //     child: Container(
+              //       // padding: EdgeInsets.only(top: 50),
+              //       width: _bannerAd!.size.width.toDouble(),
+              //       height: _bannerAd!.size.height.toDouble(),
+              //       // child: AdWidget(ad: _bannerAd!),
+              //     ),
+              //   ),
+              // if (_interstitialAd != null)
+              //   _interstitialAd.show();
+            ],
+          ),
+          bottomNavigationBar: _bannerAd != null ?
+          SizedBox(
+            // padding: EdgeInsets.only(top: 50),
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
+          ) : null
+
+          // body: TabBarView(controller: controller, children: pages),
 
         ),
       ),

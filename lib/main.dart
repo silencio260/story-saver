@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Constants/constant.dart';
@@ -14,6 +15,7 @@ import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   print('ensureInitialized');
 
   String envvar = const String.fromEnvironment("founders_version");
