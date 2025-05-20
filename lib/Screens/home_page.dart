@@ -53,41 +53,44 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     controller = TabController(length: 3, vsync: this);
 
-    BannerAd(
-      adUnitId: AdHelper.bannerAdUnitId,
-      request: AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          setState(() {
-            _bannerAd = ad as BannerAd;
-          });
-        },
-        onAdFailedToLoad: (ad, err){
-          print('Failed to load a banner ad: ${err.message}');
-          ad.dispose();
-        }
-      )
-    )..load();
+    AdmobWrapper.LoadBannerAd();
+    AdmobWrapper.loadInterstitialAd();
 
-    InterstitialAd.load(
-        adUnitId: AdHelper.InterstitialAdUnitId,
-        request: AdRequest(),
-        adLoadCallback: InterstitialAdLoadCallback(
-            onAdLoaded: (ad) {
-              ad.fullScreenContentCallback = FullScreenContentCallback(
-                onAdDismissedFullScreenContent: (ad){}
-              );
-              setState(() {
-                _interstitialAd = ad;
-              });
-            },
-            onAdFailedToLoad: (err){
-              print('Failed to load a InterstitialAd  ad: ${err.message}');
-              // ad.dispose();
-            }
-        )
-    );
+    // BannerAd(
+    //   adUnitId: AdHelper.bannerAdUnitId,
+    //   request: AdRequest(),
+    //   size: AdSize.banner,
+    //   listener: BannerAdListener(
+    //     onAdLoaded: (ad) {
+    //       setState(() {
+    //         _bannerAd = ad as BannerAd;
+    //       });
+    //     },
+    //     onAdFailedToLoad: (ad, err){
+    //       print('Failed to load a banner ad: ${err.message}');
+    //       ad.dispose();
+    //     }
+    //   )
+    // )..load();
+    //
+    // InterstitialAd.load(
+    //     adUnitId: AdHelper.InterstitialAdUnitId,
+    //     request: AdRequest(),
+    //     adLoadCallback: InterstitialAdLoadCallback(
+    //         onAdLoaded: (ad) {
+    //           ad.fullScreenContentCallback = FullScreenContentCallback(
+    //             onAdDismissedFullScreenContent: (ad){}
+    //           );
+    //           setState(() {
+    //             _interstitialAd = ad;
+    //           });
+    //         },
+    //         onAdFailedToLoad: (err){
+    //           print('Failed to load a InterstitialAd  ad: ${err.message}');
+    //           // ad.dispose();
+    //         }
+    //     )
+    // );
   }
 
   @override
@@ -95,8 +98,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // TODO: implement dispose
     controller.dispose();
 
-    _bannerAd!.dispose();
-    _interstitialAd!.dispose();
+    // _bannerAd!.dispose();
+    // _interstitialAd!.dispose();
+    AdmobWrapper.disposeAds();
 
     super.dispose();
   }
@@ -225,7 +229,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final _isBusinessMode = Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
     // print(object)
 
-    // _showInterstitialAd();
+    AdmobWrapper.showInterstitialAd();
 
     return  DoubleTapToExit(
       child: PopScope(
@@ -299,13 +303,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               //   _interstitialAd.show();
             ],
           ),
-          bottomNavigationBar: _bannerAd != null ?
-          SizedBox(
-            // padding: EdgeInsets.only(top: 50),
-            width: _bannerAd!.size.width.toDouble(),
-            height: _bannerAd!.size.height.toDouble(),
-            child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
-          ) : null
+          bottomNavigationBar: AdmobWrapper().DisplayBannerAdWidget(),
+          // _bannerAd != null ?
+          // SizedBox(
+          //   // padding: EdgeInsets.only(top: 50),
+          //   width: _bannerAd!.size.width.toDouble(),
+          //   height: _bannerAd!.size.height.toDouble(),
+          //   child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
+          // ) : null
 
           // body: TabBarView(controller: controller, children: pages),
 

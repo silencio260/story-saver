@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdHelper {
@@ -26,6 +27,12 @@ class AdHelper {
 class AdmobWrapper {
   static BannerAd? _bannerAd;
   static InterstitialAd? _interstitialAd;
+
+  static void disposeAds() {
+    _bannerAd!.dispose();
+    _interstitialAd!.dispose();
+  }
+
 
   static void LoadBannerAd() {
     BannerAd(
@@ -71,7 +78,7 @@ class AdmobWrapper {
     );
   }
 
-  static void _showInterstitialAd() {
+  static void showInterstitialAd() {
     if(_interstitialAd != null){
       _interstitialAd!.show();
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -113,6 +120,15 @@ class AdmobWrapper {
     }
   }
 
+  Widget? DisplayBannerAdWidget() {
+    return _bannerAd != null ?
+    SizedBox(
+      // padding: EdgeInsets.only(top: 50),
+      width: _bannerAd!.size.width.toDouble(),
+      height: _bannerAd!.size.height.toDouble(),
+      child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
+    ) : null;
+  }
 
 }
 
