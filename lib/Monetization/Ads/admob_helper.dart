@@ -24,17 +24,30 @@ class AdHelper {
 
 }
 
-class AdmobWrapper {
+
+class AdmobWrapper extends ChangeNotifier {
+  // Singleton pattern
+  static final AdmobWrapper _instance = AdmobWrapper._internal();
+  factory AdmobWrapper() => _instance;
+  AdmobWrapper._internal();
+
   static BannerAd? _bannerAd;
   static InterstitialAd? _interstitialAd;
 
-  static void disposeAds() {
-    _bannerAd!.dispose();
-    _interstitialAd!.dispose();
+  BannerAd? get bannerAd => _bannerAd;
+
+  // Set banner ad and notify listeners
+  set bannerAd(BannerAd? ad) {
+    _bannerAd = ad;
+    notifyListeners();
   }
 
+  static void disposeAds() {
+    _bannerAd!.dispose();
+    _interstitialAd?.dispose();
+  }
 
-  static void LoadBannerAd() {
+   void loadBannerAd() async {
     BannerAd(
         adUnitId: AdHelper.bannerAdUnitId,
         request: AdRequest(),
@@ -42,9 +55,7 @@ class AdmobWrapper {
         listener: BannerAdListener(
             onAdLoaded: (ad) {
               _bannerAd = ad as BannerAd;
-              // setState(() {
-              //   _bannerAd = ad as BannerAd;
-              // });
+              notifyListeners();
             },
             onAdFailedToLoad: (ad, err){
               print('Failed to load a banner ad: ${err.message}');
@@ -54,7 +65,7 @@ class AdmobWrapper {
     )..load();
   }
 
-  static void loadInterstitialAd() {
+   void loadInterstitialAd() {
     InterstitialAd.load(
         adUnitId: AdHelper.InterstitialAdUnitId,
         request: AdRequest(),
@@ -65,10 +76,8 @@ class AdmobWrapper {
               );
 
               _interstitialAd = ad;
+              notifyListeners();
 
-              // setState(() {
-              //   _interstitialAd = ad;
-              // });
             },
             onAdFailedToLoad: (err){
               print('Failed to load a InterstitialAd  ad: ${err.message}');
@@ -78,7 +87,11 @@ class AdmobWrapper {
     );
   }
 
-  static void showInterstitialAd() {
+  // void showInterstitialAd() {
+  //   _showInterstitialAd();
+  // }
+
+   void showInterstitialAd() {
     if(_interstitialAd != null){
       _interstitialAd!.show();
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -101,10 +114,8 @@ class AdmobWrapper {
                     );
 
                     _interstitialAd = ad;
-                    // setState(() {
-                    //   _interstitialAd = ad;
-                    //
-                    // });
+                    notifyListeners();
+
                   },
                   onAdFailedToLoad: (err){
                     print('Failed to load a InterstitialAd  ad: ${err.message}');
@@ -120,7 +131,8 @@ class AdmobWrapper {
     }
   }
 
-  Widget? DisplayBannerAdWidget() {
+   Widget? DisplayBannerAdWidget() {
+    print('bannerAd $_bannerAd ');
     return _bannerAd != null ?
     SizedBox(
       // padding: EdgeInsets.only(top: 50),
@@ -130,5 +142,29 @@ class AdmobWrapper {
     ) : null;
   }
 
+}
+
+class DisplayBannerAdWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Use AnimatedBuilder to listen for changes
+    return AnimatedBuilder(
+      animation: AdmobWrapper(),
+      builder: (context, child) {
+        final bannerAd = AdmobWrapper().bannerAd;
+        print('bannerAd $bannerAd'); // Debug print
+
+        if (bannerAd == null) {
+          return SizedBox(); // Return empty SizedBox instead of null
+        }
+
+        return SizedBox(
+          width: bannerAd.size.width.toDouble(),
+          height: bannerAd.size.height.toDouble(),
+          child: AdWidget(ad: bannerAd),
+        );
+      },
+    );
+  }
 }
 

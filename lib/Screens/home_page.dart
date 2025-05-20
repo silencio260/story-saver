@@ -53,8 +53,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     controller = TabController(length: 3, vsync: this);
 
-    AdmobWrapper.LoadBannerAd();
-    AdmobWrapper.loadInterstitialAd();
+    AdmobWrapper().addListener(_rebuild);
+
+    AdmobWrapper().loadBannerAd();
+    AdmobWrapper().loadInterstitialAd();
 
     // BannerAd(
     //   adUnitId: AdHelper.bannerAdUnitId,
@@ -93,6 +95,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // );
   }
 
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -100,6 +106,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     // _bannerAd!.dispose();
     // _interstitialAd!.dispose();
+    AdmobWrapper().removeListener(_rebuild);
     AdmobWrapper.disposeAds();
 
     super.dispose();
@@ -229,7 +236,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final _isBusinessMode = Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
     // print(object)
 
-    AdmobWrapper.showInterstitialAd();
+    // AdmobWrapper().showInterstitialAd();
 
     return  DoubleTapToExit(
       child: PopScope(
@@ -303,7 +310,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               //   _interstitialAd.show();
             ],
           ),
-          bottomNavigationBar: AdmobWrapper().DisplayBannerAdWidget(),
+          bottomNavigationBar: DisplayBannerAdWidget()//AdmobWrapper().DisplayBannerAdWidget(),
           // _bannerAd != null ?
           // SizedBox(
           //   // padding: EdgeInsets.only(top: 50),
