@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:storysaver/Monetization/Ads/adConfig.dart';
 
 class AdHelper {
   static String get bannerAdUnitId {
@@ -33,6 +36,9 @@ class AdmobWrapper extends ChangeNotifier {
 
   static BannerAd? _bannerAd;
   static InterstitialAd? _interstitialAd;
+
+  static bool _isInterstitialAdReady = true;
+  static bool _hasShownInstaAd = false;
 
   BannerAd? get bannerAd => _bannerAd;
 
@@ -75,8 +81,18 @@ class AdmobWrapper extends ChangeNotifier {
                   onAdDismissedFullScreenContent: (ad){}
               );
 
+              // _isInterstitialAdReady = false;
+
               _interstitialAd = ad;
               notifyListeners();
+
+              // Future.delayed(Duration(
+              //     seconds: AdConfig().min_insta_ad_interval), () {
+              //   _isInterstitialAdReady = true;
+              //   _interstitialAd = ad;
+              //   notifyListeners();
+              //   print('This runs after 3 seconds');
+              // });
 
             },
             onAdFailedToLoad: (err){
@@ -87,12 +103,9 @@ class AdmobWrapper extends ChangeNotifier {
     );
   }
 
-  // void showInterstitialAd() {
-  //   _showInterstitialAd();
-  // }
 
    void showInterstitialAd() {
-    if(_interstitialAd != null){
+    if(_interstitialAd != null && _isInterstitialAdReady ==  true){
       _interstitialAd!.show();
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
           onAdDismissedFullScreenContent: (ad){
@@ -113,8 +126,20 @@ class AdmobWrapper extends ChangeNotifier {
                         onAdDismissedFullScreenContent: (ad){}
                     );
 
-                    _interstitialAd = ad;
-                    notifyListeners();
+                    // _interstitialAd = ad;
+                    // notifyListeners();
+
+                    _isInterstitialAdReady =  false;
+                    _hasShownInstaAd = true;
+
+                    Future.delayed(Duration(seconds: AdConfig().min_insta_ad_interval), () {
+                      _isInterstitialAdReady = true;
+                      _interstitialAd = ad;
+                      notifyListeners();
+                      print('This runs after 3 seconds');
+                    });
+
+                    // FirebaseAnalytics.instance.logAdImpression(value: ad.)
 
                   },
                   onAdFailedToLoad: (err){
@@ -123,7 +148,13 @@ class AdmobWrapper extends ChangeNotifier {
                   }
               ),
 
-            );
+            ).timeout(Duration(
+                seconds: _hasShownInstaAd == true ? 0 : AdConfig().time_before_firs_insta_ad
+            ), onTimeout: () {
+              _hasShownInstaAd = true;
+              // print('Operation timed out');
+              return 'fallback result'; // optional return value
+            });
 
           }
       );
@@ -131,16 +162,16 @@ class AdmobWrapper extends ChangeNotifier {
     }
   }
 
-   Widget? DisplayBannerAdWidget() {
-    print('bannerAd $_bannerAd ');
-    return _bannerAd != null ?
-    SizedBox(
-      // padding: EdgeInsets.only(top: 50),
-      width: _bannerAd!.size.width.toDouble(),
-      height: _bannerAd!.size.height.toDouble(),
-      child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
-    ) : null;
-  }
+  //  Widget? DisplayBannerAdWidget() {
+  //   print('bannerAd $_bannerAd ');
+  //   return _bannerAd != null ?
+  //   SizedBox(
+  //     // padding: EdgeInsets.only(top: 50),
+  //     width: _bannerAd!.size.width.toDouble(),
+  //     height: _bannerAd!.size.height.toDouble(),
+  //     child: _bannerAd != null? AdWidget(ad: _bannerAd!) : Container(),
+  //   ) : null;
+  // }
 
 }
 

@@ -15,7 +15,13 @@ import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   MobileAds.instance.initialize();
+  RequestConfiguration requestConfiguration = RequestConfiguration(
+    testDeviceIds: ['5e2d630f-0073-4c73-b2b8-f05738eb5b6f']
+  );
+  MobileAds.instance.updateRequestConfiguration(requestConfiguration);
+
   print('ensureInitialized');
 
   String envvar = const String.fromEnvironment("founders_version");
