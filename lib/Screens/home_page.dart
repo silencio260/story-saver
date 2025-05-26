@@ -7,7 +7,9 @@ import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Constants/constant.dart';
-import 'package:storysaver/Monetization/Ads/admob_helper.dart';
+import 'package:storysaver/Monetization/Ads/Admob/Widget/DisplayBannerAds.dart';
+import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
+import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
@@ -53,8 +55,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     AdmobWrapper().addListener(_rebuild);
 
-    AdmobWrapper().loadBannerAd();
+    // AdmobWrapper().loadBannerAd();
     AdmobWrapper().loadInterstitialAd();
+
+    print("AdConfig time_before_firs_insta_ad -> ${AdConfig().time_before_firs_insta_ad},"
+        "min_insta_ad_interval -> ${AdConfig().min_insta_ad_interval},"
+        "min_insta_ad_interval -> ${AdConfig().min_insta_ad_interval}",
+    );
 
   }
 
@@ -221,7 +228,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
             ],
           ),
-          bottomNavigationBar: DisplayBannerAdWidget()//AdmobWrapper().DisplayBannerAdWidget(),
+          bottomNavigationBar: DisplayBannerAdWidget() //AdmobWrapper().DisplayBannerAdWidget(),
 
         ),
       ),

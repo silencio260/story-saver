@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:storysaver/Monetization/Ads/Admob/Widget/DisplayBannerAds.dart';
+import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/Image_view.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video_view.dart';
 
@@ -37,10 +39,22 @@ class GalleryPhotoViewWrapper extends StatefulWidget {
 class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
   late int currentIndex = widget.initialIndex;
 
+
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+  }
+
+  @override
+  void dispose() {
+
+    super.dispose();
   }
 
   void onPageChanged(int index) {
@@ -51,6 +65,9 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
 
   @override
   Widget build(BuildContext context) {
+
+    AdmobWrapper().showInterstitialAd();
+
     return Scaffold(
       body: Container(
         decoration: widget.backgroundDecoration,
@@ -70,6 +87,12 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
               onPageChanged: onPageChanged,
               scrollDirection: widget.scrollDirection,
             ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(child: DisplayBannerAdWidget(),
+                padding: EdgeInsets.only(top: 30),
+              ),
+            )
             // Container(
             //   padding: const EdgeInsets.all(20.0),
             //   child: Text(
@@ -84,6 +107,7 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
           ],
         ),
       ),
+        // bottomNavigationBar: DisplayBannerAdWidget()
     );
   }
 

@@ -47,5 +47,29 @@ class AnalyticsService {
     }
   }
 
+  Future<void> logAdImpressions({
+    required String adUnitId,
+    required String adFormat,
+    required double valueMicros,
+    required String currency,
+  }) async {
+    try {
+      print("Logging ad_impression event...");
+      await FirebaseAnalytics.instance.logEvent(
+        name: "ad_impression",
+        parameters: {
+          "ad_platform": "AdMob",
+          "ad_unit_id": adUnitId,
+          "ad_format": adFormat, // e.g., "banner", "interstitial"
+          "value": valueMicros / 1e6, // Convert from micros to standard currency
+          "currency": currency,
+        },
+      );
+      print("ad_impression event logged successfully");
+    } catch (e) {
+      print("Error logging ad impression: $e");
+    }
+  }
+
 
 }

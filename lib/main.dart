@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
@@ -9,6 +10,7 @@ import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Services/firebaseRemoteConfig.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
@@ -32,7 +34,16 @@ void main() async {
   //Init MediaStore
   await MediaStore.ensureInitialized();
 
-  AnalyticsService.init();
+   AnalyticsService.init().then((onval) {
+     final remoteConfigService = FirebaseRemoteConfigService();
+     remoteConfigService.initialize();
+   });
+  // await FirebaseRemoteConfigService().initialize();
+
+  // await Firebase.initializeApp();
+  //
+  // final remoteConfigService = FirebaseRemoteConfigService();
+  // remoteConfigService.initialize();
 
 
   runApp(MyApp());
