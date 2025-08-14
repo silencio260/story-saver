@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:docman/docman.dart';
 // import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
-import 'package:saf/saf.dart';
+// import 'package:saf/saf.dart';
 
 class AppStoragePermission {
   void _setPermissionValue(bool value) {
@@ -118,77 +119,197 @@ class AppStoragePermission {
   }
 
   Future<bool> isWhatsAppStatusFolderPermissionAvailable({bool isBusinessMode = false}) async {
+    // String statusFolder = isBusinessMode == false
+    //     ? "Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
+    //     : "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
+
+    String statusFolder = "Android/media";
+
+    List<PersistedPermission> permissions = await DocMan.perms.list(files: false, directories: true);
+
+    print("accessiblePath in isWhatsAppStatusFolderPermissionAvailable ${permissions.map((p) => p.uri).toList()}");
+
     bool isGranted = false;
-    String statusFolder = isBusinessMode == false ?
-    "Android/media/com.whatsapp/WhatsApp/Media/.Statuses" :
-    "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
-    Saf saf  = Saf(statusFolder);
-    final isSync =  await saf.sync();
-
-    final accessiblePath = await Saf.getPersistedPermissionDirectories();
-
-    print("accessiblePath in isWhatsAppStatusFolderPermissionAvailable ${accessiblePath}");
-
-    if(accessiblePath != null && accessiblePath.length > 0)
-      for (final folder in accessiblePath) {
-        if(folder == statusFolder)
-          isGranted = true;
+    for (final permission in permissions) {
+      final decodedUri = Uri.decodeFull(permission.uri);
+      if (decodedUri.contains(statusFolder) ||
+          (isBusinessMode && decodedUri.contains('whatsapp.w4b') && decodedUri.contains('.Statuses')) ||
+          (!isBusinessMode && decodedUri.contains('com.whatsapp') && decodedUri.contains('.Statuses'))) {
+        isGranted = true;
+        break;
       }
+    }
 
     return isGranted;
   }
 
+  // Future<void> pickWhatsAppStatusFolder({bool isBusinessMode = false}) async {
+  //   final folderPath = isBusinessMode == false ?
+  //   "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/" :
+  //   "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses/";
+  //
+  //   print("Expected folder path: $folderPath");
+  //
+  //   DocumentFile? statusDir = await DocMan.pick.directory(initDir: folderPath);
+  //
+  //   print("isGranted ${statusDir}");
+  //
+  //   if (statusDir != null && await statusDir.exists) {
+  //     // Validate that the correct WhatsApp folder was selected
+  //     String expectedPath = isBusinessMode ? "whatsapp.w4b" : "com.whatsapp";
+  //
+  //     if (statusDir.uri.contains(expectedPath) && statusDir.uri.contains(".Statuses")) {
+  //       final prefs = await SharedPreferences.getInstance();
+  //
+  //       // Set different permission keys based on mode
+  //       if (isBusinessMode) {
+  //         await prefs.setBool(AppConstants().IS_BUSINESS_MODE, true);
+  //       } else {
+  //         await prefs.setBool(AppConstants().IS_WHATSAPP_STATUS_PERMISSION, true);
+  //       }
+  //
+  //       print("Permission granted for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}");
+  //       print("Selected correct path: ${statusDir.uri}");
+  //
+  //       // Rest of your existing code...
+  //       List<PersistedPermission> permissions = await DocMan.perms.list(files: false, directories: true);
+  //
+  //       List<DocumentFile> documents = await statusDir.listDocuments(
+  //         mimeTypes: ['image/*', 'video/*'],
+  //       );
+  //
+  //       List<File> cachedFiles = [];
+  //       for (DocumentFile doc in documents) {
+  //         File? cachedFile = await doc.cache();
+  //         if (cachedFile != null) {
+  //           cachedFiles.add(cachedFile);
+  //         }
+  //       }
+  //
+  //       List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
+  //
+  //       print('saf_info ${cachedFiles.length}');
+  //       print('object ${cachedFilesPath}');
+  //
+  //       print('saf_accessiblePath ${permissions.map((p) => p.uri).toList()} - ${documents.map((d) => d.uri).toList()}');
+  //
+  //       if (permissions.isNotEmpty) {
+  //         final actualUri = permissions.first.uri;
+  //
+  //         DocumentFile? directory = await DocumentFile.fromUri(actualUri);
+  //
+  //         print('saf_accessiblePath_directory ${directory?.uri} ${await directory?.exists ?? false}');
+  //
+  //         if (directory != null && await directory.exists) {
+  //           List<DocumentFile> items = await directory.listDocuments();
+  //           print('------ saf_items -> ${items.map((item) => item.name).toList()}');
+  //         }
+  //       }
+  //     } else {
+  //       print("Wrong folder selected!");
+  //       print("Expected path containing: $expectedPath and .Statuses");
+  //       print("Selected path: ${statusDir.uri}");
+  //       print("Please navigate to: $folderPath");
+  //     }
+  //   }
+  // }
+
+
   Future<void> pickWhatsAppStatusFolder({bool isBusinessMode = false}) async {
-    // Saf saf = Saf("/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses");
-    final folderPath = isBusinessMode == false ?
-      "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/" :
-      "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses/";
+    final initDirUri = isBusinessMode == false ?
+    "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses" :
+    "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses";
 
-    Saf saf = Saf(folderPath);
+    DocumentFile? androidMediaDir = await DocMan.pick.directory(initDir: "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia");
 
-    // Saf saf = Saf("/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/");
+    print("Selected directory: ${androidMediaDir?.uri}");
 
-    bool? isGranted = await saf.getDirectoryPermission(isDynamic: true);
+    if (androidMediaDir != null && await androidMediaDir.exists) {
+      // Validate this is the Android/media directory
+      if (androidMediaDir.uri.contains("Android") && androidMediaDir.uri.contains("media")) {
+        print("Correct Android/media directory selected");
 
-    print("isGranted $isGranted");
+        // Now look for existing WhatsApp permissions or navigate to WhatsApp folders
+        List<PersistedPermission> permissions = await DocMan.perms.list(files: false, directories: true);
 
-    if (isGranted != null && isGranted) {
-      // Perform some file operations
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(AppConstants().IS_WHATSAPP_STATUS_PERMISSION, true);
+        String expectedPath = isBusinessMode ? "whatsapp.w4b" : "com.whatsapp";
+        DocumentFile? statusDir;
 
-      print("isGranted is true $isGranted");
+        // Check if we already have permission to the specific WhatsApp status folder
+        for (final permission in permissions) {
+          final decodedUri = Uri.decodeFull(permission.uri);
+          if (decodedUri.contains(expectedPath) && decodedUri.contains(".Statuses")) {
+            print("Found existing WhatsApp permission: $decodedUri");
+            statusDir = await DocumentFile.fromUri(permission.uri);
 
-      final accessiblePath = await Saf.getPersistedPermissionDirectories();
-
-      List<String>? paths = await saf.getFilesPath(fileType: FileTypes.media);
-
-      final isCached = await saf.cache();
-
-      List<String>? cachedFilesPath = await saf.getCachedFilesPath();
-
-
-      print('saf_info ${isCached}');
-      print('object ${cachedFilesPath}');
-
-      print('saf_accessiblePath ${accessiblePath} - ${paths}');
-
-      if (accessiblePath!.isNotEmpty) {
-        final actualPath = accessiblePath.first;
-
-        // Now you can use the traditional File/Directory API
-        final directory = Directory("/storage/emulated/0/${actualPath}/");
-
-        print('saf_accessiblePath_directory ${directory.path} ${await directory.exists()}');
-
-        if (directory.existsSync()) {
-          final items = directory.listSync();
-          print('------ saf_items -> ${items}');
-          // Process your files here
+            if (statusDir != null && await statusDir.exists && statusDir.canRead) {
+              break;
+            } else {
+              await DocMan.perms.release(permission.uri);
+              statusDir = null;
+            }
+          }
         }
+
+        // If no existing valid permission, user needs to navigate manually to specific folder
+        if (statusDir == null) {
+          print("No existing permission found for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}");
+          print("You now have access to Android/media. Please navigate to the specific folder:");
+          // print(folderPath);
+          return;
+        }
+
+        // Continue with existing logic if we found valid statusDir
+        final prefs = await SharedPreferences.getInstance();
+
+        if (isBusinessMode) {
+          await prefs.setBool(AppConstants().IS_BUSINESS_MODE, true);
+        } else {
+          await prefs.setBool(AppConstants().IS_WHATSAPP_STATUS_PERMISSION, true);
+        }
+
+        print("Permission granted for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}");
+        print("Using status directory: ${statusDir.uri}");
+
+        List<DocumentFile> documents = await statusDir.listDocuments(
+          mimeTypes: ['image/*', 'video/*'],
+        );
+
+        List<File> cachedFiles = [];
+        for (DocumentFile doc in documents) {
+          File? cachedFile = await doc.cache();
+          if (cachedFile != null) {
+            cachedFiles.add(cachedFile);
+          }
+        }
+
+        List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
+
+        print('saf_info ${cachedFiles.length}');
+        print('object ${cachedFilesPath}');
+
+        print('saf_accessiblePath ${permissions.map((p) => p.uri).toList()} - ${documents.map((d) => d.uri).toList()}');
+
+        if (permissions.isNotEmpty) {
+          final actualUri = permissions.first.uri;
+
+          DocumentFile? directory = await DocumentFile.fromUri(actualUri);
+
+          print('saf_accessiblePath_directory ${directory?.uri} ${await directory?.exists ?? false}');
+
+          if (directory != null && await directory.exists) {
+            List<DocumentFile> items = await directory.listDocuments();
+            print('------ saf_items -> ${items.map((item) => item.name).toList()}');
+          }
+        }
+
+      } else {
+        print("Please select the Android/media folder specifically");
+        print("Selected: ${androidMediaDir.uri}");
       }
+    } else {
+      print("No directory selected or Android/media folder doesn't exist");
     }
   }
-
 }

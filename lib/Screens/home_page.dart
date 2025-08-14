@@ -144,6 +144,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final provider = Provider.of<GetStatusProvider>(context, listen: false);
 
     provider.setIsBusinessMode(!provider.isBusinessMode);
+    provider.clearAllStatus();
     // Provider.of<GetStatusProvider>(context, listen: false).setIsBusinessMode();
 
     Navigator.push<void>(

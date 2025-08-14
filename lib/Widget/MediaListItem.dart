@@ -25,6 +25,18 @@ class MediaListItem extends StatefulWidget {
       : super(key: key);
 
   @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is MediaListItem &&
+        other.mediaPath == mediaPath &&
+        other.currentIndex == currentIndex;
+  }
+
+  @override
+  int get hashCode => mediaPath.hashCode ^ currentIndex.hashCode;
+
+
+  @override
   _MediaListItemState createState() => _MediaListItemState();
 }
 
@@ -34,6 +46,17 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
   final mediaManager = SavedMediaManager();
 
   bool get wantKeepAlive => false;
+
+  @override
+  void didUpdateWidget(MediaListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only rebuild if the actual values changed
+    if (oldWidget.mediaPath == widget.mediaPath &&
+        oldWidget.currentIndex == widget.currentIndex) {
+      // Don't rebuild - values are the same
+      return;
+    }
+  }
 
   @override
   void initState() {
@@ -101,6 +124,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
       SnackBar(content: Text(message)),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

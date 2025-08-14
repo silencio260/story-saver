@@ -148,9 +148,14 @@ class _ImageHomePageState extends State<ImageHomePage>
 
   void _onRefresh() async {
 
-    Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+    // Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+    //
+    // _refreshController.refreshCompleted();
 
-    _refreshController.refreshCompleted();
+    Provider.of<GetStatusProvider>(context, listen: false)
+        .getAllStatusesWithSaf(onComplete: () {
+      _refreshController.refreshCompleted();
+    });
   }
 
 
@@ -289,19 +294,19 @@ class _ImageHomePageState extends State<ImageHomePage>
                   : Container(
                       padding: const EdgeInsets.all(5),
                       child: SmartRefresher(
-                        enablePullDown: true,
+                        // enablePullDown: true,
                         // enablePullUp: true,
-                        header: WaterDropHeader(
-                          waterDropColor:
-                              Colors.green, // Color of the water drop
-                          refresh: CircularProgressIndicator(
-                            // Custom loader during refresh
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.green), // Loader color
-                          ),
-                          complete:
-                              Container(), // Customize or leave empty for the "complete" state
-                        ),
+                        // header: WaterDropHeader(
+                        //   waterDropColor:
+                        //       Colors.green, // Color of the water drop
+                        //   refresh: CircularProgressIndicator(
+                        //     // Custom loader during refresh
+                        //     valueColor: AlwaysStoppedAnimation<Color>(
+                        //         Colors.green), // Loader color
+                        //   ),
+                        //   complete:
+                        //       Container(), // Customize or leave empty for the "complete" state
+                        // ),
                         controller: _refreshController,
                         onRefresh: _onRefresh,
                         child: GridView(
@@ -326,6 +331,7 @@ class _ImageHomePageState extends State<ImageHomePage>
                               return MediaListItem(
                                 // key: mediaListItemKey,
                                 // key: ValueKey(index),
+                                key: ValueKey(data.path),
                                 mediaPath: data.path, currentIndex: index,
                               );
                             },

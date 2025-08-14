@@ -1,8 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Screens/GrantStatusFolderAccess/grant_business_status_access_page.dart';
+import 'package:storysaver/Screens/GrantStatusFolderAccess/grant_status_access_page.dart';
 import 'package:storysaver/Screens/TopNavPages/Widget/LoadStatusUtils.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
@@ -43,10 +46,17 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
 
   void _onRefresh() async{
 
-    Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+  //   Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+  //
+  //   _refreshController.refreshCompleted();
+  // }
 
-    _refreshController.refreshCompleted();
+    Provider.of<GetStatusProvider>(context, listen: false)
+        .getAllStatusesWithSaf(onComplete: () {
+      _refreshController.refreshCompleted();
+    });
   }
+
 
   final MyRouteObserver routeObserver = MyRouteObserver();
 
@@ -65,6 +75,80 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     super.dispose();
   }
 
+
+
+  Widget RequestWhatsappFolderPermission(BuildContext context) {
+
+    final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+    void _goToSafPage () {
+      if(permission.isWhatsAppStatusSafAvailable == false)
+        // Trigger navigation after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => WhatsAppStatusFolderPermission(),
+            ),
+          );
+        });
+    }
+
+    // Return fallback UI while the navigation is happening
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+            ),
+            onPressed: _goToSafPage,
+            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget RequestBusinessWhatsappFolderPermission(BuildContext context) {
+
+    final permission = Provider.of<PermissionProvider>(context, listen: false);
+
+    void _goToSafPage () {
+      if(permission.isBusinessWhatsAppStatusSafAvailable == false)
+        // Trigger navigation after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => BusinessWhatsAppStatusFolderPermission(),
+            ),
+          );
+        });
+    }
+
+    // Return fallback UI while the navigation is happening
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+            ),
+            onPressed: _goToSafPage,
+            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -77,6 +161,15 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
          const Center(
            child: Text('No Storage Permission'),
          )
+       :
+       file.isBusinessMode == true &&
+           permission.isBusinessWhatsAppStatusSafAvailable == false ?
+       // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
+       RequestBusinessWhatsappFolderPermission(context)
+
+
+           : permission.isWhatsAppStatusSafAvailable == false ?
+       RequestWhatsappFolderPermission(context)
        :
         file.isWhatsappAvailable == false
           ? LoadStatusUtils().TextWithStatusRefresh(
@@ -99,17 +192,22 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
       : Container(
           padding: const EdgeInsets.all(5),
           child: SmartRefresher(
-          enablePullDown: true,
-          // enablePullUp: true,
-          header: WaterDropHeader(
-          waterDropColor: Colors.green, // Color of the water drop
-          refresh: CircularProgressIndicator( // Custom loader during refresh
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.green), // Loader color
-          ),
-          complete: Container(), // Customize or leave empty for the "complete" state
-          ),
-          controller: _refreshController,
-          onRefresh: _onRefresh,
+            // enablePullDown: true,
+            // enablePullUp: true,
+            // header: WaterDropHeader(
+            //   waterDropColor:
+            //   Colors.green, // Color of the water drop
+            //   refresh: CircularProgressIndicator(
+            //     // Custom loader during refresh
+            //     valueColor: AlwaysStoppedAnimation<Color>(
+            //         Colors.green), // Loader color
+            //   ),
+            //   complete:
+            //   Container(), // Customize or leave empty for the "complete" state
+            // ),
+            physics: ClampingScrollPhysics(),
+            controller: _refreshController,
+            onRefresh: _onRefresh,
           child: GridView(
               gridDelegate:
                   const SliverGridDelegateWithMaxCrossAxisExtent(
