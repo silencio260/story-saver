@@ -44,17 +44,17 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
   RefreshController _refreshController =
   RefreshController(initialRefresh: false);
 
-  void _onRefresh() async{
+  Future<void> _onRefresh() async{
 
-  //   Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
-  //
-  //   _refreshController.refreshCompleted();
-  // }
+    // await Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+
+    // _refreshController.refreshCompleted();
 
     Provider.of<GetStatusProvider>(context, listen: false)
         .getAllStatusesWithSaf(onComplete: () {
       _refreshController.refreshCompleted();
     });
+    // _refreshController.refreshCompleted();
   }
 
 
@@ -179,10 +179,15 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
         // const Center(
         //       child: Text('Whatsapp not available'),
         //     )
-          : file.getImages.isEmpty
+        :
+        file.isLoading == true && file.getVideos.isEmpty
+            ? const Center(
+          child: Text('Loading Statuses...'),
+        )
+          : file.getVideos.isEmpty
             ? LoadStatusUtils().TextWithStatusRefresh(
             context: context,
-            text: "No Videos available"
+            text: "No Videos Found"
         )
         //TextWithStatusRefresh("No Videos available")
               // ? Center(
@@ -208,6 +213,7 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
             physics: ClampingScrollPhysics(),
             controller: _refreshController,
             onRefresh: _onRefresh,
+
           child: GridView(
               gridDelegate:
                   const SliverGridDelegateWithMaxCrossAxisExtent(

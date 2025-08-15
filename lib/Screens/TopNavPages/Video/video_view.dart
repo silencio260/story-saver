@@ -108,64 +108,75 @@ class _VideoViewState extends State<VideoView> {
   }
 
   Future<void> _initializePlayer() async {
-    print('_initializePlayer ------- ');
-    _videoPlayerController = VideoPlayerController.file(File(widget.videoPath!));
+    try {
+      print('_initializePlayer -------');
+      print(
+          '- widget.videoPath - ${widget.videoPath} - widget.videoPath ${widget
+              .videoPath}');
+      _videoPlayerController =
+          VideoPlayerController.file(File(widget.videoPath!));
 
-    await _videoPlayerController.initialize();
+      await _videoPlayerController.initialize();
 
-    // Get video dimensions
-    // Get video dimensions
-    final videoWidth = _videoPlayerController.value.size.width;
-    final videoHeight = _videoPlayerController.value.size.height;
+      // Get video dimensions
+      // Get video dimensions
+      final videoWidth = _videoPlayerController.value.size.width;
+      final videoHeight = _videoPlayerController.value.size.height;
 
-    double aspectRatio = 1.0; // Default aspect ratio (fallback value)
+      double aspectRatio = 1.0; // Default aspect ratio (fallback value)
 
-    // Check if video dimensions are valid
-    if (videoWidth > 0 && videoHeight > 0) {
-      aspectRatio = videoWidth / videoHeight;
-    } else {
+      // Check if video dimensions are valid
+      if (videoWidth > 0 && videoHeight > 0) {
+        aspectRatio = videoWidth / videoHeight;
+      } else {
+        MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(
+            widget.videoPath!);
 
-      MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(widget.videoPath!);
+        if (mediaInfo != null && mediaInfo.width != null &&
+            mediaInfo.height != null) {
+          double videoWidth = mediaInfo.width!.toDouble();
+          double videoHeight = mediaInfo.height!.toDouble();
 
-      if (mediaInfo != null && mediaInfo.width != null && mediaInfo.height != null) {
-        double videoWidth = mediaInfo.width!.toDouble();
-        double videoHeight = mediaInfo.height!.toDouble();
+          if (videoWidth > 0 && videoHeight > 0) {
+            aspectRatio = videoHeight / videoWidth;
+          }
+        } else
+          print("Invalid video dimensions, using fallback aspect ratio.");
+      }
 
-        if (videoWidth > 0 && videoHeight > 0) {
-          aspectRatio = videoHeight / videoWidth;
-        }
-      } else
-        print("Invalid video dimensions, using fallback aspect ratio.");
+      MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(
+          widget.videoPath!);
+
+      // print('Aspect_Ratio : ${_videoPlayerController.value.aspectRatio}, '
+      //     'height ${videoHeight}, width ${videoWidth}'
+      //     ',size ${_videoPlayerController.value.size} || ${mediaInfo.width!.toDouble()} || '
+      //     '${mediaInfo.height!.toDouble()}, ${aspectRatio}');
+
+
+      setState(() {
+        _chewieController = ChewieController(
+          videoPlayerController: _videoPlayerController,
+          autoInitialize: true,
+          autoPlay: true,
+          aspectRatio: aspectRatio,
+          //0.8,
+          // aspectRatio: _videoPlayerController.value.aspectRatio, // Fixed aspect ratio issue
+          materialProgressColors: ChewieProgressColors(
+            playedColor: const Color(CustomColors.ButtonColor),
+            handleColor: const Color(CustomColors.ButtonColor),
+            bufferedColor: Colors.grey,
+            backgroundColor: Colors.black,
+          ),
+          errorBuilder: (context, errorMessage) {
+            return Center(
+              child: Text(errorMessage),
+            );
+          },
+        );
+      });
+    } catch(e){
+      print("Error initializing Player - ${e}");
     }
-
-    MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(widget.videoPath!);
-
-    // print('Aspect_Ratio : ${_videoPlayerController.value.aspectRatio}, '
-    //     'height ${videoHeight}, width ${videoWidth}'
-    //     ',size ${_videoPlayerController.value.size} || ${mediaInfo.width!.toDouble()} || '
-    //     '${mediaInfo.height!.toDouble()}, ${aspectRatio}');
-
-
-    setState(() {
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController,
-        autoInitialize: true,
-        autoPlay: true,
-        aspectRatio: aspectRatio,//0.8,
-        // aspectRatio: _videoPlayerController.value.aspectRatio, // Fixed aspect ratio issue
-        materialProgressColors: ChewieProgressColors(
-          playedColor: const Color(CustomColors.ButtonColor),
-          handleColor: const Color(CustomColors.ButtonColor),
-          bufferedColor: Colors.grey,
-          backgroundColor: Colors.black,
-        ),
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Text(errorMessage),
-          );
-        },
-      );
-    });
 
   }
 

@@ -182,6 +182,7 @@ class GetStatusProvider extends ChangeNotifier {
       }
 
       if(statusDir == null){
+        print('statusDir is null --> ${statusDir}');
         _isWhatsappAvailable = false;
         _isLoading = false;
         notifyListeners();
@@ -412,6 +413,7 @@ class GetStatusProvider extends ChangeNotifier {
       }
 
       if(statusDir == null){
+        print('statusDir is null --> ${statusDir}');
         _isWhatsappAvailable = false;
         _isLoading = false;
         notifyListeners();
@@ -443,15 +445,15 @@ class GetStatusProvider extends ChangeNotifier {
       List<File> existingCachedFiles = [];
 
       // Check app cache directory
-      final appCacheDir = await DocMan.dir.cache();
-      if (appCacheDir != null && await appCacheDir.exists()) {
-        List<FileSystemEntity> appCacheContents = await appCacheDir.list().toList();
-        existingCachedFiles.addAll(
-            appCacheContents
-                .where((entity) => entity is File)
-                .cast<File>()
-        );
-      }
+      // final appCacheDir = await DocMan.dir.cache();
+      // if (appCacheDir != null && await appCacheDir.exists()) {
+      //   List<FileSystemEntity> appCacheContents = await appCacheDir.list().toList();
+      //   existingCachedFiles.addAll(
+      //       appCacheContents
+      //           .where((entity) => entity is File)
+      //           .cast<File>()
+      //   );
+      // }
 
       // Check DocMan cache directory
       final docManCacheDir = Directory('/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
@@ -469,9 +471,9 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('All Cached Files ${existingCachedFiles}');
 
-      Set<String> alreadyCachedNames = existingCachedFiles
+      List<String> alreadyCachedNames = existingCachedFiles
           .map((file) => file.path.split('/').last)
-          .toSet();
+          .toList();
 
       print('Already cached files: $alreadyCachedNames');
 
