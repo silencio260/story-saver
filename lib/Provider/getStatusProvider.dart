@@ -53,22 +53,47 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // void getAllStatusesWithSaf() async {
-  //
-  //   await checkIsBusinessMode();
-  //
-  //   if(_isBusinessMode == false){
-  //
-  //     getWhatsAppStatusWithSaf();
-  //   } else {
-  //
-  //     getBusinessStatusWithSaf();
-  //   }
-  // }
+  Future<List<File>> deleteExistingMediaCache(List<File> existingCachedFiles) async {
+    // --- Start of new block ---
+    List<File> filesToKeep = [];
+    DateTime now = DateTime.now();
+    print('--- Processing existing cached files (deleting if older than 25 hours) ---');
+
+    for (File file in existingCachedFiles) {
+      try {
+        FileStat stats = await file.stat();
+        Duration age = now.difference(stats.modified);
+
+        if (age.inHours > 25) {
+          print('File ${file.path} is ${age.inHours} hours old. Deleting...');
+          try {
+            await file.delete();
+            print('Successfully deleted old file: ${file.path}');
+          } catch (deleteError) {
+            print('Error deleting file ${file.path}: $deleteError');
+          }
+        } else {
+          String formattedTime =
+              "${stats.modified.hour.toString().padLeft(2, '0')}:"
+              "${stats.modified.minute.toString().padLeft(2, '0')}:"
+              "${stats.modified.second.toString().padLeft(2, '0')}";
+          print('Keeping file: ${file.path}, Age: ${age.inHours} hours, Last Modified Time: $formattedTime');
+          filesToKeep.add(file);
+        }
+      } catch (statError) {
+        print('Error getting stats for file ${file.path}, cannot determine age: $statError. Skipping this file.');
+        // Files for which stats cannot be read will not be added to filesToKeep.
+      }
+    }
+
+    return filesToKeep;
+  }
 
   void getAllStatusesWithSaf({VoidCallback? onComplete}) async {
 
     await checkIsBusinessMode();
+
+    // clearAllCache();
 
     // getWhatsAppStatusWithDocMan();
 
@@ -281,46 +306,7 @@ class GetStatusProvider extends ChangeNotifier {
   // Regular WhatsApp navigation (fallback)
   Future<DocumentFile?> _navigateToWhatsAppStatus(DocumentFile androidMediaDir) async {
     try {
-      // List<DocumentFile> mediaContents = await androidMediaDir.listDocuments();
-      // DocumentFile? whatsappDir = mediaContents.cast<DocumentFile?>().firstWhere(
-      //       (dir) => dir != null && dir.name == "com.whatsapp",
-      //   orElse: () => null,
-      // );
-      //
-      // if (whatsappDir == null) {
-      //   print("com.whatsapp folder not found in Android/media");
-      //   return null;
-      // }
-      //
-      // List<DocumentFile> whatsappContents = await whatsappDir.listDocuments();
-      // print('Regular WhatsApp Search: ${whatsappContents.map((d) => d.name).toList()}');
-      //
-      // DocumentFile? whatsappAppDir = whatsappContents.cast<DocumentFile?>().firstWhere(
-      //       (dir) => dir != null && dir.name == "WhatsApp",
-      //   orElse: () => null,
-      // );
-      //
-      // if (whatsappAppDir == null) {
-      //   print("WhatsApp folder not found in com.whatsapp");
-      //   return null;
-      // }
-      //
-      // List<DocumentFile> appContents = await whatsappAppDir.listDocuments();
-      // DocumentFile? mediaDir = appContents.cast<DocumentFile?>().firstWhere(
-      //       (dir) => dir != null && dir.name == "Media",
-      //   orElse: () => null,
-      // );
 
-      // if (mediaDir == null) {
-      //   print("Media folder not found in regular WhatsApp");
-      //   return null;
-      // }
-      //
-      // List<DocumentFile> mediaContents2 = await mediaDir.listDocuments();
-      // DocumentFile? statusDir = mediaContents2.cast<DocumentFile?>().firstWhere(
-      //       (dir) => dir != null && dir.name == ".Statuses",
-      //   orElse: () => null,
-      // );
 
       const relativePath = "com.whatsapp/Whatsapp/Media/.Statuses";
 
@@ -454,26 +440,6 @@ class GetStatusProvider extends ChangeNotifier {
 
 
 
-
-
-
-
-
-
-
-
-
-      // List<File> existingCachedFiles = [];
-      //
-      // final cacheDir = await DocMan.dir.cache();
-      // if (await cacheDir!.exists()) {
-      //   List<FileSystemEntity> cacheContents = await cacheDir.list().toList();
-      //   existingCachedFiles = cacheContents
-      //       .where((entity) => entity is File)
-      //       .cast<File>()
-      //       .toList();
-      // }
-
       List<File> existingCachedFiles = [];
 
       // Check app cache directory
@@ -497,6 +463,8 @@ class GetStatusProvider extends ChangeNotifier {
                 .cast<File>()
         );
       }
+
+      existingCachedFiles = await deleteExistingMediaCache(existingCachedFiles); // Update the list to only contain files to keep
 
 
       print('All Cached Files ${existingCachedFiles}');

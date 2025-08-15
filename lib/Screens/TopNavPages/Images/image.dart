@@ -323,7 +323,8 @@ class _ImageHomePageState extends State<ImageHomePage>
                             (index) {
                               final data = file.getImages[index];
 
-                              print('---- ${data.path}');
+                              // final stat = await file.stat();
+                              print('---- data.path -> ${data.path} - ${data.stat()}');
                               // final mediaManager = SavedMediaManager();
 
                               // bool isSaved = mediaManager.isMediaSaved(data.path);
