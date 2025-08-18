@@ -6,12 +6,19 @@ allprojects {
 }
 
 buildscript {
+    // Define ext.kotlin_version if it's not already defined
+    // If you have this line elsewhere, ensure it's a compatible version.
+    // If not, we're adding it here.
+    ext.kotlin_version = '2.0.0' // <--- CORRECTED
+
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.1'
+        // --- ADD THIS LINE ---
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -38,6 +45,3 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
-
-
-
