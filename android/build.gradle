@@ -9,7 +9,7 @@ buildscript {
     // Define ext.kotlin_version if it's not already defined
     // If you have this line elsewhere, ensure it's a compatible version.
     // If not, we're adding it here.
-    ext.kotlin_version = '2.0.0' // <--- CORRECTED
+    ext.kotlin_version = '2.1.0' // <--- CORRECTED
 
     repositories {
         google()
