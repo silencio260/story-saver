@@ -4,11 +4,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Provider/topNavProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Services/Notifications/PushNotification.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Services/firebaseRemoteConfig.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
@@ -17,6 +19,8 @@ import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // PushNotification().initialize();
 
   MobileAds.instance.initialize();
   RequestConfiguration requestConfiguration = RequestConfiguration(
@@ -34,14 +38,23 @@ void main() async {
   //Init MediaStore
   await MediaStore.ensureInitialized();
 
-   AnalyticsService.init().then((onval) {
-     final remoteConfigService = FirebaseRemoteConfigService();
-     remoteConfigService.initialize();
+  AnalyticsService.init()
+      .then((onval)  async {
+     // final remoteConfigService = FirebaseRemoteConfigService();
+     // remoteConfigService.initialize();
+     await AdConfig.ensureInitialized();
    });
+
+  // await AdConfig.ensureInitialized();
+
+
+
+
+
   // await FirebaseRemoteConfigService().initialize();
 
   // await Firebase.initializeApp();
-  //
+
   // final remoteConfigService = FirebaseRemoteConfigService();
   // remoteConfigService.initialize();
 

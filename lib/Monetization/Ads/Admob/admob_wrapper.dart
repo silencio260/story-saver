@@ -64,6 +64,8 @@ class AdmobWrapper extends ChangeNotifier {
   // }
 
    void loadInterstitialAd() {
+    print('in loadInterstitialAd -- AdConfig().time_before_first_insta_ad - ${AdConfig.time_before_first_insta_ad} --- '
+        'AdConfig().min_insta_ad_interval ${AdConfig.min_insta_ad_interval}');
     InterstitialAd.load(
         adUnitId: AdHelper.InterstitialAdUnitId,
         request: AdRequest(),
@@ -79,7 +81,7 @@ class AdmobWrapper extends ChangeNotifier {
               // notifyListeners();
 
               Future.delayed(Duration(
-                  seconds: AdConfig().time_before_firs_insta_ad), () {
+                  seconds: AdConfig.time_before_first_insta_ad), () {
                 // _isInterstitialAdReady = true;
                 _interstitialAd = ad;
                 notifyListeners();
@@ -133,7 +135,7 @@ class AdmobWrapper extends ChangeNotifier {
                     _isInterstitialAdReady =  false;
                     _hasShownInstaAd = true;
 
-                    Future.delayed(Duration(seconds: AdConfig().min_insta_ad_interval), () {
+                    Future.delayed(Duration(seconds: AdConfig.min_insta_ad_interval), () {
                       _isInterstitialAdReady = true;
                       _interstitialAd = ad;
                       notifyListeners();
@@ -150,7 +152,7 @@ class AdmobWrapper extends ChangeNotifier {
               ),
 
             ).timeout(Duration(
-                seconds: _hasShownInstaAd == true ? 0 : AdConfig().time_before_firs_insta_ad
+                seconds: _hasShownInstaAd == true ? 0 : AdConfig.time_before_first_insta_ad
             ), onTimeout: () {
               _hasShownInstaAd = true;
               // print('Operation timed out');

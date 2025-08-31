@@ -58,9 +58,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // AdmobWrapper().loadBannerAd();
     AdmobWrapper().loadInterstitialAd();
 
-    print("AdConfig time_before_firs_insta_ad -> ${AdConfig().time_before_firs_insta_ad},"
-        "min_insta_ad_interval -> ${AdConfig().min_insta_ad_interval},"
-        "min_insta_ad_interval -> ${AdConfig().min_insta_ad_interval}",
+    print("AdConfig time_before_first_insta_ad -> ${AdConfig.time_before_first_insta_ad},"
+        "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval},"
+        "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval}",
     );
 
   }

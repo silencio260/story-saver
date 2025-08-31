@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 class FirebaseRemoteConfigKeys {
   // static const String welcomeMessage = 'welcome_message';
-  static const String time_before_firs_insta_ad = 'time_before_firs_insta_ad';
+  static const String time_before_first_insta_ad = 'time_before_first_insta_ad';
   static const String min_banner_ad_interval = 'min_banner_ad_interval';
   static const String min_insta_ad_interval = 'min_insta_ad_interval';
 }
@@ -35,7 +35,7 @@ class FirebaseRemoteConfigService {
   Future<void> _setDefaults() async => _remoteConfig.setDefaults(
     const {
       // FirebaseRemoteConfigKeys.welcomeMessage: 'Hey there, this message is coming from local defaults.',
-      FirebaseRemoteConfigKeys.time_before_firs_insta_ad: 15,
+      FirebaseRemoteConfigKeys.time_before_first_insta_ad: 15,
       FirebaseRemoteConfigKeys.min_banner_ad_interval: 10,
       FirebaseRemoteConfigKeys.min_insta_ad_interval: 15
     },
@@ -52,6 +52,7 @@ class FirebaseRemoteConfigService {
   }
 
   Future<void> initialize() async {
+    print('init remote config 2');
     await _setConfigSettings();
     await _setDefaults();
     await fetchAndActivate();
