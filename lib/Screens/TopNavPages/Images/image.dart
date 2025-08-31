@@ -84,7 +84,7 @@ class _ImageHomePageState extends State<ImageHomePage>
 
       AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true).then((value) {
 
-        print('isWhatsAppStatusFolderPermissionAvailable --> $value');
+        print('isBusinessWhatsAppStatusFolderPermissionAvailable --> $value');
 
         permission.setIsBusinessWhatsAppStatusSafAvailable(value);
       });
@@ -133,13 +133,13 @@ class _ImageHomePageState extends State<ImageHomePage>
     final permission = Provider.of<PermissionProvider>(context, listen: false);
     final isGranted = await AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true);
 
-    print('_getWhatsAppStatusFolderPermission 1 permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+    print('_getBusinessWhatsAppStatusFolderPermission 1 permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
 
     if(isGranted == true)
       permission.setIsBusinessWhatsAppStatusSafAvailable(true);
 
-    print('_getWhatsAppStatusFolderPermission permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+    print('_getBusinessWhatsAppStatusFolderPermission permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
   }
 
@@ -197,7 +197,8 @@ class _ImageHomePageState extends State<ImageHomePage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          Text('Grant Access To Android/Media Folder'),
+          Text('or The Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
@@ -276,7 +277,7 @@ class _ImageHomePageState extends State<ImageHomePage>
                 RequestBusinessWhatsappFolderPermission(context)
 
 
-            : permission.isWhatsAppStatusSafAvailable == false ?
+            :file.isBusinessMode == false && permission.isWhatsAppStatusSafAvailable == false ?
                 RequestWhatsappFolderPermission(context)
 
             : file.isLoading == true && file.getImages.isEmpty

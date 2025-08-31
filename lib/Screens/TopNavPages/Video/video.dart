@@ -99,7 +99,8 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Grant Access To Business Whatsapp .Statuses Folder.'),
+          Text('Grant Access To Android/Media Folder'),
+          Text('or The Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
@@ -167,15 +168,23 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
        // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
        RequestBusinessWhatsappFolderPermission(context)
 
+       :file.isBusinessMode == true && file.isWhatsappAvailable == false
+           ? LoadStatusUtils().TextWithStatusRefresh(
+           context: context,
+           text: "WB Whatsapp not available"
+       )
+           :
+       file.isWhatsappAvailable == false
+           ? LoadStatusUtils().TextWithStatusRefresh(
+           context: context,
+           text: "Whatsapp not available"
+       )
 
-           : permission.isWhatsAppStatusSafAvailable == false ?
+
+           : file.isBusinessMode == false &&
+           permission.isWhatsAppStatusSafAvailable == false ?
        RequestWhatsappFolderPermission(context)
-       :
-        file.isWhatsappAvailable == false
-          ? LoadStatusUtils().TextWithStatusRefresh(
-          context: context,
-          text: "Whatsapp not available"
-        )
+
         // const Center(
         //       child: Text('Whatsapp not available'),
         //     )

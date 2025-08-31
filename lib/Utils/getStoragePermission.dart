@@ -123,7 +123,21 @@ class AppStoragePermission {
     //     ? "Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
     //     : "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
-    String statusFolder = "Android/media";
+    String androidMediaFolder = "Android/media";
+
+
+    // // Extract base docId ("primary:Android/media")
+    // final baseDocId = Uri.decodeComponent(
+    //   androidMediaDir.toString().split('/tree/').last.split('/document/').first,
+    // );
+    //
+    // // Build the full docId with the relative path
+    // final fullDocId = "$baseDocId/$relativePath";
+    //
+    // // Encode and build final content:// URI
+    // final fullUri =
+    //     "content://com.android.externalstorage.documents/tree/${Uri.encodeComponent(baseDocId)}/document/${Uri.encodeComponent(fullDocId)}";
+
 
     List<PersistedPermission> permissions = await DocMan.perms.list(files: false, directories: true);
 
@@ -133,13 +147,39 @@ class AppStoragePermission {
 
     for (final permission in permissions) {
       final decodedUri = Uri.decodeFull(permission.uri);
-      if (decodedUri.contains(statusFolder) ||
-          (isBusinessMode && decodedUri.contains('whatsapp.w4b') && decodedUri.contains('.Statuses')) ||
-          (!isBusinessMode && decodedUri.contains('com.whatsapp') && decodedUri.contains('.Statuses'))) {
+
+      final baseDocId = Uri.decodeComponent(
+        permission.uri.toString().split('media').first,
+      );
+
+      print('_getBusinessWhatsAppStatusFolderPermission -> decodedUri.endsWith("androidMediaFolder") - ${decodedUri.endsWith("$androidMediaFolder")} - ${decodedUri}');
+      if (decodedUri.endsWith("$androidMediaFolder")){
+
+        print('_getBusinessWhatsAppStatusFolderPermission 2 -> ${decodedUri} - ${baseDocId}');
+        isGranted = true;
+        break;
+      }
+      else if (isBusinessMode == true &&
+        (decodedUri.contains('whatsapp.w4b') && decodedUri.contains('.Statuses')) ){
+
+        isGranted = true;
+        break;
+      }
+      else if(isBusinessMode == false
+      && ( (decodedUri.contains("com.whatsapp") && !decodedUri.contains("w4b"))
+              && decodedUri.contains('.Statuses')) ) {
+
         isGranted = true;
         break;
       }
     }
+
+      // if (decodedUri.contains(androidMediaFolder) ||
+      //     (isBusinessMode && decodedUri.contains('whatsapp.w4b') && decodedUri.contains('.Statuses')) ||
+      //     (!isBusinessMode && decodedUri.contains('com.whatsapp') && decodedUri.contains('.Statuses'))) {
+      //   isGranted = true;
+      //   break;
+      // }
 
     return isGranted;
   }
@@ -239,11 +279,13 @@ class AppStoragePermission {
         // Check if we already have permission to the specific WhatsApp status folder
         for (final permission in permissions) {
           final decodedUri = Uri.decodeFull(permission.uri);
-          if (decodedUri.contains(expectedPath) && decodedUri.contains(".Statuses")) {
+          if (decodedUri.toLowerCase().endsWith("android/media") ||
+          (decodedUri.contains(expectedPath) && decodedUri.contains(".Statuses"))) {
             print("Found existing WhatsApp permission: $decodedUri");
             statusDir = await DocumentFile.fromUri(permission.uri);
 
             if (statusDir != null && await statusDir.exists && statusDir.canRead) {
+              print("statusDir is active and can read");
               break;
             } else {
               await DocMan.perms.release(permission.uri);
