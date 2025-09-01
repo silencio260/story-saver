@@ -10,6 +10,7 @@ import 'package:storysaver/Provider/topNavProvider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Services/GDPR_Consent/gdprConsentMessage.dart';
 import 'package:storysaver/Services/Notifications/PushNotification.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Services/firebaseRemoteConfig.dart';
@@ -37,6 +38,8 @@ void main() async {
 
   //Init MediaStore
   await MediaStore.ensureInitialized();
+
+  await handleGDPRConsent();
 
   AnalyticsService.init()
       .then((onval)  async {
