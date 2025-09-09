@@ -295,7 +295,7 @@ class GetStatusProvider extends ChangeNotifier {
       existingCachedFiles = await deleteExistingMediaCache(existingCachedFiles); // Update the list to only contain files to keep
 
 
-      print('All Cached Files ${existingCachedFiles}');
+      print('All Cached Files ${existingCachedFiles.length} - ${existingCachedFiles}');
 
       List<String> alreadyCachedNames = existingCachedFiles
           .map((file) => file.path.split('/').last)
@@ -305,7 +305,8 @@ class GetStatusProvider extends ChangeNotifier {
 
 
       documents.sort((a, b) => b.lastModified.compareTo(a.lastModified));
-      List<DocumentFile> recentDocuments = documents.take(20).toList(); // Only cache 20 newest
+      // List<DocumentFile> recentDocuments = documents.take(20).toList(); // Only cache 20 newest
+      List<DocumentFile> recentDocuments = documents.toList();
 
       List<File> cachedFiles = [];
       for (DocumentFile doc in recentDocuments) {
@@ -355,7 +356,7 @@ class GetStatusProvider extends ChangeNotifier {
           .map((path) => File(path))
           .toList();
 
-      print('After Getting all DocMan Files -- getWhatsAppStatusWithDocMan  --> ${_getVideos}');
+      print('After Getting all DocMan Files -- getWhatsAppStatusWithDocMan --${_getVideos.length} --> ${_getVideos}');
       print('getWhatsAppStatusWithDocMan AllFiles --> ${_getImages}');
 
       _isWhatsappAvailable = true;
