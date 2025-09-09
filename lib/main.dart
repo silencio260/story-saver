@@ -19,52 +19,58 @@ import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // PushNotification().initialize();
+    // PushNotification().initialize();
 
-  MobileAds.instance.initialize();
-  RequestConfiguration requestConfiguration = RequestConfiguration(
-    testDeviceIds: ['5e2d630f-0073-4c73-b2b8-f05738eb5b6f']
-  );
-  MobileAds.instance.updateRequestConfiguration(requestConfiguration);
+    MobileAds.instance.initialize();
+    RequestConfiguration requestConfiguration = RequestConfiguration(
+        testDeviceIds: ['5e2d630f-0073-4c73-b2b8-f05738eb5b6f']
+    );
+    MobileAds.instance.updateRequestConfiguration(requestConfiguration);
 
-  print('ensureInitialized');
+    print('ensureInitialized');
 
-  String envvar = const String.fromEnvironment("founders_version");
-  String e = AppConstants.SAVED_STORY_PATH;
-  debugPrint('#### Staging Env - $envvar - ${e} -  ${const String.fromEnvironment("firebase_api_key_android")} '
-      '${const String.fromEnvironment("founders_version")}');
+    String envvar = const String.fromEnvironment("founders_version");
+    String e = AppConstants.SAVED_STORY_PATH;
+    debugPrint(
+        '#### Staging Env - $envvar - ${e} -  ${const String.fromEnvironment(
+            "firebase_api_key_android")} '
+            '${const String.fromEnvironment("founders_version")}');
 
-  //Init MediaStore
-  await MediaStore.ensureInitialized();
+    //Init MediaStore
+    await MediaStore.ensureInitialized();
 
-  await handleGDPRConsent();
+    await handleGDPRConsent();
 
-  AnalyticsService.init()
-      .then((onval)  async {
-     // final remoteConfigService = FirebaseRemoteConfigService();
-     // remoteConfigService.initialize();
-     await AdConfig.ensureInitialized();
-   });
+    AnalyticsService.init()
+        .then((onval) async {
+      // final remoteConfigService = FirebaseRemoteConfigService();
+      // remoteConfigService.initialize();
+      await AdConfig.ensureInitialized();
+    });
 
-  // await AdConfig.ensureInitialized();
-
-
+    // await AdConfig.ensureInitialized();
 
 
+    // await FirebaseRemoteConfigService().initialize();
 
-  // await FirebaseRemoteConfigService().initialize();
+    // await Firebase.initializeApp();
 
-  // await Firebase.initializeApp();
+    // final remoteConfigService = FirebaseRemoteConfigService();
+    // remoteConfigService.initialize();
 
-  // final remoteConfigService = FirebaseRemoteConfigService();
-  // remoteConfigService.initialize();
 
+  } catch(e){
+    print('Error in main function: $e');
+  }
 
   runApp(MyApp());
 
   AnalyticsService.logAppOpen();
+
+  AnalyticsService.logGotoSplashScreen();
 }
 
 class MyApp extends StatelessWidget {

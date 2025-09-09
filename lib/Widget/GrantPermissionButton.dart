@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Services/Notifications/PushNotification.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 
 Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGranted}) {
@@ -18,9 +19,11 @@ Widget GrantPermissionButton(BuildContext context, {VoidCallback? onPermissionGr
 
   Future<void> _requestPermission() async {
 
+    // await PushNotification().initializeAndPrompt();
+
+
     //works for android 11+
     final status = await AppStoragePermission().getStoragePermission(); //await Permission.manageExternalStorage.request(); //await Permission.storage.request();
-
 
     if (status == true) {
       onPermissionGranted?.call();
