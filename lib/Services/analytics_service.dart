@@ -9,6 +9,7 @@ import 'package:storysaver/firebase_options.dart';
 
 class AnalyticsService {
   final _instance = FirebaseAnalytics.instance;
+  static String _isFoundersVersion = const String.fromEnvironment("founders_version");
 
   // In class AnalyticsService
   static Future<void> init() async {
@@ -62,21 +63,6 @@ class AnalyticsService {
     );
   }
 
-  Future<void> logSaveStatus() async {
-    // await _instance.logEvent(name: "save status");
-    try {
-      print("Logging save_status event...");
-      await  FirebaseAnalytics.instance.logEvent(
-        name: "save_status",
-        parameters: {
-          "platform": Platform.operatingSystem,
-        },
-      );
-      print("save_status event logged successfully");
-    } catch (e) {
-      print("Error logging event: $e");
-    }
-  }
 
   Future<void> logAdImpressions({
     required String adUnitId,
@@ -101,6 +87,420 @@ class AnalyticsService {
       print("Error logging ad impression: $e");
     }
   }
+
+  static Future<void> logShareApp() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "share_app",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGoToAppStorePage() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "goto_app_store_page",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGotoSplashScreen() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "goto_splash_screen",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGotoHomePage() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "goto_home_page",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logShowGDPRConsentModal() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "show_gdpr_consent_request",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGrantGDPRConsent() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "grant_gdpr_consent",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGrantNotificationRequest() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "grant_notification_request",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logOperationFailedAppError() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "app_error_operation_failed",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ////////////////////////////////////////////////
+
+  Future<void> logSaveStatus() async {
+    // await _instance.logEvent(name: "save status");
+    try {
+      print("Logging save_status event...");
+      await  FirebaseAnalytics.instance.logEvent(
+        name: "save_status",
+        parameters: {
+          "platform": Platform.operatingSystem,
+        },
+      );
+      // print("save_status event logged successfully");
+    } catch (e) {
+      print("Error logging event: $e");
+    }
+  }
+
+  static Future<void> logSwitchToBusinessMode() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "switch_to_business_mode",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logSwitchToNormalMode() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "switch_to_normal_mode",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logShowHelpModal() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "show_help",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logRequestFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "request_whatsapp_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGrantWAFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "grant_whatsapp_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logDeniedWAFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "denied_whatsapp_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logRequestBusinessFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "request_business_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGrantBusinessFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "grant_business_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logDeniedBusinessFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "denied_business_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logGrantAndroidMediaFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "grant_Android/Media_folder_permission",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+  static Future<void> logNavigateToFolderPermission() async {
+    // await _instance.logEvent(name: "save status");
+    // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
+
+    if (_isFoundersVersion == false){
+      try {
+        // print("Logging save_status event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "navigate_to_folder_permission_page",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        // print("save_status event logged successfully");
+      } catch (e) {
+        print("Error logging event: $e");
+      }
+    }
+  }
+
+
 
 
 }
