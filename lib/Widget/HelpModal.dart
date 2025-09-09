@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 class HelpModal {
   void showHelpDialog(BuildContext context) {
+    AnalyticsService.logShowHelpModal();
     showDialog(
       context: context,
       builder: (BuildContext context) {

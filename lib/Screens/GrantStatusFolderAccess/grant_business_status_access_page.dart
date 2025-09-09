@@ -8,6 +8,7 @@ import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
 import 'package:storysaver/Screens/home_page.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -38,6 +39,8 @@ class _BusinessWhatsAppStatusFolderPermissionState extends State<BusinessWhatsAp
 
       // context.loaderOverlay.show();
 
+      AnalyticsService.logRequestFolderPermission();
+
       await AppStoragePermission().pickWhatsAppStatusFolder(isBusinessMode: true);
 
       // context.loaderOverlay.show();
@@ -54,6 +57,8 @@ class _BusinessWhatsAppStatusFolderPermissionState extends State<BusinessWhatsAp
         // Permission granted
         print("isGranted in _requestPermission  $granted");
 
+        AnalyticsService.logGrantBusinessFolderPermission();
+
         permission.setIsWhatsAppStatusSafAvailable(true);
 
         navigate();
@@ -61,12 +66,14 @@ class _BusinessWhatsAppStatusFolderPermissionState extends State<BusinessWhatsAp
         print('After Nav');
 
       } else {
+        AnalyticsService.logDeniedBusinessFolderPermission();
         // Show error or retry message
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Permission denied ❌. Please try again.'))
         );
       }
     } catch (e) {
+      AnalyticsService.logOperationFailedAppError();
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'))
       );

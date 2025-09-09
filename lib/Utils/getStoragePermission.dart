@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Provider/PermissionProvider.dart';
+import 'package:storysaver/Services/Notifications/PushNotification.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
 // import 'package:saf/saf.dart';
 
@@ -109,6 +111,8 @@ class AppStoragePermission {
       statuses.forEach((permission, status) async {
         // print('perm_status $permission: $status');
       });
+
+      await PushNotification().initializeAndPrompt();
 
       // Now try PhotoManager
       final ps = await PhotoManager.requestPermissionExtend();
@@ -285,6 +289,11 @@ class AppStoragePermission {
             statusDir = await DocumentFile.fromUri(permission.uri);
 
             if (statusDir != null && await statusDir.exists && statusDir.canRead) {
+
+              if(decodedUri.toLowerCase().endsWith("android/media")){
+                AnalyticsService.logGrantAndroidMediaFolderPermission();
+              }
+
               print("statusDir is active and can read");
               break;
             } else {

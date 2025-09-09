@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/home_page.dart';
+import 'package:storysaver/Services/Notifications/PushNotification.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -20,11 +22,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
 
     Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
+
     navigate();
   }
 
   void navigate() {
     Future.delayed(const Duration(seconds: 2), () {
+      AnalyticsService.logGotoHomePage();
       Navigator.pushAndRemoveUntil(
           context,
           CupertinoPageRoute(builder: (_) => const HomePage()),

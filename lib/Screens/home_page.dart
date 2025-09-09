@@ -15,6 +15,7 @@ import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart'
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Widget/HelpModal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -124,14 +125,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void _shareAppLink(BuildContext context) {
+    // AnalyticsService.logShareApp();
     Share.share('Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
         .then((value) {
       // ScaffoldMessenger.of(context)
       //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
     });
+    AnalyticsService.logShareApp();
   }
 
   void _launchPlayStoreLink() async {
+    AnalyticsService.logGoToAppStorePage();
     final uri = Uri.parse(AppConstants().GOOGLE_PLAY_STORE_LINK);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -146,6 +150,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     provider.setIsBusinessMode(!provider.isBusinessMode);
     provider.clearAllStatus();
     // Provider.of<GetStatusProvider>(context, listen: false).setIsBusinessMode();
+
+    if(provider.isBusinessMode == true) {
+      AnalyticsService.logSwitchToBusinessMode();
+    } else {
+      AnalyticsService.logSwitchToNormalMode();
+    }
 
     Navigator.push<void>(
       context,

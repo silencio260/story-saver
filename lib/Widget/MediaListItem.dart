@@ -191,7 +191,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                     child: Container(
                       color: Color.fromRGBO(0, 0, 0, 0.3),
                       width: 200,
-                      height: 50,
+                      height: 40,
                       // child: Placeholder(),
                       // child: Text('data'),
                     ),
@@ -203,13 +203,16 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                   bottom: 0,
                   child: Container(
                     // color: Colors.blue,//Color.fromRGBO(0, 0, 0, 0.3),
-                    width: 80,
+                    width: 100,
+                    // height: 50,
                     child: GestureDetector(
                       onTap: () async {
                         _toggleSavedStatus();
                       },
                       child: Container(
+
                         // color: Colors.red,
+                        color: Color.fromRGBO(0, 0, 0, 0.0), //This somehow makes the button more clickable
                         alignment: Alignment.bottomRight,
                         child: Container(
                           constraints: BoxConstraints(maxWidth: 50, maxHeight: 50),
@@ -218,7 +221,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                           child: !isAlreadySaved ? Icon(
                             Icons.download, // Replace with your desired icon
                             color: const Color.fromARGB(255, 236, 235, 230),
-                            size: 20,
+                            size: 23,
                           ) :
                           Icon(
                             Icons.done_all, // Replace with your desired icon
