@@ -30,7 +30,7 @@ class GetStatusProvider extends ChangeNotifier {
   bool _isBusinessMode = false;
   bool get isBusinessMode => _isBusinessMode;
 
-  Future<void> checkIsBusinessMode () async {
+  Future<void> checkIsBusinessMode() async {
     final prefs = await SharedPreferences.getInstance();
     final val = prefs.getBool(AppConstants().IS_BUSINESS_MODE);
 
@@ -39,7 +39,7 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setIsBusinessMode (bool newValue) async {
+  void setIsBusinessMode(bool newValue) async {
     final prefs = await SharedPreferences.getInstance();
     final val = prefs.setBool(AppConstants().IS_BUSINESS_MODE, newValue);
 
@@ -53,11 +53,13 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<File>> deleteExistingMediaCache(List<File> existingCachedFiles) async {
+  Future<List<File>> deleteExistingMediaCache(
+      List<File> existingCachedFiles) async {
     // --- Start of new block ---
     List<File> filesToKeep = [];
     DateTime now = DateTime.now();
-    print('--- Processing existing cached files (deleting if older than 25 hours) ---');
+    print(
+        '--- Processing existing cached files (deleting if older than 25 hours) ---');
 
     for (File file in existingCachedFiles) {
       try {
@@ -77,11 +79,13 @@ class GetStatusProvider extends ChangeNotifier {
               "${stats.modified.hour.toString().padLeft(2, '0')}:"
               "${stats.modified.minute.toString().padLeft(2, '0')}:"
               "${stats.modified.second.toString().padLeft(2, '0')}";
-          print('Keeping file: ${file.path}, Age: ${age.inHours} hours, Last Modified Time: $formattedTime');
+          print(
+              'Keeping file: ${file.path}, Age: ${age.inHours} hours, Last Modified Time: $formattedTime');
           filesToKeep.add(file);
         }
       } catch (statError) {
-        print('Error getting stats for file ${file.path}, cannot determine age: $statError. Skipping this file.');
+        print(
+            'Error getting stats for file ${file.path}, cannot determine age: $statError. Skipping this file.');
         // Files for which stats cannot be read will not be added to filesToKeep.
       }
     }
@@ -90,7 +94,6 @@ class GetStatusProvider extends ChangeNotifier {
   }
 
   void getAllStatusesWithSaf({VoidCallback? onComplete}) async {
-
     await checkIsBusinessMode();
     print(' getAllStatusesWithSaf checkIsBusinessMode $_isBusinessMode');
 
@@ -106,11 +109,9 @@ class GetStatusProvider extends ChangeNotifier {
     //   getBusinessStatusWithDocMan();
     // }
 
-    if(_isBusinessMode == true){
-
+    if (_isBusinessMode == true) {
       await _getAllStatusWithDocMan(isBusinessMode: true);
     } else {
-
       await _getAllStatusWithDocMan();
     }
 
@@ -119,19 +120,25 @@ class GetStatusProvider extends ChangeNotifier {
   }
 
   // Regular WhatsApp navigation (fallback)
-  Future<DocumentFile?> _navigateToWhatsAppStatusFolder({required DocumentFile androidMediaDir, bool isBusinessMode = false}) async {
+  Future<DocumentFile?> _navigateToWhatsAppStatusFolder(
+      {required DocumentFile androidMediaDir,
+      bool isBusinessMode = false}) async {
     try {
-
       // const relativePath = "com.whatsapp/Whatsapp/Media/.Statuses";
 
       var relativePath = "com.whatsapp/Whatsapp/Media/.Statuses";
 
-      if(isBusinessMode == true)
+      if (isBusinessMode == true)
         relativePath = "com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
       // Extract base docId ("primary:Android/media")
       final baseDocId = Uri.decodeComponent(
-        androidMediaDir.toString().split('/tree/').last.split('/document/').first,
+        androidMediaDir
+            .toString()
+            .split('/tree/')
+            .last
+            .split('/document/')
+            .first,
       );
 
       // Build the full docId with the relative path
@@ -141,19 +148,15 @@ class GetStatusProvider extends ChangeNotifier {
       final fullUri =
           "content://com.android.externalstorage.documents/tree/${Uri.encodeComponent(baseDocId)}/document/${Uri.encodeComponent(fullDocId)}";
 
-
       final doc = await DocumentFile.fromUri(fullUri);
       if (doc != null && await doc.exists) {
         return doc;
       }
-
-
     } catch (e) {
       print("Error navigating to regular WhatsApp status folder: $e");
       return null;
     }
   }
-
 
   Future<void> _getAllStatusWithDocMan({bool isBusinessMode = false}) async {
     try {
@@ -162,9 +165,11 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('Before Getting all DocMan Files -- getWhatsAppStatusWithDocMan ');
 
-      List<PersistedPermission> accessiblePath = await DocMan.perms.list(files: false, directories: true);
+      List<PersistedPermission> accessiblePath =
+          await DocMan.perms.list(files: false, directories: true);
 
-      print('After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
+      print(
+          'After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
 
       DocumentFile? statusDir;
 
@@ -187,17 +192,16 @@ class GetStatusProvider extends ChangeNotifier {
         });
       };
 
-
       // First check if we already have direct .Statuses access (for both regular WhatsApp and Business)
       for (final permission in accessiblePath) {
         final decodedUri = Uri.decodeFull(permission.uri);
         print('Checking URI: ${decodedUri}');
 
-        if(decodedUri.contains(".Statuses")){
-        // Check for regular WhatsApp
+        if (decodedUri.contains(".Statuses")) {
+          // Check for regular WhatsApp
           if (isBusinessMode == false &&
               (decodedUri.contains("com.whatsapp") &&
-              !decodedUri.contains("w4b"))) {
+                  !decodedUri.contains("w4b"))) {
             print('Found direct WhatsApp .Statuses access: ${decodedUri}');
             statusDir = await getStatusDir(permission);
           }
@@ -205,7 +209,8 @@ class GetStatusProvider extends ChangeNotifier {
           //Check for WhatsApp Business
           if (isBusinessMode == true &&
               (decodedUri.contains("com.whatsapp.w4b"))) {
-            print('Found direct Business WhatsApp .Statuses access: ${decodedUri}');
+            print(
+                'Found direct Business WhatsApp .Statuses access: ${decodedUri}');
             statusDir = await getStatusDir(permission);
           }
 
@@ -220,7 +225,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       // If no direct .Statuses access, look for Android/media access and navigate
       if (statusDir == null) {
-        print('No direct .Statuses access found, checking for Android/media access');
+        print(
+            'No direct .Statuses access found, checking for Android/media access');
 
         for (final permission in accessiblePath) {
           final decodedUri = Uri.decodeFull(permission.uri);
@@ -230,12 +236,15 @@ class GetStatusProvider extends ChangeNotifier {
               !decodedUri.contains("whatsapp")) {
             // print('Found Android/media permission: ${decodedUri}');
 
-            DocumentFile? androidMediaDir = await DocumentFile.fromUri(permission.uri);
+            DocumentFile? androidMediaDir =
+                await DocumentFile.fromUri(permission.uri);
 
             if (androidMediaDir != null && await androidMediaDir.exists) {
               // Try WhatsApp Business first, then regular WhatsApp
 
-              statusDir = await _navigateToWhatsAppStatusFolder(androidMediaDir: androidMediaDir, isBusinessMode: isBusinessMode);
+              statusDir = await _navigateToWhatsAppStatusFolder(
+                  androidMediaDir: androidMediaDir,
+                  isBusinessMode: isBusinessMode);
 
               // statusDir = await _navigateToWhatsAppStatus(androidMediaDir);
 
@@ -245,12 +254,11 @@ class GetStatusProvider extends ChangeNotifier {
               }
             }
           }
-
         }
       }
 
       // If no folder access found break the function
-      if(statusDir == null){
+      if (statusDir == null) {
         print('statusDir is null --> ${statusDir}');
         _isWhatsappAvailable = false;
         _isLoading = false;
@@ -260,9 +268,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After getting statusDir --> ${statusDir.uri}');
 
-      List<DocumentFile> documents = await statusDir
-          .listDocuments(mimeTypes: ['image/*', 'video/*'])
-          .catchError((error) async {
+      List<DocumentFile> documents = await statusDir.listDocuments(
+          mimeTypes: ['image/*', 'video/*']).catchError((error) async {
         print('Error listing documents: $error');
 
         if (error.toString().contains('Cannot initialize document file') ||
@@ -275,34 +282,31 @@ class GetStatusProvider extends ChangeNotifier {
         return <DocumentFile>[]; // must return a fallback list
       });
 
-      print('After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
-
+      print(
+          'After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
 
       List<File> existingCachedFiles = [];
 
-
       // Check DocMan cache directory
-      final docManCacheDir = Directory('/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
+      final docManCacheDir = Directory(
+          '/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
       if (await docManCacheDir.exists()) {
-        List<FileSystemEntity> docManCacheContents = await docManCacheDir.list().toList();
+        List<FileSystemEntity> docManCacheContents =
+            await docManCacheDir.list().toList();
         existingCachedFiles.addAll(
-            docManCacheContents
-                .where((entity) => entity is File)
-                .cast<File>()
-        );
+            docManCacheContents.where((entity) => entity is File).cast<File>());
       }
 
-      existingCachedFiles = await deleteExistingMediaCache(existingCachedFiles); // Update the list to only contain files to keep
+      existingCachedFiles = await deleteExistingMediaCache(
+          existingCachedFiles); // Update the list to only contain files to keep
 
+      print(
+          'All Cached Files ${existingCachedFiles.length} - ${existingCachedFiles}');
 
-      print('All Cached Files ${existingCachedFiles.length} - ${existingCachedFiles}');
-
-      List<String> alreadyCachedNames = existingCachedFiles
-          .map((file) => file.path.split('/').last)
-          .toList();
+      List<String> alreadyCachedNames =
+          existingCachedFiles.map((file) => file.path.split('/').last).toList();
 
       print('Already cached files: $alreadyCachedNames');
-
 
       documents.sort((a, b) => b.lastModified.compareTo(a.lastModified));
       // List<DocumentFile> recentDocuments = documents.take(20).toList(); // Only cache 20 newest
@@ -310,16 +314,13 @@ class GetStatusProvider extends ChangeNotifier {
 
       List<File> cachedFiles = [];
       for (DocumentFile doc in recentDocuments) {
-
         print('cached file: ${doc.name} ----- ');
         if (alreadyCachedNames.contains(doc.name)) {
           print('Skipping already cached file: ${doc.name}');
 
           // Find the existing cached file and add it to cachedFiles
-          File? existingCachedFile = existingCachedFiles.firstWhere(
-                  (file) => file.path.split('/').last == doc.name
-
-          );
+          File? existingCachedFile = existingCachedFiles
+              .firstWhere((file) => file.path.split('/').last == doc.name);
 
           if (existingCachedFile != null) {
             cachedFiles.add(existingCachedFile);
@@ -342,7 +343,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After caching files -- ${cachedFiles.length}');
 
-      List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
+      List<String> cachedFilesPath =
+          cachedFiles.map((file) => file.path).toList();
 
       print('After getting cached file paths -- ${cachedFilesPath}');
 
@@ -356,19 +358,14 @@ class GetStatusProvider extends ChangeNotifier {
           .map((path) => File(path))
           .toList();
 
-      print('After Getting all DocMan Files -- getWhatsAppStatusWithDocMan --${_getVideos.length} --> ${_getVideos}');
+      print(
+          'After Getting all DocMan Files -- getWhatsAppStatusWithDocMan --${_getVideos.length} --> ${_getVideos}');
       print('getWhatsAppStatusWithDocMan AllFiles --> ${_getImages}');
 
       _isWhatsappAvailable = true;
       _isLoading = false;
       notifyListeners();
-
-
-
-
-
-
-    }catch(e){
+    } catch (e) {
       print('error in getWhatsAppStatusWithDocMan --> ${e}');
 
       _isWhatsappAvailable = false;
@@ -376,7 +373,6 @@ class GetStatusProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
 
 //////
   Future<void> getBusinessStatusWithDocMan() async {
@@ -388,9 +384,11 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('Before Getting all DocMan Files -- getWhatsAppStatusWithDocMan ');
 
-      List<PersistedPermission> accessiblePath = await DocMan.perms.list(files: false, directories: true);
+      List<PersistedPermission> accessiblePath =
+          await DocMan.perms.list(files: false, directories: true);
 
-      print('After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
+      print(
+          'After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
 
       DocumentFile? statusDir;
 
@@ -398,7 +396,8 @@ class GetStatusProvider extends ChangeNotifier {
       for (final permission in accessiblePath) {
         final decodedUri = Uri.decodeFull(permission.uri);
         print('${decodedUri}');
-        if (decodedUri.contains("whatsapp.w4b") && decodedUri.contains(".Statuses")) {
+        if (decodedUri.contains("whatsapp.w4b") &&
+            decodedUri.contains(".Statuses")) {
           print('decodedUri ${decodedUri}');
           statusDir = await DocumentFile.fromUri(permission.uri)
               .catchError((error) async {
@@ -428,20 +427,26 @@ class GetStatusProvider extends ChangeNotifier {
 
       // If no direct .Statuses access, look for Android/media access and navigate
       if (statusDir == null) {
-        print('No direct .Statuses access found, checking for Android/media access');
+        print(
+            'No direct .Statuses access found, checking for Android/media access');
 
         for (final permission in accessiblePath) {
           final decodedUri = Uri.decodeFull(permission.uri);
 
-          if (decodedUri.contains("Android") && decodedUri.contains("media") && !decodedUri.contains("whatsapp")) {
+          if (decodedUri.contains("Android") &&
+              decodedUri.contains("media") &&
+              !decodedUri.contains("whatsapp")) {
             print('Found Android/media permission: ${decodedUri}');
 
-            DocumentFile? androidMediaDir = await DocumentFile.fromUri(permission.uri);
+            DocumentFile? androidMediaDir =
+                await DocumentFile.fromUri(permission.uri);
 
             if (androidMediaDir != null && await androidMediaDir.exists) {
-              statusDir = await _navigateToWhatsAppBusinessStatus(androidMediaDir);
+              statusDir =
+                  await _navigateToWhatsAppBusinessStatus(androidMediaDir);
               if (statusDir != null) {
-                print('Successfully navigated to WhatsApp Business status folder');
+                print(
+                    'Successfully navigated to WhatsApp Business status folder');
                 break;
               }
             }
@@ -449,7 +454,7 @@ class GetStatusProvider extends ChangeNotifier {
         }
       }
 
-      if(statusDir == null){
+      if (statusDir == null) {
         print('statusDir is null --> ${statusDir}');
         _isWhatsappAvailable = false;
         _isLoading = false;
@@ -459,9 +464,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After getting statusDir --> ${statusDir.uri}');
 
-      List<DocumentFile> documents = await statusDir
-          .listDocuments(mimeTypes: ['image/*', 'video/*'])
-          .catchError((error) async {
+      List<DocumentFile> documents = await statusDir.listDocuments(
+          mimeTypes: ['image/*', 'video/*']).catchError((error) async {
         print('Error listing documents: $error');
 
         if (error.toString().contains('Cannot initialize document file') ||
@@ -475,7 +479,8 @@ class GetStatusProvider extends ChangeNotifier {
         return <DocumentFile>[]; // must return a fallback list
       });
 
-      print('After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
+      print(
+          'After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
 
       List<File> cachedFiles = [];
       for (DocumentFile doc in documents) {
@@ -487,7 +492,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After caching files -- ${cachedFiles.length}');
 
-      List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
+      List<String> cachedFilesPath =
+          cachedFiles.map((file) => file.path).toList();
 
       print('After getting cached file paths -- ${cachedFilesPath}');
 
@@ -504,13 +510,14 @@ class GetStatusProvider extends ChangeNotifier {
           .map((path) => File(path))
           .toList();
 
-      print('After Getting all DocMan Files -- getWhatsAppStatusWithDocMan  --> ${_getVideos}');
+      print(
+          'After Getting all DocMan Files -- getWhatsAppStatusWithDocMan  --> ${_getVideos}');
       print('getWhatsAppStatusWithDocMan AllFiles --> ${_getImages}');
 
       _isWhatsappAvailable = true;
       _isLoading = false;
       notifyListeners();
-    }catch(e){
+    } catch (e) {
       print('error in getWhatsAppStatusWithDocMan --> ${e}');
 
       _isWhatsappAvailable = false;
@@ -520,15 +527,17 @@ class GetStatusProvider extends ChangeNotifier {
   }
 
 // Helper method to navigate from Android/media to WhatsApp Business status folder
-  Future<DocumentFile?> _navigateToWhatsAppBusinessStatus(DocumentFile androidMediaDir) async {
+  Future<DocumentFile?> _navigateToWhatsAppBusinessStatus(
+      DocumentFile androidMediaDir) async {
     try {
       // Navigate: Android/media -> com.whatsapp.w4b -> WhatsApp Business -> Media -> .Statuses
 
       List<DocumentFile> mediaContents = await androidMediaDir.listDocuments();
-      DocumentFile? whatsappW4bDir = mediaContents.cast<DocumentFile?>().firstWhere(
-            (dir) => dir != null && dir.name == "com.whatsapp.w4b",
-        orElse: () => null,
-      );
+      DocumentFile? whatsappW4bDir =
+          mediaContents.cast<DocumentFile?>().firstWhere(
+                (dir) => dir != null && dir.name == "com.whatsapp.w4b",
+                orElse: () => null,
+              );
 
       if (whatsappW4bDir == null) {
         print("com.whatsapp.w4b folder not found in Android/media");
@@ -537,21 +546,24 @@ class GetStatusProvider extends ChangeNotifier {
 
       List<DocumentFile> w4bContents = await whatsappW4bDir.listDocuments();
       print('WhatsApp Business Search ${w4bContents}');
-      DocumentFile? whatsappBusinessDir = w4bContents.cast<DocumentFile?>().firstWhere(
-            (dir) => dir != null && dir.name == "Whatsapp Business",
-        orElse: () => null,
-      );
+      DocumentFile? whatsappBusinessDir =
+          w4bContents.cast<DocumentFile?>().firstWhere(
+                (dir) => dir != null && dir.name == "Whatsapp Business",
+                orElse: () => null,
+              );
 
       if (whatsappBusinessDir == null) {
         print("WhatsApp Business folder not found");
         return null;
       }
 
-      List<DocumentFile> businessContents = await whatsappBusinessDir.listDocuments();
-      DocumentFile? mediaDir = businessContents.cast<DocumentFile?>().firstWhere(
-            (dir) => dir != null && dir.name == "Media",
-        orElse: () => null,
-      );
+      List<DocumentFile> businessContents =
+          await whatsappBusinessDir.listDocuments();
+      DocumentFile? mediaDir =
+          businessContents.cast<DocumentFile?>().firstWhere(
+                (dir) => dir != null && dir.name == "Media",
+                orElse: () => null,
+              );
 
       if (mediaDir == null) {
         print("Media folder not found");
@@ -561,11 +573,10 @@ class GetStatusProvider extends ChangeNotifier {
       List<DocumentFile> mediaContents2 = await mediaDir.listDocuments();
       DocumentFile? statusDir = mediaContents2.cast<DocumentFile?>().firstWhere(
             (dir) => dir != null && dir.name == ".Statuses",
-        orElse: () => null,
-      );
+            orElse: () => null,
+          );
 
       return statusDir;
-
     } catch (e) {
       print("Error navigating to WhatsApp Business status folder: $e");
       return null;
@@ -573,15 +584,19 @@ class GetStatusProvider extends ChangeNotifier {
   }
 
   // Regular WhatsApp navigation (fallback)
-  Future<DocumentFile?> _navigateToWhatsAppStatus(DocumentFile androidMediaDir) async {
+  Future<DocumentFile?> _navigateToWhatsAppStatus(
+      DocumentFile androidMediaDir) async {
     try {
-
-
       const relativePath = "com.whatsapp/Whatsapp/Media/.Statuses";
 
       // Extract base docId ("primary:Android/media")
       final baseDocId = Uri.decodeComponent(
-        androidMediaDir.toString().split('/tree/').last.split('/document/').first,
+        androidMediaDir
+            .toString()
+            .split('/tree/')
+            .last
+            .split('/document/')
+            .first,
       );
 
       // Build the full docId with the relative path
@@ -591,13 +606,10 @@ class GetStatusProvider extends ChangeNotifier {
       final fullUri =
           "content://com.android.externalstorage.documents/tree/${Uri.encodeComponent(baseDocId)}/document/${Uri.encodeComponent(fullDocId)}";
 
-
-        final doc = await DocumentFile.fromUri(fullUri);
-        if (doc != null && await doc.exists) {
-          return doc;
-          }
-
-
+      final doc = await DocumentFile.fromUri(fullUri);
+      if (doc != null && await doc.exists) {
+        return doc;
+      }
     } catch (e) {
       print("Error navigating to regular WhatsApp status folder: $e");
       return null;
@@ -612,9 +624,11 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('Before Getting all DocMan Files -- getWhatsAppStatusWithDocMan ');
 
-      List<PersistedPermission> accessiblePath = await DocMan.perms.list(files: false, directories: true);
+      List<PersistedPermission> accessiblePath =
+          await DocMan.perms.list(files: false, directories: true);
 
-      print('After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
+      print(
+          'After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}');
 
       DocumentFile? statusDir;
 
@@ -624,7 +638,8 @@ class GetStatusProvider extends ChangeNotifier {
         print('Checking URI: ${decodedUri}');
 
         // Check for both regular WhatsApp and WhatsApp Business
-        if ((decodedUri.contains("com.whatsapp.w4b") || decodedUri.contains("com.whatsapp")) &&
+        if ((decodedUri.contains("com.whatsapp.w4b") ||
+                decodedUri.contains("com.whatsapp")) &&
             decodedUri.contains(".Statuses")) {
           print('Found direct .Statuses access: ${decodedUri}');
           statusDir = await DocumentFile.fromUri(permission.uri)
@@ -654,22 +669,24 @@ class GetStatusProvider extends ChangeNotifier {
 
       // If no direct .Statuses access, look for Android/media access and navigate
       if (statusDir == null) {
-        print('No direct .Statuses access found, checking for Android/media access');
+        print(
+            'No direct .Statuses access found, checking for Android/media access');
 
         for (final permission in accessiblePath) {
           final decodedUri = Uri.decodeFull(permission.uri);
 
-          if (decodedUri.contains("Android") && decodedUri.contains("media") &&
+          if (decodedUri.contains("Android") &&
+              decodedUri.contains("media") &&
               !decodedUri.contains("whatsapp")) {
             print('Found Android/media permission: ${decodedUri}');
 
-            DocumentFile? androidMediaDir = await DocumentFile.fromUri(permission.uri);
+            DocumentFile? androidMediaDir =
+                await DocumentFile.fromUri(permission.uri);
 
             if (androidMediaDir != null && await androidMediaDir.exists) {
               // Try WhatsApp Business first, then regular WhatsApp
 
               statusDir = await _navigateToWhatsAppStatus(androidMediaDir);
-
 
               if (statusDir != null) {
                 print('Successfully navigated to WhatsApp status folder');
@@ -680,7 +697,7 @@ class GetStatusProvider extends ChangeNotifier {
         }
       }
 
-      if(statusDir == null){
+      if (statusDir == null) {
         print('statusDir is null --> ${statusDir}');
         _isWhatsappAvailable = false;
         _isLoading = false;
@@ -690,9 +707,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After getting statusDir --> ${statusDir.uri}');
 
-      List<DocumentFile> documents = await statusDir
-          .listDocuments(mimeTypes: ['image/*', 'video/*'])
-          .catchError((error) async {
+      List<DocumentFile> documents = await statusDir.listDocuments(
+          mimeTypes: ['image/*', 'video/*']).catchError((error) async {
         print('Error listing documents: $error');
 
         if (error.toString().contains('Cannot initialize document file') ||
@@ -705,10 +721,8 @@ class GetStatusProvider extends ChangeNotifier {
         return <DocumentFile>[]; // must return a fallback list
       });
 
-      print('After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
-
-
-
+      print(
+          'After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}');
 
       List<File> existingCachedFiles = [];
 
@@ -724,43 +738,38 @@ class GetStatusProvider extends ChangeNotifier {
       // }
 
       // Check DocMan cache directory
-      final docManCacheDir = Directory('/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
+      final docManCacheDir = Directory(
+          '/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
       if (await docManCacheDir.exists()) {
-        List<FileSystemEntity> docManCacheContents = await docManCacheDir.list().toList();
+        List<FileSystemEntity> docManCacheContents =
+            await docManCacheDir.list().toList();
         existingCachedFiles.addAll(
-            docManCacheContents
-                .where((entity) => entity is File)
-                .cast<File>()
-        );
+            docManCacheContents.where((entity) => entity is File).cast<File>());
       }
 
-      existingCachedFiles = await deleteExistingMediaCache(existingCachedFiles); // Update the list to only contain files to keep
-
+      existingCachedFiles = await deleteExistingMediaCache(
+          existingCachedFiles); // Update the list to only contain files to keep
 
       print('All Cached Files ${existingCachedFiles}');
 
-      List<String> alreadyCachedNames = existingCachedFiles
-          .map((file) => file.path.split('/').last)
-          .toList();
+      List<String> alreadyCachedNames =
+          existingCachedFiles.map((file) => file.path.split('/').last).toList();
 
       print('Already cached files: $alreadyCachedNames');
 
-
       documents.sort((a, b) => b.lastModified.compareTo(a.lastModified));
-      List<DocumentFile> recentDocuments = documents.take(20).toList(); // Only cache 20 newest
+      List<DocumentFile> recentDocuments =
+          documents.take(20).toList(); // Only cache 20 newest
 
       List<File> cachedFiles = [];
       for (DocumentFile doc in recentDocuments) {
-
         print('cached file: ${doc.name} ----- ');
         if (alreadyCachedNames.contains(doc.name)) {
           print('Skipping already cached file: ${doc.name}');
 
           // Find the existing cached file and add it to cachedFiles
-          File? existingCachedFile = existingCachedFiles.firstWhere(
-                (file) => file.path.split('/').last == doc.name
-
-          );
+          File? existingCachedFile = existingCachedFiles
+              .firstWhere((file) => file.path.split('/').last == doc.name);
 
           if (existingCachedFile != null) {
             cachedFiles.add(existingCachedFile);
@@ -783,7 +792,8 @@ class GetStatusProvider extends ChangeNotifier {
 
       print('After caching files -- ${cachedFiles.length}');
 
-      List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
+      List<String> cachedFilesPath =
+          cachedFiles.map((file) => file.path).toList();
 
       print('After getting cached file paths -- ${cachedFilesPath}');
 
@@ -797,19 +807,14 @@ class GetStatusProvider extends ChangeNotifier {
           .map((path) => File(path))
           .toList();
 
-      print('After Getting all DocMan Files -- getWhatsAppStatusWithDocMan  --> ${_getVideos}');
+      print(
+          'After Getting all DocMan Files -- getWhatsAppStatusWithDocMan  --> ${_getVideos}');
       print('getWhatsAppStatusWithDocMan AllFiles --> ${_getImages}');
 
       _isWhatsappAvailable = true;
       _isLoading = false;
       notifyListeners();
-
-
-
-
-
-
-    }catch(e){
+    } catch (e) {
       print('error in getWhatsAppStatusWithDocMan --> ${e}');
 
       _isWhatsappAvailable = false;
@@ -927,7 +932,6 @@ class GetStatusProvider extends ChangeNotifier {
 //     }
 //   }
 
-
   //////
   // void deprecated_getBusinessStatusWithSaf() async {
   //   _isLoading = true;
@@ -1036,7 +1040,6 @@ class GetStatusProvider extends ChangeNotifier {
 
   // Fetch WhatsApp Status files based on extension
 
-
   void getStatus(String ext) async {
     if (await AppStoragePermission().getStoragePermission() == true) {
       final directory = Directory(AppConstants.WHATSAPP_PATH);
@@ -1068,7 +1071,6 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
 
     if (await AppStoragePermission().getStoragePermission() == true) {
-
       List<FileSystemEntity> allStatus = [];
 
       for (final folder in AppConstants.WHATSAPP_PATH_LIST) {
