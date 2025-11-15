@@ -7,15 +7,17 @@ import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Widget/HelpModal.dart';
 import 'package:storysaver/Widget/svgIcons.dart';
 
+const canvasColor = Color(0xff154734);
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: canvasColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -52,7 +54,7 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.workspace_premium,
             label: 'Remove Ads',
             onTap: () {
-              PresentRevenueCatPayWallIfNeeded();
+              RevenueCatService().PresentRevenueCatPayWallIfNeeded();
             },
           ),
           const SizedBox(height: 12),
@@ -89,13 +91,11 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.subscriptions_outlined,
             label: 'Subscription Management',
             onTap: () {
-              PresentRevenueCatPayWallIfNeeded();
+              RevenueCatService().PresentRevenueCatCustomerCenter();
             },
           ),
-          const SizedBox(height: 32),
-          // Divider
-          Divider(color: Colors.white.withOpacity(0.1), height: 1),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          const SizedBox(height: 24),
           _buildSettingsItem(
             context: context,
             icon: Icons.help_outline,
@@ -134,25 +134,27 @@ class SettingsPage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: const Color(0xFF2A2A2A),
+      color: Colors.grey[200],
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
+        splashColor: canvasColor.withOpacity(0.2),
+        highlightColor: canvasColor.withOpacity(0.1),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
             children: [
               Icon(
                 icon,
-                color: Colors.white,
+                color: Colors.grey[800],
                 size: 24,
               ),
               const SizedBox(width: 16),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Colors.grey[800],
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),

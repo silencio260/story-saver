@@ -1,73 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
+import 'package:storysaver/Utils/ShareToApp.dart';
+import 'package:storysaver/Utils/checkBusinessMode.dart';
+import 'package:storysaver/Widget/HelpModal.dart';
+import 'package:storysaver/Widget/svgIcons.dart';
+////////////////////////////////////
 
-// class SidebarXExampleApp extends StatelessWidget {
-//   SidebarXExampleApp({Key? key}) : super(key: key);
-//
-//   final _controller = SidebarXController(selectedIndex: 0, extended: true);
-//   final _key = GlobalKey<ScaffoldState>();
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'SidebarX Example',
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(
-//         primaryColor: primaryColor,
-//         canvasColor: canvasColor,
-//         scaffoldBackgroundColor: scaffoldBackgroundColor,
-//         textTheme: const TextTheme(
-//           headlineSmall: TextStyle(
-//             color: Colors.white,
-//             fontSize: 46,
-//             fontWeight: FontWeight.w800,
-//           ),
-//         ),
-//       ),
-//       home: Builder(
-//         builder: (context) {
-//           final isSmallScreen = MediaQuery.of(context).size.width < 600;
-//           return Scaffold(
-//             key: _key,
-//             appBar: isSmallScreen
-//                 ? AppBar(
-//               backgroundColor: canvasColor,
-//               title: Text(_getTitleByIndex(_controller.selectedIndex)),
-//               leading: IconButton(
-//                 onPressed: () {
-//                   // if (!Platform.isAndroid && !Platform.isIOS) {
-//                   //   _controller.setExtended(true);
-//                   // }
-//                   _key.currentState?.openDrawer();
-//                 },
-//                 icon: const Icon(Icons.menu),
-//               ),
-//             )
-//                 : null,
-//             drawer: ExampleSidebarX(controller: _controller),
-//             body: Row(
-//               children: [
-//                 if (!isSmallScreen) ExampleSidebarX(controller: _controller),
-//                 Expanded(
-//                   child: Center(
-//                     child: _ScreensExample(
-//                       controller: _controller,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
-class ExampleSidebarX extends StatelessWidget {
-  const ExampleSidebarX({
+class AppSideBar extends StatelessWidget {
+  const AppSideBar({
     Key? key,
     required SidebarXController controller,
   })  : _controller = controller,
@@ -81,263 +24,238 @@ class ExampleSidebarX extends StatelessWidget {
       child: SidebarX(
         controller: _controller,
         showToggleButton: false,
+        animationDuration: Duration.zero, // Disable animation
         theme: SidebarXTheme(
-          margin: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+          decoration: const BoxDecoration(
             color: canvasColor,
-            borderRadius: BorderRadius.circular(20),
           ),
-          hoverColor: scaffoldBackgroundColor,
-          textStyle:
-              TextStyle(color: Colors.white.withOpacity(1), fontSize: 18),
-          selectedTextStyle: const TextStyle(color: Colors.white),
+          hoverColor: Colors.white.withOpacity(0.1),
+          textStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.2,
+          ),
+          selectedTextStyle: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w400,
+            fontSize: 18,
+            letterSpacing: 0.2,
+          ),
           hoverTextStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w400,
+            fontSize: 18,
+            letterSpacing: 0.2,
           ),
-          itemTextPadding: const EdgeInsets.only(left: 30),
-          selectedItemTextPadding: const EdgeInsets.only(left: 30),
+          itemTextPadding: const EdgeInsets.only(left: 20),
+          selectedItemTextPadding: const EdgeInsets.only(left: 20),
           itemDecoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: canvasColor),
+            borderRadius: BorderRadius.circular(14),
+            color: Colors.transparent,
           ),
           selectedItemDecoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: actionColor.withOpacity(0.37),
-            ),
-            gradient: const LinearGradient(
-              colors: [accentCanvasColor, canvasColor],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.28),
-                blurRadius: 30,
-              )
-            ],
+            borderRadius: BorderRadius.circular(14),
+            color: Colors.white.withOpacity(0.12),
           ),
-          iconTheme: IconThemeData(
-            color: Colors.white.withOpacity(0.7),
-            size: 20,
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+            size: 26,
           ),
           selectedIconTheme: const IconThemeData(
             color: Colors.white,
-            size: 20,
+            size: 26,
           ),
+          itemPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          selectedItemPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
         extendedTheme: const SidebarXTheme(
           width: 280,
           decoration: BoxDecoration(
             color: canvasColor,
           ),
+          padding: EdgeInsets.all(0),
         ),
-        // footerDivider: Divider(color: white.withOpacity(0.3), height: 1),
-        footerBuilder: (context, extended) {
-          return Positioned(
-              top: 0,
-              child: Divider(color: white.withOpacity(0.3), height: 20));
-          // return Padding( padding: EdgeInsets.only(top: 250), child: Divider(color: white.withOpacity(0.3), height: 20));
+        headerBuilder: (context, extended) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 70,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 15.0),
+                decoration: const BoxDecoration(
+                  color: canvasColor,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Story Saver',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (Navigator.canPop(context))
+                      IconButton(
+                        icon: const Icon(Icons.close,
+                            color: Colors.white, size: 32),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                        },
+                        tooltip: 'Close',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              ),
+              Divider(
+                color: white.withOpacity(0.2),
+                height: 1,
+                thickness: 1,
+              ),
+            ],
+          );
         },
+        items: [
+          SidebarXItem(
+            // icon: Icons.calendar_today_outlined,
+            // // label: 'Statuses',
+            iconWidget: checkIsBusinessMode(context) == false
+                ? businessWhatsAppsSvgIcon
+                : whatsAppsSvgIcon,
+            label: checkIsBusinessMode(context) == false
+                ? 'Business Mode'
+                : 'Personal Status',
+            onTap: () {
+              switchToBusinessMode(context);
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          SidebarXItem(
+            icon: Icons.workspace_premium,
+            label: 'Remove Ads',
+            onTap: () {
+              RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          SidebarXItem(
+            icon: Icons.feedback_outlined,
+            label: 'Contact Us',
+            onTap: () {
+              // debugPrint('Feedback tapped');
+
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+
+              Future.delayed(const Duration(milliseconds: 100), () {
+                _controller.selectIndex(0); // Select first item (Statuses)
+              });
+
+              FeedBackHelper().showContactUsDialog(context);
+            },
+          ),
+          // SidebarXItem(
+          //   icon: Icons.settings_outlined,
+          //   label: 'Settings',
+          //   onTap: () {
+          //     debugPrint('Settings');
+          //     if (Navigator.canPop(context)) {
+          //       Navigator.pop(context);
+          //     }
+          //   },
+          // ),
+        ],
+
         footerItems: [
           SidebarXItem(
             icon: Icons.help_outline,
             label: 'Help',
             onTap: () {
               debugPrint('Help tapped');
-              // if (Navigator.canPop(context)) {
-              //   Navigator.pop(context);
-              // }
+
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+
+              Future.delayed(const Duration(milliseconds: 100), () {
+                _controller.selectIndex(0); // Select first item (Statuses)
+              });
+
+              HelpModal().showHelpDialog(context);
             },
           ),
           SidebarXItem(
-            icon: Icons.feedback_outlined,
-            label: 'Feedback',
+            icon: Icons.star_border_outlined,
+            label: 'Rate Us',
             onTap: () {
-              FeedBackHelper().showFancyRatings(context);
               debugPrint('Feedback tapped');
-              // if (Navigator.canPop(context)) {
-              //   Navigator.pop(context);
-              // }
+
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+
+              Future.delayed(const Duration(milliseconds: 100), () {
+                _controller.selectIndex(0); // Select first item (Statuses)
+              });
+
+              FeedBackHelper().showFancyRatings(context);
             },
           ),
-          // divider,
           SidebarXItem(
-            icon: Icons.info_outline,
-            label: 'About',
+            icon: Icons.share,
+            label: 'Share',
             onTap: () {
               debugPrint('About tapped');
-              // if (Navigator.canPop(context)) {
-              //   Navigator.pop(context);
-              // }
-            },
-          ),
-        ],
-        // footerBuilder: (context, extended) {
-        //   return Column();
-        // },
-        headerBuilder: (context, extended) {
-          return Container(
-            height: 60, // Adjust height as needed
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0), // Overall padding for the header
-            alignment: Alignment.centerLeft, // Align content to the center-left
-            child: Row(
-              children: [
-                // Title: "Story Saver"
-                Expanded(
-                  // Allows text to take available space and potentially wrap
-                  child: Text(
-                    'Story Saver',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18, // Adjust font size
-                      fontWeight: FontWeight.w600, // Make it a bit bolder
-                    ),
-                    overflow: TextOverflow.ellipsis, // Handle long text
-                  ),
-                ),
-                // Spacer(), // Pushes the close button to the right, use if Expanded is not used for Text
-                if (Navigator.canPop(
-                    context)) // Only show if it can be popped (like a drawer)
-                  IconButton(
-                    icon: const Icon(Icons.close,
-                        color: Colors.white, size: 24), // Adjusted size
-                    onPressed: () {
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context); // Close the drawer
-                      }
-                    },
-                    tooltip: 'Close Drawer',
-                    padding:
-                        EdgeInsets.zero, // Minimal padding for the icon button
-                    constraints: const BoxConstraints(), // Minimal constraints
-                  ),
-              ],
-            ),
-          );
-        },
 
-        // headerBuilder: (context, extended) {
-        //   return SizedBox(
-        //     height: 100,
-        //     child: Padding(
-        //       padding: const EdgeInsets.all(5.0),
-        //       child: Image.asset('assets/images/app-logo.png'),
-        //     ),
-        //   );
-        // },
-        items: [
-          SidebarXItem(
-            icon: Icons.home,
-            label: 'Home',
-            onTap: () {
-              debugPrint('Home');
+              shareAppLink(context);
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+              Future.delayed(const Duration(milliseconds: 100), () {
+                _controller.selectIndex(0); // Select first item (Statuses)
+              });
             },
           ),
-          const SidebarXItem(
-            icon: Icons.search,
-            label: 'Search',
-          ),
-          const SidebarXItem(
-            icon: Icons.people,
-            label: 'People',
-          ),
-          SidebarXItem(
-            icon: Icons.favorite,
-            label: 'Favorites',
-            selectable: false,
-            onTap: () => _showDisabledAlert(context),
-          ),
-          const SidebarXItem(
-            iconWidget: FlutterLogo(size: 20),
-            label: 'Flutter',
-          ),
+          // SidebarXItem(
+          //   icon: Icons.info_outline,
+          //   label: 'About',
+          //   onTap: () {
+          //     debugPrint('About tapped');
+          //     // _controller.selectIndex(0);
+          //     // if (Navigator.canPop(context)) {
+          //     //   Navigator.pop(context);
+          //     // }
+          //     Future.delayed(const Duration(milliseconds: 100), () {
+          //       _controller.selectIndex(0); // Select first item (Statuses)
+          //     });
+          //   },
+          // ),
         ],
       ),
     );
-  }
-
-  void _showDisabledAlert(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Item disabled for selecting',
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.white,
-      ),
-    );
-  }
-}
-
-class _ScreensExample extends StatelessWidget {
-  const _ScreensExample({
-    Key? key,
-    required this.controller,
-  }) : super(key: key);
-
-  final SidebarXController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        final pageTitle = _getTitleByIndex(controller.selectedIndex);
-        switch (controller.selectedIndex) {
-          case 0:
-            return ListView.builder(
-              padding: const EdgeInsets.only(top: 10),
-              itemBuilder: (context, index) => Container(
-                height: 100,
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 10, right: 10, left: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Theme.of(context).canvasColor,
-                  boxShadow: const [BoxShadow()],
-                ),
-              ),
-            );
-          default:
-            return Text(
-              pageTitle,
-              style: theme.textTheme.headlineSmall,
-            );
-        }
-      },
-    );
-  }
-}
-
-String _getTitleByIndex(int index) {
-  switch (index) {
-    case 0:
-      return 'Home';
-    case 1:
-      return 'Search';
-    case 2:
-      return 'People';
-    case 3:
-      return 'Favorites';
-    case 4:
-      return 'Custom iconWidget';
-    case 5:
-      return 'Profile';
-    case 6:
-      return 'Settings';
-    default:
-      return 'Not found page';
   }
 }
 
 const primaryColor = Color(0xFF685BFF);
-const canvasColor = Color(
-    0xff154734); //Color(CustomColors.AppBarColor);///Color(0xA8FFFFFF);//Colors.black87;//Color(CustomColors.AppBarColor);
+const canvasColor = Color(0xff154734);
 const scaffoldBackgroundColor = Color(0xFF464667);
-const accentCanvasColor = Color(0xFF3E3E61);
+const accentCanvasColor = Color(0xFF0D6E4F); // Lighter green for selection
 const white = Colors.white;
 final actionColor = const Color(0xFF5F5FA7).withOpacity(0.6);
 final divider = Divider(color: white.withOpacity(0.3), height: 1);
