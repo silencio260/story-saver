@@ -2,20 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sidebarx/sidebarx.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Monetization/Ads/Admob/Widget/DisplayBannerAds.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
+import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:storysaver/Screens/Settings/settings_page.dart';
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart';
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'package:storysaver/Screens/TopNavPages/Widget/SideBar.dart'
+    hide SettingsPage;
+import 'package:storysaver/Services/PostHogWrapper/posthog_wrapper.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Widget/HelpModal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -26,9 +34,11 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late TabController controller;
+  final _controller = SidebarXController(selectedIndex: 0, extended: true);
+  final _key = GlobalKey<ScaffoldState>();
 
   final Widget whatsAppsSvgIcon = SvgPicture.asset(
     "assets/icons/whatsapp.svg",
@@ -46,11 +56,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // TODO: implement initState
     super.initState();
 
-    // print('init myHomePage');
-
-    // Provider.of<GetStatusProvider>(context, listen: false).getAllStatus();
-    _checkIsBusinessMode();
-
+    checkIsBusinessMode(context);
 
     controller = TabController(length: 3, vsync: this);
 
@@ -59,12 +65,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // AdmobWrapper().loadBannerAd();
     AdmobWrapper().loadInterstitialAd();
 
-    print("AdConfig time_before_first_insta_ad -> ${AdConfig.time_before_first_insta_ad},"
-        "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval},"
-        "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval}",
+    print(
+      "AdConfig time_before_first_insta_ad -> ${AdConfig.time_before_first_insta_ad},"
+      "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval},"
+      "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval}",
     );
-
   }
+
+  // Future<void> _enableSessionReplay() async {
+  //   await PostHogWrapper.startSessionReplay(record: true);
+  // }
 
   void _rebuild() {
     if (mounted) setState(() {});
@@ -75,13 +85,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // TODO: implement dispose
     controller.dispose();
 
-
     AdmobWrapper().removeListener(_rebuild);
     AdmobWrapper.disposeAds();
 
     super.dispose();
   }
-
 
   List<Widget> pages = const [
     ImageHomePage(),
@@ -101,7 +109,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             child: Text("No"),
           ),
           TextButton(
-            onPressed: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'), // Exit app
+            onPressed: () => SystemChannels.platform
+                .invokeMethod('SystemNavigator.pop'), // Exit app
             child: Text("Yes"),
           ),
         ],
@@ -109,82 +118,36 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
-  void _onRefresh() async{
+  void _onRefresh() async {
     // monitor network fetch
     await Future.delayed(Duration(milliseconds: 1000));
     // if failed,use refreshFailed()
     _refreshController.refreshCompleted();
   }
 
-  void _onLoading() async{
+  void _onLoading() async {
     // monitor network fetch
     await Future.delayed(Duration(milliseconds: 1000));
     _refreshController.loadComplete();
   }
 
-  void _shareAppLink(BuildContext context) {
-    // AnalyticsService.logShareApp();
-    Share.share('Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
-        .then((value) {
-      // ScaffoldMessenger.of(context)
-      //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
-    });
-    AnalyticsService.logShareApp();
-  }
-
-  void _launchPlayStoreLink() async {
-    AnalyticsService.logGoToAppStorePage();
-    final uri = Uri.parse(AppConstants().GOOGLE_PLAY_STORE_LINK);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch ${uri}';
-    }
-  }
-
-  void _switchToBusinessMode() {
-    final provider = Provider.of<GetStatusProvider>(context, listen: false);
-
-    provider.setIsBusinessMode(!provider.isBusinessMode);
-    provider.clearAllStatus();
-    // Provider.of<GetStatusProvider>(context, listen: false).setIsBusinessMode();
-
-    if(provider.isBusinessMode == true) {
-      AnalyticsService.logSwitchToBusinessMode();
-    } else {
-      AnalyticsService.logSwitchToNormalMode();
-    }
-
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(
-        builder: (BuildContext ctx) => const HomePage(),
-      ),
-    );
-  }
-
-  Future<void> _checkIsBusinessMode() async {
-    await Provider.of<GetStatusProvider>(context, listen: false).checkIsBusinessMode();
-
-    // print("_checkIsBusinessMode ${Provider.of<GetStatusProvider>(context, listen: false).isBusinessMode}");
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    final _isBusinessMode = Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
-    // print(object)
+    final _isBusinessMode =
+        Provider.of<GetStatusProvider>(context, listen: true).isBusinessMode;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     AdmobWrapper().showInterstitialAd();
 
-    return  DoubleTapToExit(
+    return DoubleTapToExit(
       child: PopScope(
         canPop: false, // Prevents app from closing automatically
         onPopInvoked: (didPop) async {
           if (didPop) return;
-      
+
           bool exitApp = await _showExitDialog(context) ?? false;
           if (exitApp) {
             SystemChannels.platform.invokeMethod('SystemNavigator.pop');
@@ -192,56 +155,86 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         },
 
         child: Scaffold(
-          appBar: AppBar(
-            title:
-            Text(
-                _isBusinessMode == false ?
-                "Story Saver" :
-                "WB Story Saver"
-            ),
-            automaticallyImplyLeading: false,
-            bottom: TabBar(
-              controller: controller,
-              indicatorColor: Colors.white,
-              indicatorSize: TabBarIndicatorSize.tab,
-              tabs:
-              [
-                Tab(child: Text('Image', style: TextStyle(fontSize: 14, color: Colors.white),),),
-                Tab(child: Text('Video', style: TextStyle(fontSize: 14, color: Colors.white),),),
-                Tab(child: Text('Gallery', style: TextStyle(fontSize: 14, color: Colors.white),),),
-              ]
-            ),
-            actions: [
-              IconButton(onPressed: () {
-                _switchToBusinessMode();
-              }, icon: _isBusinessMode == false ?
-                      businessWhatsAppsSvgIcon :
-                      whatsAppsSvgIcon,
+            key: _key,
+            // drawer: AppSideBar(controller: _controller),
+            appBar: AppBar(
+              // leading: IconButton(
+              //   onPressed: () {
+              //     _key.currentState?.openDrawer();
+              //     // print("_key.currentState?.isDrawerOpen ${_key.currentState?.isDrawerOpen}");
+              //   },
+              //   icon: const Icon(Icons.menu),
+              // ),
+              title: Text(
+                  _isBusinessMode == false ? "Story Saver" : "WB Story Saver"),
+              automaticallyImplyLeading: false,
+              bottom: TabBar(
+                  controller: controller,
+                  indicatorColor: Colors.white,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: [
+                    Tab(
+                      child: Text(
+                        'Image',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        'Video',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                    Tab(
+                      child: Text(
+                        'Gallery',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                  ]),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    switchToBusinessMode(context);
+                  },
+                  icon: _isBusinessMode == false
+                      ? businessWhatsAppsSvgIcon
+                      : whatsAppsSvgIcon,
                   color: Colors.white,
-              ),
-              IconButton(onPressed: () {
-                // _switchToBusinessMode();
-                HelpModal().showHelpDialog(context);
-              }, icon: Icon(Icons.help_outline_sharp, color: Colors.white)),
-              IconButton(onPressed: () {
-                _shareAppLink(context);
-              }, icon: Icon(Icons.share, color: Colors.white)),
-              IconButton(onPressed: () {
-                _launchPlayStoreLink();
-              }, icon: Icon(Icons.star_border_purple500_sharp, color: Colors.white)),
-            ],
-            backgroundColor: const Color(CustomColors.AppBarColor),
-            foregroundColor: Colors.white,
-          ),
-          body: Stack(
-            children: [
-              TabBarView(controller: controller, children: pages),
+                ),
+                IconButton(
+                    onPressed: () {
+                      // _switchToBusinessMode();
+                      // HelpModal().showHelpDialog(context);
+                      // Navigator.of(context).push<void>(
+                      //   MaterialPageRoute<void>(builder: (_) => SettingsPage()),
+                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.settings, color: Colors.white)),
+                IconButton(
+                    onPressed: () {
+                      RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+                    },
+                    icon: Icon(Icons.diamond_outlined, color: Colors.white)),
+              ],
+              backgroundColor: const Color(CustomColors.AppBarColor),
+              foregroundColor: Colors.white,
+            ),
+            body: Stack(
+              children: [
+                TabBarView(controller: controller, children: pages),
+              ],
+            ),
+            bottomNavigationBar:
+                DisplayBannerAdWidget() //AdmobWrapper().DisplayBannerAdWidget(),
 
-            ],
-          ),
-          bottomNavigationBar: DisplayBannerAdWidget() //AdmobWrapper().DisplayBannerAdWidget(),
-
-        ),
+            ),
       ),
     );
   }
