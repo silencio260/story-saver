@@ -17,6 +17,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Services/analytics_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AdvancedAppRatingService {
   static const String _installDateKey = "app_install_date";
@@ -51,16 +54,20 @@ class AdvancedAppRatingService {
 
     int currentTime = DateTime.now().millisecondsSinceEpoch;
 
-    bool meetsInstallDate = currentTime - installDate >= _minDaysAfterInstall * 24 * 60 * 60 * 1000;
+    bool meetsInstallDate =
+        currentTime - installDate >= _minDaysAfterInstall * 24 * 60 * 60 * 1000;
     bool meetsAppOpens = appOpens >= _minAppOpens;
-    bool meetsReviewInterval = currentTime - lastReviewDate >= _minDaysBetweenReviews * 24 * 60 * 60 * 1000;
+    bool meetsReviewInterval = currentTime - lastReviewDate >=
+        _minDaysBetweenReviews * 24 * 60 * 60 * 1000;
 
-    return meetsInstallDate && meetsAppOpens && meetsReviewInterval && !alredyReviewed;
+    return meetsInstallDate &&
+        meetsAppOpens &&
+        meetsReviewInterval &&
+        !alredyReviewed;
   }
 
   static Future<void> showReviewDialogIfEligible(BuildContext context) async {
     if (await _meetsConditions()) {
-
       AdvancedAppRatingService().askForFeedbackOrReview(context);
     }
   }
@@ -88,8 +95,9 @@ class AdvancedAppRatingService {
     _minDaysBetweenReviews = days;
   }
 
-   Future<void> askForFeedbackOrReview(BuildContext context) async {
-    bool isHappy = await _showCustomPromptForFeedback(context); // Ask if they're happy
+  Future<void> askForFeedbackOrReview(BuildContext context) async {
+    bool isHappy =
+        await _showCustomPromptForFeedback(context); // Ask if they're happy
 
     if (isHappy) {
       // await AdvancedAppRatingService.showReviewDialogIfEligible(); // Prompt happy users
@@ -103,7 +111,8 @@ class AdvancedAppRatingService {
     }
   }
 
-  static Future<void> showAskForReviewDialogOnClick(BuildContext context) async {
+  static Future<void> showAskForReviewDialogOnClick(
+      BuildContext context) async {
     AdvancedAppRatingService().askForFeedbackOrReview(context);
   }
 
@@ -129,10 +138,18 @@ class AdvancedAppRatingService {
     );
   }
 
+  static void launchPlayStoreLink() async {
+    AnalyticsService.logGoToAppStorePage();
+    final uri = Uri.parse(AppConstants().GOOGLE_PLAY_STORE_LINK);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch ${uri}';
+    }
+  }
+
   // void _redirectToFeedbackForm() {
   //   final feedbackUrl = 'https://yourapp.com/feedback'; // Replace with your form URL
   //   launch(feedbackUrl);
   // }
 }
-
-
