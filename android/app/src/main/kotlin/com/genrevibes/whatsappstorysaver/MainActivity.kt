@@ -1,6 +1,6 @@
 package com.genrevibes.whatsappstorysaver
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -8,7 +8,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "video_thumbnail"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
