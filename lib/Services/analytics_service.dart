@@ -1,15 +1,18 @@
-
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Utils/device_identifier.dart';
 import 'package:storysaver/firebase_options.dart';
 
 class AnalyticsService {
   final _instance = FirebaseAnalytics.instance;
-  static String _isFoundersVersion = const String.fromEnvironment("founders_version");
+  static bool _isFoundersVersion =
+      const bool.fromEnvironment("founders_version");
 
   // In class AnalyticsService
   static Future<void> init() async {
@@ -19,33 +22,62 @@ class AnalyticsService {
       // Check if a [DEFAULT] Firebase app already exists.
       FirebaseApp? existingDefaultApp;
       try {
-        existingDefaultApp = Firebase.app(); // This gets the [DEFAULT] app or throws if not found.
+        existingDefaultApp = Firebase
+            .app(); // This gets the [DEFAULT] app or throws if not found.
       } catch (e) {
         // No [DEFAULT] app exists, which is fine.
         print('AnalyticsService: No existing [DEFAULT] Firebase app found.');
       }
 
       if (existingDefaultApp != null) {
-        print('AnalyticsService: Existing [DEFAULT] Firebase app found. Deleting it now...');
+        print(
+            'AnalyticsService: Existing [DEFAULT] Firebase app found. Deleting it now...');
         await existingDefaultApp.delete();
         print('AnalyticsService: Existing [DEFAULT] Firebase app deleted.');
       }
 
       // Now, initialize Firebase. This will become the new [DEFAULT] app.
       print('AnalyticsService: Initializing new [DEFAULT] Firebase app...');
+
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
       print('AnalyticsService: Firebase has been forcibly re-initialized.');
 
+      if (_isFoundersVersion) {
+        // print("AnalyticsService: Founders version, skipping Firebase init.");
+        // return;
+        // You can disable analytics collection like this:
+        await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+      }
+      // You can disable analytics collection like this:
+      // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
+
+      // Initialize Crashlytics after a successful Firebase init.
+      initCrashlytics();
     } catch (e) {
-      print('AnalyticsService: CRITICAL ERROR during forced Firebase re-initialization: $e');
+      print(
+          'AnalyticsService: CRITICAL ERROR during forced Firebase re-initialization: $e');
       // Depending on your app's needs, you might want to rethrow the error
       // or handle it in a way that prevents the app from continuing in an unstable state.
       // For example: throw Exception('Failed to forcibly re-initialize Firebase: $e');
     }
   }
 
+  static void initCrashlytics() {
+    // Capture Flutter framework errors
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    // Capture uncaught asynchronous errors
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
+
+  static void testCrash() {
+    throw const FormatException('Custom format error occurred');
+  }
 
   static Future<void> logAppOpen() async {
     // Obtain the unique device identifier
@@ -63,7 +95,6 @@ class AnalyticsService {
     );
   }
 
-
   Future<void> logAdImpressions({
     required String adUnitId,
     required String adFormat,
@@ -78,7 +109,8 @@ class AnalyticsService {
           "ad_platform": "AdMob",
           "ad_unit_id": adUnitId,
           "ad_format": adFormat, // e.g., "banner", "interstitial"
-          "value": valueMicros / 1e6, // Convert from micros to standard currency
+          "value":
+              valueMicros / 1e6, // Convert from micros to standard currency
           "currency": currency,
         },
       );
@@ -92,7 +124,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -112,7 +144,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -132,7 +164,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -152,7 +184,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -172,7 +204,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -192,7 +224,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -212,7 +244,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -232,7 +264,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -248,27 +280,13 @@ class AnalyticsService {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   ////////////////////////////////////////////////
 
   Future<void> logSaveStatus() async {
     // await _instance.logEvent(name: "save status");
     try {
       print("Logging save_status event...");
-      await  FirebaseAnalytics.instance.logEvent(
+      await FirebaseAnalytics.instance.logEvent(
         name: "save_status",
         parameters: {
           "platform": Platform.operatingSystem,
@@ -284,7 +302,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -304,7 +322,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -324,7 +342,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -344,7 +362,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -364,7 +382,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -384,7 +402,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -404,7 +422,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -424,7 +442,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -444,7 +462,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -464,7 +482,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -484,7 +502,7 @@ class AnalyticsService {
     // await _instance.logEvent(name: "save status");
     // print('in Event logger _isFoundersVersion: $_isFoundersVersion');
 
-    if (_isFoundersVersion == false){
+    if (_isFoundersVersion == false) {
       try {
         // print("Logging save_status event...");
         await FirebaseAnalytics.instance.logEvent(
@@ -499,8 +517,4 @@ class AnalyticsService {
       }
     }
   }
-
-
-
-
 }
