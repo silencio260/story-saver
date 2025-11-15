@@ -1,18 +1,19 @@
 class AppConstants {
   // static String WHATSAPP_PATH = "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
 
-  final GOOGLE_PLAY_STORE_LINK = "https://play.google.com/store/apps/details?id=com.genrevibes.whatsappstorysaver";
+  final GOOGLE_PLAY_STORE_LINK =
+      "https://play.google.com/store/apps/details?id=com.genrevibes.whatsappstorysaver";
 
   final IS_BUSINESS_MODE = "is_app_in_whatsapp_business_mode";
 
-  final IS_WHATSAPP_STATUS_PERMISSION = "is_whatsapp_status_folder_permission_granted";
+  final IS_WHATSAPP_STATUS_PERMISSION =
+      "is_whatsapp_status_folder_permission_granted";
 
   static List<String> WHATSAPP_PATH_LIST = [
     // "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/",
 
     "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/.Statuses",
     // "/storage/emulated/0/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses",
-
 
     // "/storage/emulated/0/Pictures/Saved Statuses/",
     // "/storage/emulated/0/Pictures/Story Saver/"
@@ -31,7 +32,6 @@ class AppConstants {
 
     ////////////////////////////// Screenshot app set dressing
     // "/storage/emulated/0/App_Screenshots/Story Saver/stories_1",
-
   ];
 
   static String WHATSAPP_PATH =
@@ -40,13 +40,12 @@ class AppConstants {
   static String TEST_STORYSAVER_PATH =
       "/storage/emulated/0/Pictures/Story Saver/";
 
+  static String DEVELOPER_SPECIAL_SAVED_STORY_PATH = "Story Saver";
 
-  static String DEVELOPER_SPECIAL_SAVED_STORY_PATH =
-      "Story Saver";
+  static String USER_SAVED_STORY_PATH = "Saved Statuses";
 
-  static String USER_SAVED_STORY_PATH =
-      "Saved Statuses";
-  
-  static String SAVED_STORY_PATH =  (const String.fromEnvironment("founders_version ") == "true") ? DEVELOPER_SPECIAL_SAVED_STORY_PATH :
-  USER_SAVED_STORY_PATH;
+  static String SAVED_STORY_PATH =
+      (const String.fromEnvironment("founders_version") == "true")
+          ? DEVELOPER_SPECIAL_SAVED_STORY_PATH
+          : USER_SAVED_STORY_PATH;
 }
