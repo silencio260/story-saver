@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.4+5
+version: 1.0.6+7
 
 environment:
   sdk: ">=2.14.0 <3.25.0"
@@ -31,6 +31,8 @@ dependencies:
 
   firebase_core: ^3.11.0
   firebase_analytics: ^11.4.2
+  firebase_remote_config: ^5.4.4
+  firebase_crashlytics: ^4.3.10
 
   shared_preferences: ^2.1.0
   uuid: ^3.0.7
@@ -47,7 +49,7 @@ dependencies:
   chewie: 1.8.0
   share_plus: 10.1.3
   url_launcher: ^6.3.1
-  in_app_review: ^2.0.10
+#  in_app_review: ^2.0.10
 #  webview_flutter: ^4.2.0
 #  google_mobile_ads: ^6.0.0
 #  webview_flutter: ^4.8.0  # Try this specific version
@@ -55,7 +57,7 @@ dependencies:
 #  webview_flutter_android: ^4.3.4
   google_mobile_ads: ^6.0.0
 #  google_mobile_ads: ^5.2.0  # Downgrade to a more stable version
-  firebase_remote_config: ^5.4.4
+
 
   pull_to_refresh_flutter3: ^2.0.2
   flutter_cache_manager: ^3.3.0
@@ -78,6 +80,14 @@ dependencies:
   saf_stream: ^0.12.0
   docman: ^1.2.0
   onesignal_flutter: ^5.1.2
+  sidebarx: ^0.17.2
+  purchases_flutter: ^9.6.0
+  purchases_ui_flutter: ^9.6.0
+  in_app_review: ^2.0.11
+  flutter_feedback_dialog: ^0.0.8
+  feedbacknest_core: ^0.0.8
+  fancy_rating_bar: ^0.0.9
+  posthog_flutter: ^5.5.0
   #  saf: ^1.0.3+4
 #  file_picker: ^10.1.1
 #  fluttertoast: ^8.2.12
