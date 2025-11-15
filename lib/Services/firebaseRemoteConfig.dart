@@ -9,37 +9,38 @@ class FirebaseRemoteConfigKeys {
 }
 
 class FirebaseRemoteConfigService {
-  FirebaseRemoteConfigService._() : _remoteConfig = FirebaseRemoteConfig.instance; // MODIFIED
+  FirebaseRemoteConfigService._()
+      : _remoteConfig = FirebaseRemoteConfig.instance; // MODIFIED
 
   static FirebaseRemoteConfigService? _instance; // NEW
-  factory FirebaseRemoteConfigService() => _instance ??= FirebaseRemoteConfigService._(); // NEW
+  factory FirebaseRemoteConfigService() =>
+      _instance ??= FirebaseRemoteConfigService._(); // NEW
 
   final FirebaseRemoteConfig _remoteConfig;
 
   String getString(String key) => _remoteConfig.getString(key); // NEW
-  bool getBool(String key) =>_remoteConfig.getBool(key); // NEW
-  int getInt(String key) =>_remoteConfig.getInt(key); // NEW
-  double getDouble(String key) =>_remoteConfig.getDouble(key); // NEW
+  bool getBool(String key) => _remoteConfig.getBool(key); // NEW
+  int getInt(String key) => _remoteConfig.getInt(key); // NEW
+  double getDouble(String key) => _remoteConfig.getDouble(key); // NEW
 
   ///////
   // String get welcomeMessage => _remoteConfig.getString(FirebaseRemoteConfigKeys.welcomeMessage);
 
-
   Future<void> _setConfigSettings() async => _remoteConfig.setConfigSettings(
-    RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1),
-      minimumFetchInterval: const Duration(hours: 12),
-    ),
-  );
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 1),
+          minimumFetchInterval: const Duration(hours: 12),
+        ),
+      );
 
   Future<void> _setDefaults() async => _remoteConfig.setDefaults(
-    const {
-      // FirebaseRemoteConfigKeys.welcomeMessage: 'Hey there, this message is coming from local defaults.',
-      FirebaseRemoteConfigKeys.time_before_first_insta_ad: 15,
-      FirebaseRemoteConfigKeys.min_banner_ad_interval: 10,
-      FirebaseRemoteConfigKeys.min_insta_ad_interval: 15
-    },
-  );
+        const {
+          // FirebaseRemoteConfigKeys.welcomeMessage: 'Hey there, this message is coming from local defaults.',
+          FirebaseRemoteConfigKeys.time_before_first_insta_ad: 3,
+          FirebaseRemoteConfigKeys.min_banner_ad_interval: 3,
+          FirebaseRemoteConfigKeys.min_insta_ad_interval: 6
+        },
+      );
 
   Future<void> fetchAndActivate() async {
     bool updated = await _remoteConfig.fetchAndActivate();
@@ -57,5 +58,4 @@ class FirebaseRemoteConfigService {
     await _setDefaults();
     await fetchAndActivate();
   }
-
 }
