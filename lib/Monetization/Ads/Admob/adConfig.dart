@@ -5,7 +5,8 @@ import 'package:storysaver/Services/firebaseRemoteConfig.dart';
 // import 'package:storysaver/path/to/firebase_remote_config_keys.dart';
 
 class AdConfig {
-  static final FirebaseRemoteConfigService _remoteConfigService = FirebaseRemoteConfigService();
+  static final FirebaseRemoteConfigService _remoteConfigService =
+      FirebaseRemoteConfigService();
 
   static late final int time_before_first_insta_ad;
   static late final int min_banner_ad_interval;
@@ -19,13 +20,14 @@ class AdConfig {
   /// `AdConfig.ensureInitialized()` must be called and awaited during app startup.
   AdConfig() {
     if (!_isInitialized && !_isInitializing) {
-      print("Warning: AdConfig instance created, but AdConfig.ensureInitialized() has not completed. Static ad config values may not be ready.");
+      print(
+          "Warning: AdConfig instance created, but AdConfig.ensureInitialized() has not completed. Static ad config values may not be ready.");
     }
   }
 
   /// Initializes the remote config service and fetches ad configuration values.
   /// This method should be called once during app startup.
-  /// 
+  ///
   /// Example usage in your main.dart:
   /// ```dart
   /// Future<void> main() async {
@@ -46,18 +48,22 @@ class AdConfig {
 
       // Ensure FirebaseRemoteConfigKeys is accessible here
       // For example, FirebaseRemoteConfigKeys.time_before_first_insta_ad
-      time_before_first_insta_ad = _remoteConfigService.getInt(FirebaseRemoteConfigKeys.time_before_first_insta_ad);
-      min_banner_ad_interval = _remoteConfigService.getInt(FirebaseRemoteConfigKeys.min_banner_ad_interval);
-      min_insta_ad_interval = _remoteConfigService.getInt(FirebaseRemoteConfigKeys.min_insta_ad_interval);
+      time_before_first_insta_ad = _remoteConfigService
+          .getInt(FirebaseRemoteConfigKeys.time_before_first_insta_ad);
+      min_banner_ad_interval = _remoteConfigService
+          .getInt(FirebaseRemoteConfigKeys.min_banner_ad_interval);
+      min_insta_ad_interval = _remoteConfigService
+          .getInt(FirebaseRemoteConfigKeys.min_insta_ad_interval);
 
       _isInitialized = true;
     } catch (e) {
       print('Error initializing AdConfig: $e. Using default ad config values.');
       // Set default values in case of an error
-      time_before_first_insta_ad = 10;   // Default fallback
-      min_banner_ad_interval = 5;  // Default fallback
-      min_insta_ad_interval = 10;   // Default fallback
-      _isInitialized = true; // Mark as initialized (with defaults) to prevent repeated attempts
+      time_before_first_insta_ad = 3; // Default fallback
+      min_banner_ad_interval = 3; // Default fallback
+      min_insta_ad_interval = 5; // Default fallback
+      _isInitialized =
+          true; // Mark as initialized (with defaults) to prevent repeated attempts
     } finally {
       _isInitializing = false;
     }

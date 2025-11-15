@@ -8,7 +8,6 @@ import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 
-
 class AdmobWrapper extends ChangeNotifier {
   // Singleton pattern
   static final AdmobWrapper _instance = AdmobWrapper._internal();
@@ -22,6 +21,7 @@ class AdmobWrapper extends ChangeNotifier {
 
   static bool _isInterstitialAdReady = true;
   static bool _hasShownInstaAd = false;
+  static bool _shouldRetryFailedInterstitialAdRequest = false;
 
   // BannerAd? get bannerAd => _bannerAd;
 
@@ -63,109 +63,119 @@ class AdmobWrapper extends ChangeNotifier {
   //   )..load();
   // }
 
-   void loadInterstitialAd() {
-    print('in loadInterstitialAd -- AdConfig().time_before_first_insta_ad - ${AdConfig.time_before_first_insta_ad} --- '
+  void resetInterstitialAdValues() {
+    _interstitialAd = null;
+    _isInterstitialAdReady = false;
+    _hasShownInstaAd = false;
+    // _shouldRetryFailedInterstitialAdRequest = false;
+    notifyListeners();
+  }
+
+  void loadInterstitialAd() {
+    print(
+        'in loadInterstitialAd -- AdConfig().time_before_first_insta_ad - ${AdConfig.time_before_first_insta_ad} --- '
         'AdConfig().min_insta_ad_interval ${AdConfig.min_insta_ad_interval}');
     InterstitialAd.load(
         adUnitId: AdHelper.InterstitialAdUnitId,
         request: AdRequest(),
-        adLoadCallback: InterstitialAdLoadCallback(
-            onAdLoaded: (ad) {
-              ad.fullScreenContentCallback = FullScreenContentCallback(
-                  onAdDismissedFullScreenContent: (ad){}
-              );
+        adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+              onAdDismissedFullScreenContent: (ad) {});
 
-              // _isInterstitialAdReady = false;
+          // _isInterstitialAdReady = false;
 
-              // _interstitialAd = ad;
-              // notifyListeners();
+          // _interstitialAd = ad;
+          // notifyListeners();
 
-              Future.delayed(Duration(
-                  seconds: AdConfig.time_before_first_insta_ad), () {
-                // _isInterstitialAdReady = true;
-                _interstitialAd = ad;
-                notifyListeners();
-                print('This runs after 3 seconds');
-              });
+          Future.delayed(Duration(seconds: AdConfig.time_before_first_insta_ad),
+              () {
+            // _isInterstitialAdReady = true;
+            _interstitialAd = ad;
+            notifyListeners();
+            print('loadInterstitialAd - Successfully loaded interstitial ad');
+            // print('This runs after 3 seconds');
+          });
+        }, onAdFailedToLoad: (err) {
+          resetInterstitialAdValues();
+          _shouldRetryFailedInterstitialAdRequest = true;
 
-            },
-            onAdFailedToLoad: (err){
-              print('Failed to load a InterstitialAd  ad: ${err.message}');
-              // ad.dispose();
-            }
-        )
-    );
+          print(
+              'loadInterstitialAd - Failed to load a InterstitialAd ad: ${err.message}');
+          // ad.dispose();
+        }));
   }
 
-
-   void showInterstitialAd() {
-    if(_interstitialAd != null && _isInterstitialAdReady ==  true){
+  void showInterstitialAd() {
+    if (_interstitialAd != null && _isInterstitialAdReady == true) {
       _interstitialAd!.show();
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-          onAdDismissedFullScreenContent: (ad){
-            // ad.dispose();
+      _interstitialAd!.fullScreenContentCallback =
+          FullScreenContentCallback(onAdDismissedFullScreenContent: (ad) {
+        // ad.dispose();
 
-            ////////////
-            InterstitialAd.load(
-              adUnitId: AdHelper.InterstitialAdUnitId,
-              request: AdRequest(),
+        ////////////
+        InterstitialAd.load(
+          adUnitId: AdHelper.InterstitialAdUnitId,
+          request: AdRequest(),
+          adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+                onAdFailedToShowFullScreenContent: (ad, err) {
+                  ad.dispose();
+                },
+                onAdDismissedFullScreenContent: (ad) {});
 
-              adLoadCallback: InterstitialAdLoadCallback(
-                  onAdLoaded: (ad) {
-                    ad.fullScreenContentCallback = FullScreenContentCallback(
-                        onAdFailedToShowFullScreenContent: (ad, err){
-                          ad.dispose();
+            ad.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
+              AnalyticsService().logAdImpressions(
+                adUnitId: ad.adUnitId,
+                adFormat: 'interstitial',
+                valueMicros: valueMicros,
+                currency: currencyCode,
+              );
+            };
 
-                        },
-                        onAdDismissedFullScreenContent: (ad){}
-                    );
+            // _interstitialAd = ad;
+            // notifyListeners();
 
-                    ad.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
-                      AnalyticsService().logAdImpressions(
-                        adUnitId: ad.adUnitId,
-                        adFormat: 'interstitial',
-                        valueMicros: valueMicros,
-                        currency: currencyCode,
-                      );
-                    };
+            _isInterstitialAdReady = false;
+            _hasShownInstaAd = true;
 
-                    // _interstitialAd = ad;
-                    // notifyListeners();
-
-                    _isInterstitialAdReady =  false;
-                    _hasShownInstaAd = true;
-
-                    Future.delayed(Duration(seconds: AdConfig.min_insta_ad_interval), () {
-                      _isInterstitialAdReady = true;
-                      _interstitialAd = ad;
-                      notifyListeners();
-                      print('This runs after 3 seconds');
-                    });
-
-                    // FirebaseAnalytics.instance.logAdImpression(value: ad.)
-
-                  },
-                  onAdFailedToLoad: (err){
-                    print('Failed to load a InterstitialAd  ad: ${err.message}');
-                    // ad.dispose();
-                  }
-              ),
-
-            ).timeout(Duration(
-                seconds: _hasShownInstaAd == true ? 0 : AdConfig.time_before_first_insta_ad
-            ), onTimeout: () {
-              _hasShownInstaAd = true;
-              // print('Operation timed out');
-              return 'fallback result'; // optional return value
+            Future.delayed(Duration(seconds: AdConfig.min_insta_ad_interval),
+                () {
+              _isInterstitialAdReady = true;
+              _interstitialAd = ad;
+              notifyListeners();
+              // print('This runs after 3 seconds');
+              print('showInterstitialAd - Successfully showed interstitial ad');
             });
 
-          }
-      );
+            // FirebaseAnalytics.instance.logAdImpression(value: ad.)
+          }, onAdFailedToLoad: (err) {
+            resetInterstitialAdValues();
 
+            print(
+                'showInterstitialAd - Failed to load a InterstitialAd ad: ${err.message}');
+            // ad.dispose();
+          }),
+        ).timeout(
+            Duration(
+                seconds: _hasShownInstaAd == true
+                    ? 0
+                    : AdConfig.time_before_first_insta_ad), onTimeout: () {
+          _hasShownInstaAd = true;
+          // print('Operation timed out');
+          return 'fallback result'; // optional return value
+        });
+      });
+    } else {
+      if (_shouldRetryFailedInterstitialAdRequest == true) {
+        _shouldRetryFailedInterstitialAdRequest = false;
+        Future.delayed(Duration(seconds: 2), () {
+          loadInterstitialAd();
+          print('_shouldRetryFailedInterstitialAdRequest');
+          // _shouldRetryFailedInterstitialAdRequest = false;
+        });
+      }
     }
   }
-
-
 }
 
 // class DisplayBannerAdWidget extends StatelessWidget {
@@ -192,4 +202,3 @@ class AdmobWrapper extends ChangeNotifier {
 //     );
 //   }
 // }
-

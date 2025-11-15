@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
@@ -15,11 +13,21 @@ class DisplayBannerAdWidget extends StatefulWidget {
 class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
   late final BannerAd _bannerAd;
   bool _isAdLoaded = false;
+  bool _shouldRetryFailedBannerAdRequest = false;
 
   @override
   void initState() {
     super.initState();
+    // print('init state load banner');
+    _loadBannerAd();
+  }
 
+  void _resetBannerAdValues() {
+    // _bannerAd.dispose();
+    _isAdLoaded = false;
+  }
+
+  void _loadBannerAd() {
     _bannerAd = BannerAd(
       adUnitId: AdHelper.bannerAdUnitId,
       request: AdRequest(),
@@ -40,6 +48,9 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
+          _resetBannerAdValues();
+          _shouldRetryFailedBannerAdRequest = true;
+          print('_loadBannerAd: Failed to load banner ads ${error}');
         },
       ),
     )..load();
@@ -53,6 +64,15 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // print('banner banner banner');
+    if (_shouldRetryFailedBannerAdRequest == true) {
+      _shouldRetryFailedBannerAdRequest = false;
+      Future.delayed(Duration(seconds: 2), () {
+        _loadBannerAd();
+        print('_shouldRetryFailedBannerAdRequest');
+      });
+    }
+
     if (!_isAdLoaded) {
       return const SizedBox();
     }
