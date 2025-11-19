@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
-import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Monetization/Ads/Admob/Widget/DisplayBannerAds.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
@@ -19,13 +15,7 @@ import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart'
 import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
-import 'package:storysaver/Screens/TopNavPages/Widget/SideBar.dart'
-    hide SettingsPage;
-import 'package:storysaver/Services/PostHogWrapper/posthog_wrapper.dart';
-import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/checkBusinessMode.dart';
-import 'package:storysaver/Widget/HelpModal.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -141,6 +131,8 @@ class _HomePageState extends State<HomePage>
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     AdmobWrapper().showInterstitialAd();
+    // print(
+    //     'RevenueCatService.isSubscriptionActive(): ${RevenueCatService.isSubscriptionActive()}');
 
     return DoubleTapToExit(
       child: PopScope(
@@ -203,25 +195,34 @@ class _HomePageState extends State<HomePage>
                   color: Colors.white,
                 ),
                 IconButton(
-                    onPressed: () {
-                      // _switchToBusinessMode();
-                      // HelpModal().showHelpDialog(context);
-                      // Navigator.of(context).push<void>(
-                      //   MaterialPageRoute<void>(builder: (_) => SettingsPage()),
-                      // );
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsPage(),
+                  onPressed: () {
+                    // _switchToBusinessMode();
+                    // HelpModal().showHelpDialog(context);
+                    // Navigator.of(context).push<void>(
+                    //   MaterialPageRoute<void>(builder: (_) => SettingsPage()),
+                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.settings, color: Colors.white),
+                ),
+                RevenueCatService.isSubscriptionActive() == false
+                    ? IconButton(
+                        onPressed: () {
+                          RevenueCatService()
+                              .PresentRevenueCatPayWallIfNeeded();
+                        },
+                        icon: Icon(Icons.diamond_outlined, color: Colors.white),
+                      )
+                    : SizedBox(
+                        // child: DarkModeToggleButton(),
+                        // width: 10,
+                        // height: 10,
                         ),
-                      );
-                    },
-                    icon: Icon(Icons.settings, color: Colors.white)),
-                IconButton(
-                    onPressed: () {
-                      RevenueCatService().PresentRevenueCatPayWallIfNeeded();
-                    },
-                    icon: Icon(Icons.diamond_outlined, color: Colors.white)),
               ],
               backgroundColor: const Color(CustomColors.AppBarColor),
               foregroundColor: Colors.white,
