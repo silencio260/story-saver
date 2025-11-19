@@ -1,12 +1,9 @@
-import 'dart:io';
-
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Utils/loggerUtil.dart';
 
 class AdmobWrapper extends ChangeNotifier {
   // Singleton pattern
@@ -108,62 +105,69 @@ class AdmobWrapper extends ChangeNotifier {
   void showInterstitialAd() {
     if (_interstitialAd != null && _isInterstitialAdReady == true) {
       _interstitialAd!.show();
+
+      _interstitialAd!.onPaidEvent =
+          (ad, valueMicros, precision, currencyCode) {
+        AnalyticsService().logAdImpressions(
+          adUnitId: ad.adUnitId,
+          adFormat: 'interstitial',
+          valueMicros: valueMicros,
+          currency: currencyCode,
+        );
+
+        printLogAdImpression(
+            ad: 'Insta', valueMicros: valueMicros, currencyCode: currencyCode);
+      };
+
       _interstitialAd!.fullScreenContentCallback =
           FullScreenContentCallback(onAdDismissedFullScreenContent: (ad) {
         // ad.dispose();
 
-        ////////////
-        InterstitialAd.load(
-          adUnitId: AdHelper.InterstitialAdUnitId,
-          request: AdRequest(),
-          adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
-            ad.fullScreenContentCallback = FullScreenContentCallback(
-                onAdFailedToShowFullScreenContent: (ad, err) {
-                  ad.dispose();
-                },
-                onAdDismissedFullScreenContent: (ad) {});
+        print('onAdDismissedFullScreenContent');
 
-            ad.onPaidEvent = (ad, valueMicros, precision, currencyCode) {
-              AnalyticsService().logAdImpressions(
-                adUnitId: ad.adUnitId,
-                adFormat: 'interstitial',
-                valueMicros: valueMicros,
-                currency: currencyCode,
-              );
-            };
+        _isInterstitialAdReady = false;
+        _hasShownInstaAd = true;
 
-            // _interstitialAd = ad;
-            // notifyListeners();
-
-            _isInterstitialAdReady = false;
-            _hasShownInstaAd = true;
-
-            Future.delayed(Duration(seconds: AdConfig.min_insta_ad_interval),
-                () {
-              _isInterstitialAdReady = true;
-              _interstitialAd = ad;
-              notifyListeners();
-              // print('This runs after 3 seconds');
-              print('showInterstitialAd - Successfully showed interstitial ad');
-            });
-
-            // FirebaseAnalytics.instance.logAdImpression(value: ad.)
-          }, onAdFailedToLoad: (err) {
-            resetInterstitialAdValues();
-
-            print(
-                'showInterstitialAd - Failed to load a InterstitialAd ad: ${err.message}');
-            // ad.dispose();
-          }),
-        ).timeout(
-            Duration(
-                seconds: _hasShownInstaAd == true
-                    ? 0
-                    : AdConfig.time_before_first_insta_ad), onTimeout: () {
-          _hasShownInstaAd = true;
-          // print('Operation timed out');
-          return 'fallback result'; // optional return value
+        Future.delayed(Duration(seconds: AdConfig.min_insta_ad_interval), () {
+          _isInterstitialAdReady = true;
+          _interstitialAd = ad;
+          notifyListeners();
+          // print('This runs after 3 seconds');
+          loadInterstitialAd();
+          print(
+              'showInterstitialAd - successfully reload interstitial ad after ${AdConfig.min_insta_ad_interval}');
         });
+        ////////////
+        //   InterstitialAd.load(
+        //     adUnitId: AdHelper.InterstitialAdUnitId,
+        //     request: AdRequest(),
+        //     adLoadCallback: InterstitialAdLoadCallback(onAdLoaded: (ad) {
+        //       ad.fullScreenContentCallback = FullScreenContentCallback(
+        //           onAdFailedToShowFullScreenContent: (ad, err) {
+        //         ad.dispose();
+        //       });
+        //
+        //       // _interstitialAd = ad;
+        //       // notifyListeners();
+        //
+        //
+        //       // FirebaseAnalytics.instance.logAdImpression(value: ad.)
+        //     }, onAdFailedToLoad: (err) {
+        //       resetInterstitialAdValues();
+        //
+        //       print(
+        //           'showInterstitialAd - Failed to load a InterstitialAd ad: ${err.message}');
+        //       // ad.dispose();
+        //     }),
+        //   ).timeout(
+        //       Duration(
+        //           seconds: _hasShownInstaAd == true
+        //               ? 0
+        //               : AdConfig.time_before_first_insta_ad), onTimeout: () {
+        //     _hasShownInstaAd = true;
+        //     // print('Operation timed out');
+        //     return 'fallback result'; // optional return value
+        //   });
       });
     } else {
       if (_shouldRetryFailedInterstitialAdRequest == true) {
