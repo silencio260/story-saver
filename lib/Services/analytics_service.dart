@@ -5,7 +5,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Utils/device_identifier.dart';
 import 'package:storysaver/firebase_options.dart';
 
@@ -514,6 +513,119 @@ class AnalyticsService {
         // print("save_status event logged successfully");
       } catch (e) {
         print("Error logging event: $e");
+      }
+    }
+  }
+
+//*****************************************
+// RevenueCat Event Logs
+//*****************************************
+
+  // Purchase Event
+  static Future<void> logCustomPurchase({
+    required String currency,
+    required double price,
+    required String productId,
+    required String entitlementId,
+  }) async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging custom_purchase event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "custom_purchase",
+          parameters: {
+            "currency": currency,
+            "value": price,
+            "item_id": productId,
+            "item_name": entitlementId,
+            "quantity": 1,
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("custom_purchase event logged successfully");
+      } catch (e) {
+        print("Error logging custom_purchase: $e");
+      }
+    }
+  }
+
+  // Paywall Cancelled Event
+  static Future<void> logCustomPaywallCancelled({
+    required String entitlementId,
+  }) async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging custom_paywall_cancelled event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "custom_paywall_cancelled",
+          parameters: {
+            "entitlement_id": entitlementId,
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("custom_paywall_cancelled event logged successfully");
+      } catch (e) {
+        print("Error logging custom_paywall_cancelled: $e");
+      }
+    }
+  }
+
+  // Purchases Restored Event (with entitlement_id)
+  static Future<void> logCustomPurchasesRestored({
+    required String entitlementId,
+  }) async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging custom_purchases_restored event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "custom_purchases_restored",
+          parameters: {
+            "entitlement_id": entitlementId,
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("custom_purchases_restored event logged successfully");
+      } catch (e) {
+        print("Error logging custom_purchases_restored: $e");
+      }
+    }
+  }
+
+  // Purchases Restored Event (with active entitlements count)
+  static Future<void> logCustomPurchasesRestoredWithCount({
+    required int activeEntitlementsCount,
+  }) async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging custom_purchases_restored event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "custom_purchases_restored",
+          parameters: {
+            "active_entitlements": activeEntitlementsCount,
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("custom_purchases_restored event logged successfully");
+      } catch (e) {
+        print("Error logging custom_purchases_restored: $e");
+      }
+    }
+  }
+
+  // Customer Center Viewed Event
+  static Future<void> logCustomCustomerCenterViewed() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging custom_customer_center_viewed event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "custom_customer_center_viewed",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("custom_customer_center_viewed event logged successfully");
+      } catch (e) {
+        print("Error logging custom_customer_center_viewed: $e");
       }
     }
   }
