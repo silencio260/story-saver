@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:storysaver/Constants/CustomColors.dart';
 
-/// Shows a premium upgrade modal dialog
+/// Shows a premium upgrade modal dialog with app-consistent green branding
 ///
 /// Returns:
 /// - `true` if user wants to upgrade (show paywall)
@@ -13,7 +14,15 @@ Future<bool?> showPremiumUpgradeModal(
       'Unlock one-click downloads with Premium! Start your free trial now',
   String yesButtonText = 'Start Free Trial',
   String noButtonText = 'Maybe Later',
+  Color? primaryColor, // Defaults to app's green
+  Color? accentColor, // Defaults to lighter green
+  Color? iconColor, // Defaults to gold
 }) async {
+  // Use app colors if not specified
+  final primary = primaryColor ?? const Color(CustomColors.PremiumPrimary);
+  final accent = accentColor ?? const Color(CustomColors.PremiumAccent);
+  final iconGold = iconColor ?? const Color(CustomColors.PremiumGold);
+
   return showDialog<bool>(
     context: context,
     barrierDismissible: true,
@@ -31,7 +40,7 @@ Future<bool?> showPremiumUpgradeModal(
               end: Alignment.bottomRight,
               colors: [
                 Colors.white,
-                Colors.amber.shade50,
+                primary.withOpacity(0.08),
               ],
             ),
           ),
@@ -47,8 +56,8 @@ Future<bool?> showPremiumUpgradeModal(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.amber.shade400,
-                      Colors.orange.shade600,
+                      accent,
+                      primary,
                     ],
                   ),
                 ),
@@ -66,7 +75,7 @@ Future<bool?> showPremiumUpgradeModal(
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: primary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -77,25 +86,25 @@ Future<bool?> showPremiumUpgradeModal(
                 message,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: Colors.grey[800], // Darker gray for better readability
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
 
-              // Benefits list
-              _buildBenefit(Icons.download_done, 'Unlimited downloads'),
+              // Benefits list with green check marks
+              _buildBenefit(Icons.download_done, 'Unlimited downloads', accent),
               const SizedBox(height: 8),
-              _buildBenefit(Icons.block, 'No ads'),
+              _buildBenefit(Icons.block, 'No ads', accent),
               const SizedBox(height: 8),
-              _buildBenefit(Icons.speed, 'One-click saves'),
+              _buildBenefit(Icons.speed, 'One-click saves', accent),
               const SizedBox(height: 28),
 
               // Action buttons
               Column(
                 children: [
-                  // Yes button - primary action
+                  // Yes button - primary action with green theme
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -104,7 +113,7 @@ Future<bool?> showPremiumUpgradeModal(
                         Navigator.of(context).pop(true);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade600,
+                        backgroundColor: accent,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -114,11 +123,11 @@ Future<bool?> showPremiumUpgradeModal(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.star, size: 20),
+                          Icon(Icons.star, size: 20, color: iconGold),
                           const SizedBox(width: 8),
                           Text(
                             yesButtonText,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -138,14 +147,15 @@ Future<bool?> showPremiumUpgradeModal(
                         Navigator.of(context).pop(false);
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey[600],
+                        foregroundColor:
+                            Colors.grey[700], // Darker for visibility
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         noButtonText,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                         ),
                       ),
@@ -161,20 +171,20 @@ Future<bool?> showPremiumUpgradeModal(
   );
 }
 
-Widget _buildBenefit(IconData icon, String text) {
+Widget _buildBenefit(IconData icon, String text, Color accentColor) {
   return Row(
     children: [
       Icon(
         icon,
         size: 20,
-        color: Colors.green.shade600,
+        color: accentColor,
       ),
       const SizedBox(width: 12),
       Text(
         text,
         style: TextStyle(
           fontSize: 15,
-          color: Colors.grey[700],
+          color: Colors.grey[800], // Darker for better readability
         ),
       ),
     ],
