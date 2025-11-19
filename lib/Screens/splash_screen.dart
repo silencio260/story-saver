@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/home_page.dart';
-import 'package:storysaver/Services/Notifications/PushNotification.dart';
 import 'package:storysaver/Services/analytics_service.dart';
-
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -20,19 +18,21 @@ class _SplashScreenState extends State<SplashScreen> {
     // TODO: implement initState
     super.initState();
 
-
-    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
+    Provider.of<GetSavedMediaProvider>(context, listen: false)
+        .loadVMediaInStaggeredBatches();
 
     navigate();
   }
 
   void navigate() {
-    Future.delayed(const Duration(seconds: 2), () {
-      AnalyticsService.logGotoHomePage();
-      Navigator.pushAndRemoveUntil(
-          context,
-          CupertinoPageRoute(builder: (_) => const HomePage()),
-          (route) => false);
+    Future.delayed(
+      const Duration(seconds: 2),
+      () {
+        AnalyticsService.logGotoHomePage();
+        Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(builder: (_) => const HomePage()),
+            (route) => false);
       },
     );
   }
@@ -40,12 +40,15 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child:  ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(50)),
-          child: Image(image: AssetImage("assets/images/app-logo.png"), width: 200, height: 200, fit: BoxFit.cover, )
-        ),
-      )
-    );
+        body: Center(
+      child: ClipRRect(
+          borderRadius: BorderRadius.all(Radius.circular(50)),
+          child: Image(
+            image: AssetImage("assets/images/app-logo.png"),
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+          )),
+    ));
   }
 }
