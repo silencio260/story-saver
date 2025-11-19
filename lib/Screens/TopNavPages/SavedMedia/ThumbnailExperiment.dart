@@ -7,7 +7,6 @@ import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/clearCache.dart';
 import 'package:video_compress/video_compress.dart';
 
-
 Stream<Uint8List> getThumbnails(List<FileSystemEntity> files) async* {
   for (final file in files) {
     try {
@@ -28,10 +27,8 @@ Stream<Uint8List> getThumbnails(List<FileSystemEntity> files) async* {
   }
 }
 
-
 class Thumbnailexperiment extends StatefulWidget {
   const Thumbnailexperiment({Key? key}) : super(key: key);
-
 
   @override
   State<Thumbnailexperiment> createState() => _ThumbnailexperimentState();
@@ -52,14 +49,14 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
   String _counter = 'video';
   final String? title = 'vid';
 
-
   @override
   Widget build(BuildContext context) {
     return Consumer<GetStatusProvider>(
       builder: (context, provider, child) {
         final videoFiles = provider.getExperimentalFiles;
         return ListView.builder(
-          itemCount: videoFiles.length,//provider.thumbnailCacheV2.length + 5 > videoFiles.length ? videoFiles.length : provider.thumbnailCacheV2.length + 5,
+          itemCount: videoFiles
+              .length, //provider.thumbnailCacheV2.length + 5 > videoFiles.length ? videoFiles.length : provider.thumbnailCacheV2.length + 5,
           //videoFiles.length, //provider.thumbnailCache.length + 1,
           itemBuilder: (context, index) {
             final videoPath = videoFiles[index].path;
@@ -70,7 +67,8 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
             if (thumbnail == null) {
               // provider.generateThumbnailsWithExternalIsolates(videoPath);
               provider.generateThumbnailFromListAllVideos(videoPath);
-              print(" +++++++++++++++++ index of current image $index ${provider.thumbnailCacheV2[videoPath]}");
+              print(
+                  " +++++++++++++++++ index of current image $index ${provider.thumbnailCacheV2[videoPath]}");
               // final result = generateThumbnailInIsolate(videoPath).then((onValue) {
 
               return ListTile(
@@ -80,36 +78,20 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
               // thumbnail = provider.thumbnailCache[videoPath];
             }
 
-
-
             return ListTile(
               title: Text("Video $index"),
               leading:
-              // ThumbnailTile(thumbnailController: ThumbnailController(videoPath: videoFiles[index].path))
-               Image.file(File(thumbnail!), fit: BoxFit.cover),
+                  // ThumbnailTile(thumbnailController: ThumbnailController(videoPath: videoFiles[index].path))
+                  Image.file(File(thumbnail), fit: BoxFit.cover),
             );
           },
         );
       },
-    // ),
-    // ),
+      // ),
+      // ),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //     return Consumer<GetStatusProvider>(
 //       builder: (context, provider, child) {
@@ -135,55 +117,55 @@ class _ThumbnailexperimentState extends State<Thumbnailexperiment> {
 //     );
 //   }
 // }
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //       body: Consumer<GetStatusProvider>(builder: (context, file, child) {
-  //         if (_isFetched == false) {
-  //           file.getExperimentalStatus('.mp4');
-  //           Future.delayed(const Duration(microseconds: 1), () {
-  //             _isFetched = true;
-  //           });
-  //         }
-  //         return file.isWhatsappAvailable == false
-  //             ? const Center(
-  //           child: Text('Whatsapp not available'),
-  //         )
-  //             : file.getExperimentalFiles.isEmpty
-  //             ? Center(
-  //           child: Text("No Videos available"),
-  //         )
-  //             : Container(
-  //           padding: const EdgeInsets.all(20),
-  //           child: StreamBuilder<List<Uint8List>>(
-  //             stream: getThumbnailsStream(file.getExperimentalFiles),
-  //             builder: (context, snapshot) {
-  //               if (snapshot.connectionState == ConnectionState.waiting) {
-  //                 return CircularProgressIndicator();
-  //               }
-  //
-  //               if (snapshot.hasError) {
-  //                 return Text('Error: ${snapshot.error}');
-  //               }
-  //
-  //               if (snapshot.hasData) {
-  //                 final thumbnails = snapshot.data!;
-  //                 return ListView.builder(
-  //                   itemCount: thumbnails.length,
-  //                   itemBuilder: (context, index) {
-  //                     return Image.memory(thumbnails[index]);
-  //                   },
-  //                 );
-  //               }
-  //
-  //               return Text('No data');
-  //             },
-  //           ),
-  //
-  //
-  //         );
-  //       }));
-  // }
+// @override
+// Widget build(BuildContext context) {
+//   return Scaffold(
+//       body: Consumer<GetStatusProvider>(builder: (context, file, child) {
+//         if (_isFetched == false) {
+//           file.getExperimentalStatus('.mp4');
+//           Future.delayed(const Duration(microseconds: 1), () {
+//             _isFetched = true;
+//           });
+//         }
+//         return file.isWhatsappAvailable == false
+//             ? const Center(
+//           child: Text('Whatsapp not available'),
+//         )
+//             : file.getExperimentalFiles.isEmpty
+//             ? Center(
+//           child: Text("No Videos available"),
+//         )
+//             : Container(
+//           padding: const EdgeInsets.all(20),
+//           child: StreamBuilder<List<Uint8List>>(
+//             stream: getThumbnailsStream(file.getExperimentalFiles),
+//             builder: (context, snapshot) {
+//               if (snapshot.connectionState == ConnectionState.waiting) {
+//                 return CircularProgressIndicator();
+//               }
+//
+//               if (snapshot.hasError) {
+//                 return Text('Error: ${snapshot.error}');
+//               }
+//
+//               if (snapshot.hasData) {
+//                 final thumbnails = snapshot.data!;
+//                 return ListView.builder(
+//                   itemCount: thumbnails.length,
+//                   itemBuilder: (context, index) {
+//                     return Image.memory(thumbnails[index]);
+//                   },
+//                 );
+//               }
+//
+//               return Text('No data');
+//             },
+//           ),
+//
+//
+//         );
+//       }));
+// }
 // }
 
 class VideoThumbnailWidget extends StatefulWidget {
@@ -205,11 +187,10 @@ class _VideoThumbnailWidgetState extends State<VideoThumbnailWidget> {
   }
 
   Future<Uint8List> _generateThumbnail() async {
-
     final thumb = await VideoCompress.getByteThumbnail(widget.videoPath,
         quality: 100, // default(100)
         position: -1 // default(-1)
-    );
+        );
 
     print('------------- in get thumbnail');
     print(thumb);
@@ -230,8 +211,8 @@ class _VideoThumbnailWidgetState extends State<VideoThumbnailWidget> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
-            color: Colors.grey[300],  // Placeholder color
-            height: 200,              // Adjust height as needed
+            color: Colors.grey[300], // Placeholder color
+            height: 200, // Adjust height as needed
             child: Center(child: CircularProgressIndicator()),
           );
         }
