@@ -148,15 +148,16 @@ Future<bool?> showPremiumUpgradeModal(
                       },
                       style: TextButton.styleFrom(
                         foregroundColor:
-                            Colors.grey[700], // Darker for visibility
+                            Colors.grey[850], // Much darker for visibility
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         noButtonText,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
+                          color: Colors.grey[850], // Darker for readability
                         ),
                       ),
                     ),
