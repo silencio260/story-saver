@@ -15,14 +15,14 @@ class MediaListItem extends StatefulWidget {
   final int? currentIndex;
   // final Future<bool> Function(String mediaPath) checkMediaSaved;
 
-  const MediaListItem({Key? key,
-      required this.mediaPath,
-      this.isVideo = false,
-      this.videoFilePath = null,
-      this.currentIndex = 0,
-      // required this.checkMediaSaved,
-      })
-      : super(key: key);
+  const MediaListItem({
+    Key? key,
+    required this.mediaPath,
+    this.isVideo = false,
+    this.videoFilePath = null,
+    this.currentIndex = 0,
+    // required this.checkMediaSaved,
+  }) : super(key: key);
 
   @override
   bool operator ==(Object other) {
@@ -35,12 +35,12 @@ class MediaListItem extends StatefulWidget {
   @override
   int get hashCode => mediaPath.hashCode ^ currentIndex.hashCode;
 
-
   @override
   _MediaListItemState createState() => _MediaListItemState();
 }
 
-class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveClientMixin {
+class _MediaListItemState extends State<MediaListItem>
+    with AutomaticKeepAliveClientMixin {
   late bool isAlreadySaved;
   late Future<bool> _future;
   final mediaManager = SavedMediaManager();
@@ -67,8 +67,7 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
   }
 
   void _toggleSavedStatus() async {
-
-    if(_checkFileExists() == false){
+    if (_checkFileExists() == false) {
       // _showErrorDialog("Error: Files does not exist");
       return;
     }
@@ -76,17 +75,11 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
     // Handle the click event here
     print("Icon tapped!");
     final result = await mediaManager.saveMedia(
-        widget.videoFilePath != null ?
-        widget.videoFilePath! :
-        widget.mediaPath,
+      widget.videoFilePath != null ? widget.videoFilePath! : widget.mediaPath,
     );
-
 
     saveStatus(context,
-        widget.isVideo == true ?
-        widget.videoFilePath! :
-        widget.mediaPath
-    );
+        widget.isVideo == true ? widget.videoFilePath! : widget.mediaPath);
 
     // isAlreadySaved = true;
     print('Aready Saved');
@@ -97,18 +90,18 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
     // _showErrorDialog("Status Saved");
   }
 
-  void saveMedia () async {
+  void saveMedia() async {
     _toggleSavedStatus();
   }
 
-  bool _checkFileExists()  {
-    if (widget.mediaPath == null || widget.mediaPath!.isEmpty) {
+  bool _checkFileExists() {
+    if (widget.mediaPath.isEmpty) {
       _showErrorDialog("Media path is missing!");
       return false;
     }
 
-    File file = File(widget.mediaPath!);
-    bool exists =  file.existsSync();
+    File file = File(widget.mediaPath);
+    bool exists = file.existsSync();
 
     if (!exists) {
       _showErrorDialog("File does not exist at the given path!");
@@ -119,20 +112,18 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
   }
 
   void _showErrorDialog(String message) {
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return FutureBuilder<bool>(
-        future: widget.videoFilePath != null ?
-          mediaManager.isMediaSaved(widget.videoFilePath!) :
-          mediaManager.isMediaSaved(widget.mediaPath),
+        future: widget.videoFilePath != null
+            ? mediaManager.isMediaSaved(widget.videoFilePath!)
+            : mediaManager.isMediaSaved(widget.mediaPath),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting ||
               !snapshot.hasData) {
@@ -148,31 +139,39 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
 
           bool isAlreadySaved = snapshot.data ?? false;
 
-          print('widget.videoFilePath ${snapshot.data} $isAlreadySaved - ${widget.videoFilePath}');
+          print(
+              'widget.videoFilePath ${snapshot.data} $isAlreadySaved - ${widget.videoFilePath}');
           return GestureDetector(
             onTap: () {
-
               if (widget.isVideo) {
-                print('widget.videoFilePath_ $isAlreadySaved - ${widget.videoFilePath}');
-                if(widget.videoFilePath != null)
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) =>
-                        GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!, isVideoView: true,
-                        galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getVideos)
-                    // VideoView(videoPath: widget.videoFilePath),
-                  ),
-                );
+                print(
+                    'widget.videoFilePath_ $isAlreadySaved - ${widget.videoFilePath}');
+                if (widget.videoFilePath != null)
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                        builder: (_) => GalleryPhotoViewWrapper(
+                            initialIndex: widget.currentIndex!,
+                            isVideoView: true,
+                            galleryItems: Provider.of<GetStatusProvider>(
+                                    context,
+                                    listen: false)
+                                .getVideos)
+                        // VideoView(videoPath: widget.videoFilePath),
+                        ),
+                  );
               } else {
                 // print('widget.ImagePath $isAlreadySaved - ${widget.mediaPath}');
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => GalleryPhotoViewWrapper(initialIndex: widget.currentIndex!,
-                        galleryItems: Provider.of<GetStatusProvider>(context, listen: false).getImages)
-                    //ImageView(imagePath: widget.mediaPath),
-                  ),
+                      builder: (_) => GalleryPhotoViewWrapper(
+                          initialIndex: widget.currentIndex!,
+                          galleryItems: Provider.of<GetStatusProvider>(context,
+                                  listen: false)
+                              .getImages)
+                      //ImageView(imagePath: widget.mediaPath),
+                      ),
                 );
               }
             },
@@ -210,24 +209,29 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
                         _toggleSavedStatus();
                       },
                       child: Container(
-
                         // color: Colors.red,
-                        color: Color.fromRGBO(0, 0, 0, 0.0), //This somehow makes the button more clickable
+                        color: Color.fromRGBO(0, 0, 0,
+                            0.0), //This somehow makes the button more clickable
                         alignment: Alignment.bottomRight,
                         child: Container(
-                          constraints: BoxConstraints(maxWidth: 50, maxHeight: 50),
+                          constraints:
+                              BoxConstraints(maxWidth: 50, maxHeight: 50),
                           width: 50,
                           height: 50,
-                          child: !isAlreadySaved ? Icon(
-                            Icons.download, // Replace with your desired icon
-                            color: const Color.fromARGB(255, 236, 235, 230),
-                            size: 23,
-                          ) :
-                          Icon(
-                            Icons.done_all, // Replace with your desired icon
-                            color:  Colors.green,
-                            size: 20,
-                          ),
+                          child: !isAlreadySaved
+                              ? Icon(
+                                  Icons
+                                      .download, // Replace with your desired icon
+                                  color:
+                                      const Color.fromARGB(255, 236, 235, 230),
+                                  size: 23,
+                                )
+                              : Icon(
+                                  Icons
+                                      .done_all, // Replace with your desired icon
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
                         ),
                       ),
                     ),
@@ -250,4 +254,3 @@ class _MediaListItemState extends State<MediaListItem> with AutomaticKeepAliveCl
         });
   }
 }
-
