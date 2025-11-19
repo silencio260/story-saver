@@ -53,11 +53,9 @@ class _ImageHomePageState extends State<ImageHomePage>
     getStatusesFoldersPermissions();
 
     _loadStories();
-
   }
 
-  void getStatusesFoldersPermissions () async {
-
+  void getStatusesFoldersPermissions() async {
     final statuses = Provider.of<GetStatusProvider>(context, listen: false);
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
@@ -70,10 +68,10 @@ class _ImageHomePageState extends State<ImageHomePage>
 
     await statuses.checkIsBusinessMode();
 
-    if(statuses.isBusinessMode == false){
-
-      AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable().then((value) {
-
+    if (statuses.isBusinessMode == false) {
+      AppStoragePermission()
+          .isWhatsAppStatusFolderPermissionAvailable()
+          .then((value) {
         print('isWhatsAppStatusFolderPermissionAvailable --> $value');
 
         permission.setIsWhatsAppStatusSafAvailable(value);
@@ -81,9 +79,9 @@ class _ImageHomePageState extends State<ImageHomePage>
 
       _getWhatsAppStatusFolderPermission();
     } else {
-
-      AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true).then((value) {
-
+      AppStoragePermission()
+          .isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true)
+          .then((value) {
         print('isBusinessWhatsAppStatusFolderPermissionAvailable --> $value');
 
         permission.setIsBusinessWhatsAppStatusSafAvailable(value);
@@ -93,9 +91,7 @@ class _ImageHomePageState extends State<ImageHomePage>
     }
   }
 
-
   void _loadStories() {
-
     final statuses = Provider.of<GetStatusProvider>(context, listen: false);
 
     // if(statuses.getVideos.isEmpty && statuses.getImages.isEmpty){
@@ -109,37 +105,40 @@ class _ImageHomePageState extends State<ImageHomePage>
   bool hasPermission = false;
   bool? isWhatsAppStatusFolderPermissionGranted = null;
 
-  void _getWhatsAppStatusFolderPermission () async {
-
+  void _getWhatsAppStatusFolderPermission() async {
     final permission = Provider.of<PermissionProvider>(context, listen: false);
-    final isGranted = await AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable();
+    final isGranted = await AppStoragePermission()
+        .isWhatsAppStatusFolderPermissionAvailable();
 
-    print('_getWhatsAppStatusFolderPermission 1 permission ${permission.isWhatsAppStatusSafAvailable}'
+    print(
+        '_getWhatsAppStatusFolderPermission 1 permission ${permission.isWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
 
-    if(isGranted == true)
-      permission.setIsWhatsAppStatusSafAvailable(true);
+    if (isGranted == true) permission.setIsWhatsAppStatusSafAvailable(true);
 
-    print('_getWhatsAppStatusFolderPermission permission ${permission.isWhatsAppStatusSafAvailable}'
+    print(
+        '_getWhatsAppStatusFolderPermission permission ${permission.isWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
-      
+
     //   isWhatsAppStatusFolderPermissionGranted = true;
     // else
     //   isWhatsAppStatusFolderPermissionGranted = false;
   }
 
-  void _getBusinessWhatsAppStatusFolderPermission () async {
-
+  void _getBusinessWhatsAppStatusFolderPermission() async {
     final permission = Provider.of<PermissionProvider>(context, listen: false);
-    final isGranted = await AppStoragePermission().isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true);
+    final isGranted = await AppStoragePermission()
+        .isWhatsAppStatusFolderPermissionAvailable(isBusinessMode: true);
 
-    print('_getBusinessWhatsAppStatusFolderPermission 1 permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+    print(
+        '_getBusinessWhatsAppStatusFolderPermission 1 permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
 
-    if(isGranted == true)
+    if (isGranted == true)
       permission.setIsBusinessWhatsAppStatusSafAvailable(true);
 
-    print('_getBusinessWhatsAppStatusFolderPermission permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
+    print(
+        '_getBusinessWhatsAppStatusFolderPermission permission ${permission.isBusinessWhatsAppStatusSafAvailable}'
         ' isGranted - ${isGranted}');
   }
 
@@ -147,7 +146,6 @@ class _ImageHomePageState extends State<ImageHomePage>
       RefreshController(initialRefresh: false);
 
   void _onRefresh() async {
-
     // Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
     //
     // _refreshController.refreshCompleted();
@@ -158,14 +156,12 @@ class _ImageHomePageState extends State<ImageHomePage>
     });
   }
 
-
   final MyRouteObserver routeObserver = MyRouteObserver();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-
   }
 
   @override
@@ -176,11 +172,10 @@ class _ImageHomePageState extends State<ImageHomePage>
   }
 
   Widget RequestWhatsappFolderPermission(BuildContext context) {
-
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
-    void _goToSafPage () {
-      if(permission.isWhatsAppStatusSafAvailable == false)
+    void _goToSafPage() {
+      if (permission.isWhatsAppStatusSafAvailable == false)
         // Trigger navigation after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.push(
@@ -201,10 +196,11 @@ class _ImageHomePageState extends State<ImageHomePage>
           Text('or The Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.green),
             ),
             onPressed: _goToSafPage,
-            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+            child:
+                Text("Grant Permission", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -212,11 +208,10 @@ class _ImageHomePageState extends State<ImageHomePage>
   }
 
   Widget RequestBusinessWhatsappFolderPermission(BuildContext context) {
-
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
-    void _goToSafPage () {
-      if(permission.isBusinessWhatsAppStatusSafAvailable == false)
+    void _goToSafPage() {
+      if (permission.isBusinessWhatsAppStatusSafAvailable == false)
         // Trigger navigation after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.push(
@@ -236,17 +231,16 @@ class _ImageHomePageState extends State<ImageHomePage>
           Text('Grant Access To Business Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.green),
             ),
             onPressed: _goToSafPage,
-            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+            child:
+                Text("Grant Permission", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -254,96 +248,92 @@ class _ImageHomePageState extends State<ImageHomePage>
     return Scaffold(
       body: Consumer<GetStatusProvider>(
         builder: (context, file, child) {
-          final permission = Provider.of<PermissionProvider>(context, listen: false);
+          final permission =
+              Provider.of<PermissionProvider>(context, listen: false);
 
           // print('file_length ${file.getImages.length} ${file.getVideos.length}');
 
-          print('_getWhatsAppStatusFolderPermission 3 permission.isWhatsAppStatusSafAvailable -> ${permission.isWhatsAppStatusSafAvailable}');
+          print(
+              '_getWhatsAppStatusFolderPermission 3 permission.isWhatsAppStatusSafAvailable -> ${permission.isWhatsAppStatusSafAvailable}');
 
-          return permission.hasStoragePermission != true ?
-            GrantPermissionButton(
-                context,
-                onPermissionGranted: () {
+          return permission.hasStoragePermission != true
+              ? GrantPermissionButton(context, onPermissionGranted: () {
                   // setState(() {
                   //   hasPermission = true;
                   // });
                   _loadStories();
-                }
-            )
-            :
-          file.isBusinessMode == true &&
-              permission.isBusinessWhatsAppStatusSafAvailable == false ?
-                // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
-                RequestBusinessWhatsappFolderPermission(context)
+                })
+              : file.isBusinessMode == true &&
+                      permission.isBusinessWhatsAppStatusSafAvailable == false
+                  ?
+                  // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
+                  RequestBusinessWhatsappFolderPermission(context)
+                  : file.isBusinessMode == false &&
+                          permission.isWhatsAppStatusSafAvailable == false
+                      ? RequestWhatsappFolderPermission(context)
+                      : file.isLoading == true && file.getImages.isEmpty
+                          ? const Center(
+                              child: Text('Loading Statuses...'),
+                            )
+                          : file.getImages.isEmpty
+                              ? LoadStatusUtils().TextWithStatusRefresh(
+                                  context: context, text: "No images Found")
+                              // ? Center(
+                              //     child: Text("No images available"),
+                              //   )
+                              : Container(
+                                  padding: const EdgeInsets.all(5),
+                                  child: SmartRefresher(
+                                    // enablePullDown: true,
+                                    // enablePullUp: true,
+                                    // header: WaterDropHeader(
+                                    //   waterDropColor:
+                                    //       Colors.green, // Color of the water drop
+                                    //   refresh: CircularProgressIndicator(
+                                    //     // Custom loader during refresh
+                                    //     valueColor: AlwaysStoppedAnimation<Color>(
+                                    //         Colors.green), // Loader color
+                                    //   ),
+                                    //   complete:
+                                    //       Container(), // Customize or leave empty for the "complete" state
+                                    // ),
+                                    controller: _refreshController,
+                                    onRefresh: _onRefresh,
+                                    child: GridView(
+                                      gridDelegate:
+                                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                                        maxCrossAxisExtent:
+                                            300, // Each item max width = 150
+                                        crossAxisSpacing: 5,
+                                        mainAxisSpacing: 8,
+                                        childAspectRatio: 0.95,
+                                      ),
+                                      children: List.generate(
+                                        file.getImages.length,
+                                        (index) {
+                                          final data = file.getImages[index];
 
+                                          // final stat = await file.stat();
+                                          print(
+                                              '---- data.path -> ${data.path} - ${data.stat()}');
+                                          // final mediaManager = SavedMediaManager();
 
-            :file.isBusinessMode == false && permission.isWhatsAppStatusSafAvailable == false ?
-                RequestWhatsappFolderPermission(context)
+                                          // bool isSaved = mediaManager.isMediaSaved(data.path);
 
-            : file.isLoading == true && file.getImages.isEmpty
-              ? const Center(
-                  child: Text('Loading Statuses...'),
-                )
-              : file.getImages.isEmpty
-                ? LoadStatusUtils().TextWithStatusRefresh(
-                  context: context,
-                  text: "No images Found"
-                )
-                  // ? Center(
-                  //     child: Text("No images available"),
-                  //   )
-                  : Container(
-                      padding: const EdgeInsets.all(5),
-                      child: SmartRefresher(
-                        // enablePullDown: true,
-                        // enablePullUp: true,
-                        // header: WaterDropHeader(
-                        //   waterDropColor:
-                        //       Colors.green, // Color of the water drop
-                        //   refresh: CircularProgressIndicator(
-                        //     // Custom loader during refresh
-                        //     valueColor: AlwaysStoppedAnimation<Color>(
-                        //         Colors.green), // Loader color
-                        //   ),
-                        //   complete:
-                        //       Container(), // Customize or leave empty for the "complete" state
-                        // ),
-                        controller: _refreshController,
-                        onRefresh: _onRefresh,
-                        child: GridView(
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent:
-                                300, // Each item max width = 150
-                            crossAxisSpacing: 5,
-                            mainAxisSpacing: 8,
-                            childAspectRatio: 0.95,
-                          ),
-                          children: List.generate(
-                            file.getImages.length,
-                            (index) {
-                              final data = file.getImages[index];
-
-                              // final stat = await file.stat();
-                              print('---- data.path -> ${data.path} - ${data.stat()}');
-                              // final mediaManager = SavedMediaManager();
-
-                              // bool isSaved = mediaManager.isMediaSaved(data.path);
-
-                              return MediaListItem(
-                                // key: mediaListItemKey,
-                                // key: ValueKey(index),
-                                key: ValueKey(data.path),
-                                mediaPath: data.path, currentIndex: index,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    );
+                                          return MediaListItem(
+                                            // key: mediaListItemKey,
+                                            // key: ValueKey(index),
+                                            key: ValueKey(data.path),
+                                            mediaPath: data.path,
+                                            currentIndex: index,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
         },
       ),
     );
   }
 }
-
