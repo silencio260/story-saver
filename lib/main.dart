@@ -15,8 +15,11 @@ import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
 import 'package:storysaver/Services/GDPR_Consent/gdprConsentMessage.dart';
 import 'package:storysaver/Services/PostHogWrapper/posthog_wrapper.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:storysaver/Utils/checkDevelopmentMode.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
+
+import 'Monetization/SubscriptionManager.dart';
 
 void main() async {
   try {
@@ -25,6 +28,11 @@ void main() async {
     // PushNotification().initialize();
 
     RevenueCatService().ConfigureRevenueCatSDK();
+
+    if (DevelopmentModeUtils.checkDevelopmentMode()) {
+      // Enable premium testing
+      SubscriptionManager().debugOverridePremium = true;
+    }
 
     PostHogWrapper.init();
 

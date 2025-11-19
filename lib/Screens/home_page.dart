@@ -9,6 +9,7 @@ import 'package:storysaver/Monetization/Ads/Admob/Widget/DisplayBannerAds.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
+import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Screens/Settings/settings_page.dart';
 import 'package:storysaver/Screens/TopNavPages/SavedMedia/saved_media_list.dart';
@@ -210,7 +211,7 @@ class _HomePageState extends State<HomePage>
                   },
                   icon: Icon(Icons.settings, color: Colors.white),
                 ),
-                RevenueCatService.isSubscriptionActive() == false
+                !SubscriptionManager().isPremium
                     ? IconButton(
                         onPressed: () {
                           RevenueCatService()
