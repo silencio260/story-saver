@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
@@ -14,10 +13,8 @@ import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
 import 'package:storysaver/Services/GDPR_Consent/gdprConsentMessage.dart';
-import 'package:storysaver/Services/Notifications/PushNotification.dart';
 import 'package:storysaver/Services/PostHogWrapper/posthog_wrapper.dart';
 import 'package:storysaver/Services/analytics_service.dart';
-import 'package:storysaver/Services/firebaseRemoteConfig.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
@@ -82,25 +79,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PostHogWidget(
-      child: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => TopNavProvider()),
-          ChangeNotifierProvider(create: (_) => GetStatusProvider()),
-          ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
-          ChangeNotifierProvider(create: (_) => PermissionProvider()),
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.light(
-              primary: Colors.green, // Set the custom primary color
-            ),
-          ),
-          navigatorObservers: [routeObserver, PosthogObserver()],
-          navigatorKey: myGlobalNavigatorKey,
-          home: const SplashScreen(),
-        ),
+        child: MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TopNavProvider()),
+        ChangeNotifierProvider(create: (_) => GetStatusProvider()),
+        ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
+        ChangeNotifierProvider(create: (_) => PermissionProvider()),
+        // ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        // themeMode: themeProvider.themeMode,
+        // theme: ThemeData.light(),
+        // darkTheme: ThemeData.dark(),
+        // theme: ThemeData(
+        //   colorScheme: ColorScheme.light(
+        //     primary: Colors.green, // Set the custom primary color
+        //   ),
+        // ),
+        navigatorObservers: [routeObserver, PosthogObserver()],
+        navigatorKey: myGlobalNavigatorKey,
+        home: const SplashScreen(),
       ),
-    );
+    ));
   }
 }
