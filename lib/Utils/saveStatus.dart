@@ -56,7 +56,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
     print('File(filePath) ${File(filePath)}');
     print('File Exist newFile.path ${newFile.path}');
     print("newFile.existsSync() ${newFile.existsSync()}");
-    print('directory!.path ${directory!.path}');
+    print('directory!.path ${directory.path}');
 
     if (newFile.existsSync()) {
       // ✅ File already exists, delete it
@@ -66,9 +66,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
       // print('File successfully deleted');
 
       await deleteFileFromAppFolderWithMediaStore(
-          fileName: fileName,
-          appFolder: saveDirectory.split('/').last
-      );
+          fileName: fileName, appFolder: saveDirectory.split('/').last);
     }
 
     // Step 4: Determine if it's an image or video
@@ -141,14 +139,13 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
   }
 }
 
-Future<void> deleteFileFromAppFolderWithMediaStore({required String fileName, required String appFolder}) async {
-
+Future<void> deleteFileFromAppFolderWithMediaStore(
+    {required String fileName, required String appFolder}) async {
   // saveDirectory.split('/').last
   MediaStore.appFolder = appFolder;
   final mediaStore = await MediaStore();
   String extension = fileName.split('.').last.toLowerCase();
   late Uri? fileUri = null;
-
 
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic']
       .contains(extension)) {
@@ -157,8 +154,7 @@ Future<void> deleteFileFromAppFolderWithMediaStore({required String fileName, re
       dirType: DirType.photo,
       dirName: DirName.pictures, // Folder under Pictures
     );
-  } else if(['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv']
-      .contains(extension)) {
+  } else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv'].contains(extension)) {
     fileUri = await mediaStore.getFileUri(
       fileName: fileName, // Only file name
       dirType: DirType.video,
@@ -169,7 +165,7 @@ Future<void> deleteFileFromAppFolderWithMediaStore({required String fileName, re
   print('deleted_file ${fileName} - ${appFolder} - ${fileUri.toString()} -'
       '${extension}');
 
-  if(fileUri != null) {
+  if (fileUri != null) {
     await mediaStore.deleteFileUsingUri(uriString: fileUri.toString());
 
     print('deleted_file_1 ${fileName} - ${appFolder} $fileUri');
@@ -180,11 +176,10 @@ Future<void> deleteFileFromAppFolderWithMediaStore({required String fileName, re
   //   dirType: DirType.photo,
   //   dirName: DirName.pictures, // Folder under Pictures
   // );
-
 }
 
-
-Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath) async {
+Future<void> deleteSaveStatusFromDevice(
+    BuildContext context, String filePath) async {
   try {
     // Step 1: Ensure the file exists
     File originalFile = File(filePath);
@@ -225,8 +220,8 @@ Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath) a
   }
 }
 
-
-Future<void> deleteSaveStatusWithPhotoManager(BuildContext context, AssetEntity entity) async {
+Future<void> deleteSaveStatusWithPhotoManager(
+    BuildContext context, AssetEntity entity) async {
   try {
     final result = await PhotoManager.editor.deleteWithIds([entity.id]);
     PhotoManager.clearFileCache();

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class CustomColors {
   static const int AppBarColor = 0xff154734; //0xff000000;
   static const int ButtonColor = 0xff154734;

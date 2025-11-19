@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 
@@ -22,13 +21,16 @@ class HelpModal {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              helpBullet('Go to Whatsapp or Whatsapp Business and watch any status.'),
+              helpBullet(
+                  'Go to Whatsapp or Whatsapp Business and watch any status.'),
               SizedBox(height: 8),
-              helpBullet('Come back to story saver app. Choose Photo or Video Status to download.'),
+              helpBullet(
+                  'Come back to story saver app. Choose Photo or Video Status to download.'),
               // SizedBox(height: 8),
               // helpBullet('Click on save button to save or choose another option for Share and Repost.'),
               SizedBox(height: 8),
-              helpBullet('You can check your saved status in last tab (Gallery).'),
+              helpBullet(
+                  'You can check your saved status in last tab (Gallery).'),
             ],
           ),
           actions: [
@@ -61,5 +63,3 @@ class HelpModal {
     );
   }
 }
-
-

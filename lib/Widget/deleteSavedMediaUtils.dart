@@ -1,15 +1,13 @@
-
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 
 class deleteSavedMeidaUtils {
-
-  void confirmFileDeleteDialog(BuildContext context, String message,GetSavedMediaProvider file, int index) {
+  void confirmFileDeleteDialog(BuildContext context, String message,
+      GetSavedMediaProvider file, int index) {
     Future.delayed(Duration.zero, () {
       showDialog(
         context: context,
@@ -24,7 +22,10 @@ class deleteSavedMeidaUtils {
                 onPressed: () {
                   Navigator.popUntil(dialogContext, (route) => route.isFirst);
                 },
-                child: Text("Cancel", style: TextStyle(color: Colors.grey),),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -32,7 +33,10 @@ class deleteSavedMeidaUtils {
                   deleteMedia(context, file, index);
                   Navigator.popUntil(dialogContext, (route) => route.isFirst);
                 },
-                child: Text("OK", style: TextStyle(color: Colors.red),),
+                child: Text(
+                  "OK",
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           );
@@ -41,8 +45,8 @@ class deleteSavedMeidaUtils {
     });
   }
 
-  void deleteMedia(BuildContext context, GetSavedMediaProvider file, int index) async {
-
+  void deleteMedia(
+      BuildContext context, GetSavedMediaProvider file, int index) async {
     File? fileToDelete = await file.getMediaFile[index].file;
     String? filePath = fileToDelete?.path;
     String fileName = file.getMediaFile[index].title.toString();

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingCard extends StatelessWidget {
@@ -25,8 +24,11 @@ class OnboardingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-              padding: EdgeInsets.all(50),
-              child: Image.asset(image, fit: BoxFit.contain,),
+            padding: EdgeInsets.all(50),
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+            ),
           ),
           Column(
             children: [
@@ -42,7 +44,7 @@ class OnboardingCard extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.all(8),
                 child: Text(
-                 description,
+                  description,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.secondary,
@@ -51,7 +53,6 @@ class OnboardingCard extends StatelessWidget {
                   ),
                 ),
               ),
-
             ],
           ),
           MaterialButton(
@@ -60,9 +61,7 @@ class OnboardingCard extends StatelessWidget {
             color: Theme.of(context).colorScheme.primary,
             child: Text(
               buttonText,
-              style: TextStyle(
-                color: Colors.white
-              ),
+              style: TextStyle(color: Colors.white),
             ),
           )
         ],
