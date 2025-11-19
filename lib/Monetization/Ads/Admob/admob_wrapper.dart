@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
+import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Utils/loggerUtil.dart';
 
@@ -68,7 +69,15 @@ class AdmobWrapper extends ChangeNotifier {
     notifyListeners();
   }
 
-  void loadInterstitialAd() {
+  void loadInterstitialAd() async {
+    // Check if user is premium before loading ad
+    await SubscriptionManager().initialize();
+    if (SubscriptionManager().isPremium) {
+      print(
+          'loadInterstitialAd - User is premium, skipping interstitial ad load');
+      return;
+    }
+
     print(
         'in loadInterstitialAd -- AdConfig().time_before_first_insta_ad - ${AdConfig.time_before_first_insta_ad} --- '
         'AdConfig().min_insta_ad_interval ${AdConfig.min_insta_ad_interval}');
@@ -102,7 +111,15 @@ class AdmobWrapper extends ChangeNotifier {
         }));
   }
 
-  void showInterstitialAd() {
+  void showInterstitialAd() async {
+    // Check if user is premium before showing ad
+    await SubscriptionManager().initialize();
+    if (SubscriptionManager().isPremium) {
+      print(
+          'showInterstitialAd - User is premium, skipping interstitial ad display');
+      return;
+    }
+
     if (_interstitialAd != null && _isInterstitialAdReady == true) {
       _interstitialAd!.show();
 

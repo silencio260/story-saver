@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
+import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Services/analytics_service.dart';
 
 class DisplayBannerAdWidget extends StatefulWidget {
@@ -14,12 +15,25 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
   late final BannerAd _bannerAd;
   bool _isAdLoaded = false;
   bool _shouldRetryFailedBannerAdRequest = false;
+  bool _isPremium = false;
 
   @override
   void initState() {
     super.initState();
-    // print('init state load banner');
-    _loadBannerAd();
+    _checkSubscriptionAndLoadAd();
+  }
+
+  Future<void> _checkSubscriptionAndLoadAd() async {
+    // Check if user is premium
+    await SubscriptionManager().initialize();
+    _isPremium = SubscriptionManager().isPremium;
+
+    if (!_isPremium) {
+      // Only load ad if user is not premium
+      _loadBannerAd();
+    } else {
+      print('DisplayBannerAdWidget: User is premium, skipping ad load');
+    }
   }
 
   void _resetBannerAdValues() {
@@ -58,12 +72,20 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
 
   @override
   void dispose() {
-    _bannerAd.dispose();
+    // Only dispose if ad was actually loaded (not premium user)
+    if (!_isPremium && _isAdLoaded) {
+      _bannerAd.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Return empty widget for premium users
+    if (_isPremium) {
+      return const SizedBox();
+    }
+
     // print('banner banner banner');
     if (_shouldRetryFailedBannerAdRequest == true) {
       _shouldRetryFailedBannerAdRequest = false;
