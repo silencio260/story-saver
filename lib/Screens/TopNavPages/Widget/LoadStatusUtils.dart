@@ -1,14 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 
 class LoadStatusUtils {
-  Widget TextWithStatusRefresh({
-    required BuildContext context,
-    String text = ''}) {
-
+  Widget TextWithStatusRefresh(
+      {required BuildContext context, String text = ''}) {
     return Center(
       child: RichText(
         text: TextSpan(
@@ -24,7 +21,8 @@ class LoadStatusUtils {
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
                   // handle tap here
-                  Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
+                  Provider.of<GetStatusProvider>(context, listen: false)
+                      .getAllStatusesWithSaf();
                 },
             ),
           ],
