@@ -31,7 +31,7 @@ void main() async {
 
     if (DevelopmentModeUtils.checkDevelopmentMode()) {
       // Enable premium testing
-      SubscriptionManager().debugOverridePremium = true;
+      // SubscriptionManager().debugOverridePremium = true;
     }
 
     PostHogWrapper.init();

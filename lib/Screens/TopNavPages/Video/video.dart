@@ -242,7 +242,9 @@ class _VideoHomePageState extends State<VideoHomePage>
                                                                   .toString(),
                                                               isVideo: true,
                                                               videoFilePath:
-                                                                  data.path)
+                                                                  data.path,
+                                                              itemIndex:
+                                                                  index) // NEW: Pass item index
                                                           : Center(
                                                               child: Column(
                                                                 mainAxisAlignment:

@@ -326,6 +326,8 @@ class _ImageHomePageState extends State<ImageHomePage>
                                             key: ValueKey(data.path),
                                             mediaPath: data.path,
                                             currentIndex: index,
+                                            itemIndex:
+                                                index, // NEW: Pass item index
                                           );
                                         },
                                       ),

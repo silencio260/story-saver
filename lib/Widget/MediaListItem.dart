@@ -2,17 +2,22 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
+import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
+import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
+import 'package:storysaver/Widget/PremiumUpgradeModal.dart';
 
 class MediaListItem extends StatefulWidget {
   final String mediaPath;
   final bool isVideo;
   final String? videoFilePath;
   final int? currentIndex;
+  final int itemIndex; // NEW: Index position in the list
   // final Future<bool> Function(String mediaPath) checkMediaSaved;
 
   const MediaListItem({
@@ -21,6 +26,7 @@ class MediaListItem extends StatefulWidget {
     this.isVideo = false,
     this.videoFilePath = null,
     this.currentIndex = 0,
+    this.itemIndex = 0, // NEW: Default to 0
     // required this.checkMediaSaved,
   }) : super(key: key);
 
@@ -117,6 +123,19 @@ class _MediaListItemState extends State<MediaListItem>
     );
   }
 
+  /// Returns the appropriate icon color based on premium status and item index
+  Color _getIconColor() {
+    final isPremium = SubscriptionManager().isPremium;
+
+    // If premium or within free limit (first 3 items)
+    if (isPremium || widget.itemIndex < 3) {
+      return const Color.fromARGB(255, 236, 235, 230); // Normal white
+    } else {
+      // Locked item - grayed out
+      return const Color.fromARGB(255, 236, 235, 230).withOpacity(0.4);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -206,7 +225,28 @@ class _MediaListItemState extends State<MediaListItem>
                     // height: 50,
                     child: GestureDetector(
                       onTap: () async {
-                        _toggleSavedStatus();
+                        // Check if user is premium
+                        final isPremium = SubscriptionManager().isPremium;
+
+                        // If not premium and item is 4th or later (index >= 3)
+                        if (!isPremium && widget.itemIndex >= 3) {
+                          // Show upgrade modal
+                          final shouldUpgrade =
+                              await showPremiumUpgradeModal(context);
+
+                          if (shouldUpgrade == true) {
+                            // User wants to upgrade - show paywall
+                            await RevenueCatService()
+                                .PresentRevenueCatPayWallIfNeeded();
+                          } else if (shouldUpgrade == false) {
+                            // User declined - show ad
+                            AdmobWrapper().showInterstitialAd();
+                          }
+                          // If null (dismissed), do nothing
+                        } else {
+                          // Premium user or within free limit - allow download
+                          _toggleSavedStatus();
+                        }
                       },
                       child: Container(
                         // color: Colors.red,
@@ -220,15 +260,12 @@ class _MediaListItemState extends State<MediaListItem>
                           height: 50,
                           child: !isAlreadySaved
                               ? Icon(
-                                  Icons
-                                      .download, // Replace with your desired icon
-                                  color:
-                                      const Color.fromARGB(255, 236, 235, 230),
+                                  Icons.download,
+                                  color: _getIconColor(),
                                   size: 23,
                                 )
                               : Icon(
-                                  Icons
-                                      .done_all, // Replace with your desired icon
+                                  Icons.done_all,
                                   color: Colors.green,
                                   size: 20,
                                 ),
