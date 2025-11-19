@@ -88,6 +88,7 @@ dependencies:
   feedbacknest_core: ^0.0.8
   fancy_rating_bar: ^0.0.9
   posthog_flutter: ^5.5.0
+  logger: ^2.6.2
   #  saf: ^1.0.3+4
 #  file_picker: ^10.1.1
 #  fluttertoast: ^8.2.12
