@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart'
 /// ```dart
 /// import 'firebase_options.dart';
 /// // ...
-/// await Firebase.initializeApp(
+/// await  Firebase.initializeApp(
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
 /// ```
@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'whatsapp-status-saver-fl-6c420.firebasestorage.app',
     iosBundleId: 'com.faruq.storysaver',
   );
-
 }
