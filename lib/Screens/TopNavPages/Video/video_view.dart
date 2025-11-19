@@ -21,7 +21,8 @@ class VideoView extends StatefulWidget {
   final int? currentIndex;
 
   const VideoView({
-    Key? key, this.videoPath,
+    Key? key,
+    this.videoPath,
     this.isLoading = false,
     this.isSavedMedia = false,
     this.currentIndex = null,
@@ -45,8 +46,7 @@ class _VideoViewState extends State<VideoView> {
   late VideoPlayerController _videoPlayerController;
 
   void _toggleSavedStatus() async {
-
-    if(checkFileExists(widget.videoPath!) == false){
+    if (checkFileExists(widget.videoPath!) == false) {
       showErrorDialog(context, "Error: Files does not exist");
       return;
     }
@@ -60,30 +60,33 @@ class _VideoViewState extends State<VideoView> {
     // isAlreadySaved = true;
     print('Aready Saved');
 
-
     // _showErrorDialog("Status Saved");
   }
 
-  void saveMedia () async {
-    if(!widget.isLoading)
-    _toggleSavedStatus();
+  void saveMedia() async {
+    if (!widget.isLoading) _toggleSavedStatus();
   }
 
-  void _shareMedia(BuildContext context){
-    if(!widget.isLoading) {
+  void _shareMedia(BuildContext context) {
+    if (!widget.isLoading) {
       // print("share");
-      Share.shareXFiles([XFile(widget.videoPath!)],
-          text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}').then((value) {
+      Share.shareXFiles([
+        XFile(widget.videoPath!)
+      ], text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
+          .then((value) {
         // ScaffoldMessenger.of(context).showSnackBar(
         //     const SnackBar(content: Text("Video Sent")));
-        });
+      });
     }
   }
 
-  void _shareMediaToWhatsapp(BuildContext context){
-    if(!widget.isLoading) {
+  void _shareMediaToWhatsapp(BuildContext context) {
+    if (!widget.isLoading) {
       // print("share");
-      shareToWhatsApp('Shared From Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}', filePath: widget.videoPath!, context: context);
+      shareToWhatsApp(
+          'Shared From Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
+          filePath: widget.videoPath!,
+          context: context);
     }
   }
 
@@ -96,10 +99,9 @@ class _VideoViewState extends State<VideoView> {
   }
 
   void _onStart() {
-    if(!widget.isLoading) {
+    if (!widget.isLoading) {
       if (checkFileExists(widget.videoPath!) == false)
         showErrorDialog(context, "File does not exists");
-
 
       if (widget.videoPath != null && widget.videoPath!.isNotEmpty) {
         _initializePlayer();
@@ -111,8 +113,7 @@ class _VideoViewState extends State<VideoView> {
     try {
       print('_initializePlayer -------');
       print(
-          '- widget.videoPath - ${widget.videoPath} - widget.videoPath ${widget
-              .videoPath}');
+          '- widget.videoPath - ${widget.videoPath} - widget.videoPath ${widget.videoPath}');
       _videoPlayerController =
           VideoPlayerController.file(File(widget.videoPath!));
 
@@ -129,11 +130,10 @@ class _VideoViewState extends State<VideoView> {
       if (videoWidth > 0 && videoHeight > 0) {
         aspectRatio = videoWidth / videoHeight;
       } else {
-        MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(
-            widget.videoPath!);
+        MediaInfo? mediaInfo =
+            await VideoCompress.getMediaInfo(widget.videoPath!);
 
-        if (mediaInfo != null && mediaInfo.width != null &&
-            mediaInfo.height != null) {
+        if (mediaInfo.width != null && mediaInfo.height != null) {
           double videoWidth = mediaInfo.width!.toDouble();
           double videoHeight = mediaInfo.height!.toDouble();
 
@@ -144,14 +144,13 @@ class _VideoViewState extends State<VideoView> {
           print("Invalid video dimensions, using fallback aspect ratio.");
       }
 
-      MediaInfo? mediaInfo = await VideoCompress.getMediaInfo(
-          widget.videoPath!);
+      MediaInfo? mediaInfo =
+          await VideoCompress.getMediaInfo(widget.videoPath!);
 
       // print('Aspect_Ratio : ${_videoPlayerController.value.aspectRatio}, '
       //     'height ${videoHeight}, width ${videoWidth}'
       //     ',size ${_videoPlayerController.value.size} || ${mediaInfo.width!.toDouble()} || '
       //     '${mediaInfo.height!.toDouble()}, ${aspectRatio}');
-
 
       setState(() {
         _chewieController = ChewieController(
@@ -174,12 +173,10 @@ class _VideoViewState extends State<VideoView> {
           },
         );
       });
-    } catch(e){
+    } catch (e) {
       print("Error initializing Player - ${e}");
     }
-
   }
-
 
   @override
   void didUpdateWidget(VideoView oldWidget) {
@@ -207,14 +204,11 @@ class _VideoViewState extends State<VideoView> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
-        constraints: BoxConstraints(
-            maxHeight: 700
-        ),
-        child: !widget.isLoading ?
-        (_chewieController != null
-            ? Chewie(controller: _chewieController!)
-            : const Center(child: CircularProgressIndicator())
-        )
+        constraints: BoxConstraints(maxHeight: 700),
+        child: !widget.isLoading
+            ? (_chewieController != null
+                ? Chewie(controller: _chewieController!)
+                : const Center(child: CircularProgressIndicator()))
             : Placeholder(),
       ),
       floatingActionButton: Padding(
@@ -222,9 +216,8 @@ class _VideoViewState extends State<VideoView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
-            if((widget.isSavedMedia == false && index != 4) ||
-            (widget.isSavedMedia == true && index != 1)
-            ) {
+            if ((widget.isSavedMedia == false && index != 4) ||
+                (widget.isSavedMedia == true && index != 1)) {
               return FloatingActionButton(
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(CustomColors.ButtonColor),
@@ -252,11 +245,11 @@ class _VideoViewState extends State<VideoView> {
                       break;
 
                     case 4:
-                      if(widget.isSavedMedia && widget.currentIndex != null) {
-                        final mediaProvider = Provider.of<
-                            GetSavedMediaProvider>(context, listen: false);
-                        deleteSavedMeidaUtils()
-                            .confirmFileDeleteDialog(
+                      if (widget.isSavedMedia && widget.currentIndex != null) {
+                        final mediaProvider =
+                            Provider.of<GetSavedMediaProvider>(context,
+                                listen: false);
+                        deleteSavedMeidaUtils().confirmFileDeleteDialog(
                           context,
                           'Are you sure you want to delete?',
                           mediaProvider,
@@ -268,9 +261,10 @@ class _VideoViewState extends State<VideoView> {
                 },
                 child: buttonsList[index],
               );
-            }
-            else
-              return Container(child: Text(''),);
+            } else
+              return Container(
+                child: Text(''),
+              );
           }),
         ),
       ),

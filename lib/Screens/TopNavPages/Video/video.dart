@@ -13,7 +13,6 @@ import 'package:storysaver/Widget/GrantPermissionButton.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
-
 class VideoHomePage extends StatefulWidget {
   const VideoHomePage({Key? key}) : super(key: key);
 
@@ -21,8 +20,8 @@ class VideoHomePage extends StatefulWidget {
   State<VideoHomePage> createState() => _VideoHomePageState();
 }
 
-class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveClientMixin, RouteAware {
-
+class _VideoHomePageState extends State<VideoHomePage>
+    with AutomaticKeepAliveClientMixin, RouteAware {
   @override
   bool get wantKeepAlive => true;
 
@@ -42,10 +41,9 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
   final String? title = 'vid';
 
   RefreshController _refreshController =
-  RefreshController(initialRefresh: false);
+      RefreshController(initialRefresh: false);
 
-  Future<void> _onRefresh() async{
-
+  Future<void> _onRefresh() async {
     // await Provider.of<GetStatusProvider>(context, listen: false).getAllStatusesWithSaf();
 
     // _refreshController.refreshCompleted();
@@ -56,7 +54,6 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     });
     // _refreshController.refreshCompleted();
   }
-
 
   final MyRouteObserver routeObserver = MyRouteObserver();
 
@@ -75,14 +72,11 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
     super.dispose();
   }
 
-
-
   Widget RequestWhatsappFolderPermission(BuildContext context) {
-
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
-    void _goToSafPage () {
-      if(permission.isWhatsAppStatusSafAvailable == false)
+    void _goToSafPage() {
+      if (permission.isWhatsAppStatusSafAvailable == false)
         // Trigger navigation after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.push(
@@ -103,10 +97,11 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
           Text('or The Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.green),
             ),
             onPressed: _goToSafPage,
-            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+            child:
+                Text("Grant Permission", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -114,11 +109,10 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
   }
 
   Widget RequestBusinessWhatsappFolderPermission(BuildContext context) {
-
     final permission = Provider.of<PermissionProvider>(context, listen: false);
 
-    void _goToSafPage () {
-      if(permission.isBusinessWhatsAppStatusSafAvailable == false)
+    void _goToSafPage() {
+      if (permission.isBusinessWhatsAppStatusSafAvailable == false)
         // Trigger navigation after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.push(
@@ -138,134 +132,139 @@ class _VideoHomePageState extends State<VideoHomePage>  with AutomaticKeepAliveC
           Text('Grant Access To Business Whatsapp .Statuses Folder.'),
           ElevatedButton(
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.green),
             ),
             onPressed: _goToSafPage,
-            child: Text("Grant Permission", style: TextStyle(color: Colors.white)),
+            child:
+                Text("Grant Permission", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-        body: Consumer<GetStatusProvider>(builder: (context, file, child) {
+      body: Consumer<GetStatusProvider>(builder: (context, file, child) {
+        final permission =
+            Provider.of<PermissionProvider>(context, listen: false);
 
-       final permission = Provider.of<PermissionProvider>(context, listen: false);
-
-       return permission.hasStoragePermission != true ?
-         const Center(
-           child: Text('No Storage Permission'),
-         )
-       :
-       file.isBusinessMode == true &&
-           permission.isBusinessWhatsAppStatusSafAvailable == false ?
-       // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
-       RequestBusinessWhatsappFolderPermission(context)
-
-       :file.isBusinessMode == true && file.isWhatsappAvailable == false
-           ? LoadStatusUtils().TextWithStatusRefresh(
-           context: context,
-           text: "WB Whatsapp not available"
-       )
-           :
-       file.isWhatsappAvailable == false
-           ? LoadStatusUtils().TextWithStatusRefresh(
-           context: context,
-           text: "Whatsapp not available"
-       )
-
-
-           : file.isBusinessMode == false &&
-           permission.isWhatsAppStatusSafAvailable == false ?
-       RequestWhatsappFolderPermission(context)
-
-        // const Center(
-        //       child: Text('Whatsapp not available'),
-        //     )
-        :
-        file.isLoading == true && file.getVideos.isEmpty
+        return permission.hasStoragePermission != true
             ? const Center(
-          child: Text('Loading Statuses...'),
-        )
-          : file.getVideos.isEmpty
-            ? LoadStatusUtils().TextWithStatusRefresh(
-            context: context,
-            text: "No Videos Found"
-        )
-        //TextWithStatusRefresh("No Videos available")
-              // ? Center(
-              //     child: Text("No Videos available"),
+                child: Text('No Storage Permission'),
+              )
+            : file.isBusinessMode == true &&
+                    permission.isBusinessWhatsAppStatusSafAvailable == false
+                ?
+                // Center(child: Text("Is in business mode now ${file.isBusinessMode}"))
+                RequestBusinessWhatsappFolderPermission(context)
+                : file.isBusinessMode == true &&
+                        file.isWhatsappAvailable == false
+                    ? LoadStatusUtils().TextWithStatusRefresh(
+                        context: context, text: "WB Whatsapp not available")
+                    : file.isWhatsappAvailable == false
+                        ? LoadStatusUtils().TextWithStatusRefresh(
+                            context: context, text: "Whatsapp not available")
+                        : file.isBusinessMode == false &&
+                                permission.isWhatsAppStatusSafAvailable == false
+                            ? RequestWhatsappFolderPermission(context)
 
-              //   )
-      : Container(
-          padding: const EdgeInsets.all(5),
-          child: SmartRefresher(
-            // enablePullDown: true,
-            // enablePullUp: true,
-            // header: WaterDropHeader(
-            //   waterDropColor:
-            //   Colors.green, // Color of the water drop
-            //   refresh: CircularProgressIndicator(
-            //     // Custom loader during refresh
-            //     valueColor: AlwaysStoppedAnimation<Color>(
-            //         Colors.green), // Loader color
-            //   ),
-            //   complete:
-            //   Container(), // Customize or leave empty for the "complete" state
-            // ),
-            physics: ClampingScrollPhysics(),
-            controller: _refreshController,
-            onRefresh: _onRefresh,
+                            // const Center(
+                            //       child: Text('Whatsapp not available'),
+                            //     )
+                            : file.isLoading == true && file.getVideos.isEmpty
+                                ? const Center(
+                                    child: Text('Loading Statuses...'),
+                                  )
+                                : file.getVideos.isEmpty
+                                    ? LoadStatusUtils().TextWithStatusRefresh(
+                                        context: context,
+                                        text: "No Videos Found")
+                                    //TextWithStatusRefresh("No Videos available")
+                                    // ? Center(
+                                    //     child: Text("No Videos available"),
 
-          child: GridView(
-              gridDelegate:
-                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 300, // Each item max width = 150
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 0.95,
-                  ),
-              children: List.generate(file.getVideos.length, (index) {
-                // print('---------------------');
-                // print(file.getVideos.length);
-                final data = file.getVideos[index];
-                return FutureBuilder<String>(
-                    future: file.generateThumbnailFromListAllVideosForFutureBuilder(data.path),
-                    builder: (context, snapshot) {
+                                    //   )
+                                    : Container(
+                                        padding: const EdgeInsets.all(5),
+                                        child: SmartRefresher(
+                                          // enablePullDown: true,
+                                          // enablePullUp: true,
+                                          // header: WaterDropHeader(
+                                          //   waterDropColor:
+                                          //   Colors.green, // Color of the water drop
+                                          //   refresh: CircularProgressIndicator(
+                                          //     // Custom loader during refresh
+                                          //     valueColor: AlwaysStoppedAnimation<Color>(
+                                          //         Colors.green), // Loader color
+                                          //   ),
+                                          //   complete:
+                                          //   Container(), // Customize or leave empty for the "complete" state
+                                          // ),
+                                          physics: ClampingScrollPhysics(),
+                                          controller: _refreshController,
+                                          onRefresh: _onRefresh,
 
-                      print('video File path - snapshot.data.toString() -> ${snapshot.data.toString()}'
-                          ' - videoFilePath -> ${data.path}');
+                                          child: GridView(
+                                            gridDelegate:
+                                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                              maxCrossAxisExtent:
+                                                  300, // Each item max width = 150
+                                              crossAxisSpacing: 5,
+                                              mainAxisSpacing: 8,
+                                              childAspectRatio: 0.95,
+                                            ),
+                                            children: List.generate(
+                                              file.getVideos.length,
+                                              (index) {
+                                                // print('---------------------');
+                                                // print(file.getVideos.length);
+                                                final data =
+                                                    file.getVideos[index];
+                                                return FutureBuilder<String>(
+                                                    future: file
+                                                        .generateThumbnailFromListAllVideosForFutureBuilder(
+                                                            data.path),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      print(
+                                                          'video File path - snapshot.data.toString() -> ${snapshot.data.toString()}'
+                                                          ' - videoFilePath -> ${data.path}');
 
-                      return
-                        snapshot.hasData
-                          ?
-                       MediaListItem(
-                           currentIndex: index,
-                           mediaPath: snapshot.data.toString(),
-                           isVideo: true,
-                           videoFilePath: data.path
-                       )
-                      :
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.broken_image, color: Colors.grey),
-                              // Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
-                            ],),
-                        );
-                    });
-              },),
-            ),
-            ),
-          );
-    }),
+                                                      return snapshot.hasData
+                                                          ? MediaListItem(
+                                                              currentIndex:
+                                                                  index,
+                                                              mediaPath: snapshot
+                                                                  .data
+                                                                  .toString(),
+                                                              isVideo: true,
+                                                              videoFilePath:
+                                                                  data.path)
+                                                          : Center(
+                                                              child: Column(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Icon(
+                                                                      Icons
+                                                                          .broken_image,
+                                                                      color: Colors
+                                                                          .grey),
+                                                                  // Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
+                                                                ],
+                                                              ),
+                                                            );
+                                                    });
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      );
+      }),
     );
   }
 }
