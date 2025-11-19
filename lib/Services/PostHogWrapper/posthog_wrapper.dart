@@ -1,9 +1,10 @@
 import 'package:posthog_flutter/posthog_flutter.dart';
-import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Utils/checkDevelopmentMode.dart';
 
 class PostHogWrapper {
   static init() async {
+    // print('PostHog wrapper init - checkDevelopmentMode - ${DevelopmentModeUtils.checkDevelopmentMode()}');
+
     final api_key = const String.fromEnvironment("posthog_api_key");
     final config = PostHogConfig(api_key);
     config.host = 'https://us.i.posthog.com';
@@ -13,7 +14,7 @@ class PostHogWrapper {
     // for more config and to learn about how we capture sessions on mobile
     // and what to expect
     config.sessionReplay =
-        DevelopmentModeUtils.checkDevelopmentMode() ? false : false;
+        DevelopmentModeUtils.checkDevelopmentMode() ? false : true;
     // choose whether to mask images or text
     config.sessionReplayConfig.maskAllTexts = false;
     config.sessionReplayConfig.maskAllImages = false;
