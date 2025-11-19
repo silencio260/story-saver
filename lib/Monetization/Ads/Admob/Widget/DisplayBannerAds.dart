@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:storysaver/Monetization/AdSuppressionManager.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Services/analytics_service.dart';
@@ -24,6 +25,15 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
   }
 
   Future<void> _checkSubscriptionAndLoadAd() async {
+    // Check if ads are suppressed
+    if (AdSuppressionManager().areAdsSuppressed) {
+      print(
+          'DisplayBannerAdWidget: Ads are suppressed, skipping banner ad load');
+      print(
+          'DisplayBannerAdWidget: Suppression reasons: ${AdSuppressionManager().activeSuppressionReasons}');
+      return;
+    }
+
     // Check if user is premium
     await SubscriptionManager().initialize();
     _isPremium = SubscriptionManager().isPremium;

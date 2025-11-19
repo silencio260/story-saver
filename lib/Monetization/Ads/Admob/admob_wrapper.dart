@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:storysaver/Monetization/AdSuppressionManager.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/Ads/Admob/ad_helper.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
@@ -70,6 +71,15 @@ class AdmobWrapper extends ChangeNotifier {
   }
 
   void loadInterstitialAd() async {
+    // Check if ads are suppressed
+    if (AdSuppressionManager().areAdsSuppressed) {
+      print(
+          'loadInterstitialAd - Ads are suppressed, skipping interstitial ad load');
+      print(
+          'loadInterstitialAd - Suppression reasons: ${AdSuppressionManager().activeSuppressionReasons}');
+      return;
+    }
+
     // Check if user is premium before loading ad
     await SubscriptionManager().initialize();
     if (SubscriptionManager().isPremium) {
@@ -112,6 +122,15 @@ class AdmobWrapper extends ChangeNotifier {
   }
 
   void showInterstitialAd() async {
+    // Check if ads are suppressed
+    if (AdSuppressionManager().areAdsSuppressed) {
+      print(
+          'showInterstitialAd - Ads are suppressed, skipping interstitial ad display');
+      print(
+          'showInterstitialAd - Suppression reasons: ${AdSuppressionManager().activeSuppressionReasons}');
+      return;
+    }
+
     // Check if user is premium before showing ad
     await SubscriptionManager().initialize();
     if (SubscriptionManager().isPremium) {

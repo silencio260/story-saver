@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:storysaver/Monetization/AdSuppressionManager.dart';
 import 'package:storysaver/Monetization/Ads/Admob/admob_wrapper.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
@@ -230,19 +231,35 @@ class _MediaListItemState extends State<MediaListItem>
 
                         // If not premium and item is 4th or later (index >= 3)
                         if (!isPremium && widget.itemIndex >= 3) {
-                          // Show upgrade modal
-                          final shouldUpgrade =
-                              await showPremiumUpgradeModal(context);
+                          // Suppress ads during the entire upgrade flow
+                          AdSuppressionManager()
+                              .suppressAds('premium_download_flow');
 
-                          if (shouldUpgrade == true) {
-                            // User wants to upgrade - show paywall
-                            await RevenueCatService()
-                                .PresentRevenueCatPayWallIfNeeded();
-                          } else if (shouldUpgrade == false) {
-                            // User declined - show ad
-                            AdmobWrapper().showInterstitialAd();
+                          try {
+                            // Show upgrade modal
+                            final shouldUpgrade =
+                                await showPremiumUpgradeModal(context);
+
+                            if (shouldUpgrade == true) {
+                              // User wants to upgrade - show paywall
+                              // Ad suppression continues during paywall
+                              await RevenueCatService()
+                                  .PresentRevenueCatPayWallIfNeeded();
+                            } else if (shouldUpgrade == false) {
+                              // User declined - re-enable ads first, then show ad
+                              AdSuppressionManager()
+                                  .enableAds('premium_download_flow');
+                              // Small delay to ensure suppression is cleared
+                              await Future.delayed(
+                                  const Duration(milliseconds: 100));
+                              AdmobWrapper().showInterstitialAd();
+                            }
+                          } finally {
+                            // Always re-enable ads when flow completes
+                            AdSuppressionManager()
+                                .enableAds('premium_download_flow');
                           }
-                          // If null (dismissed), do nothing
+                          // If null (dismissed), suppression is cleared in finally block
                         } else {
                           // Premium user or within free limit - allow download
                           _toggleSavedStatus();
