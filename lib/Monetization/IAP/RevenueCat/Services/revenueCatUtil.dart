@@ -2,9 +2,10 @@ import 'dart:io' show Platform;
 
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 class RevenueCatService {
-  CustomerInfo? _customerInfo;
+  static CustomerInfo? _customerInfo;
 
   Future<void> ConfigureRevenueCatSDK() async {
     try {
@@ -61,17 +62,17 @@ class RevenueCatService {
       } else if (paywallResult == PaywallResult.cancelled) {
         print('User cancelled the purchase');
 
-        // await _analytics.logEvent(
-        //   name: 'paywall_cancelled',
-        //   parameters: {'entitlement_id': entitlementId},
-        // );
+        // Paywall Cancelled Event
+        AnalyticsService.logCustomPaywallCancelled(
+          entitlementId: entitlementId,
+        );
       } else if (paywallResult == PaywallResult.restored) {
         print('User restored purchases');
 
-        // await _analytics.logEvent(
-        //   name: 'purchases_restored',
-        //   parameters: {'entitlement_id': entitlementId},
-        // );
+        // Purchases Restored Event (with entitlement_id)
+        AnalyticsService.logCustomPurchasesRestored(
+          entitlementId: entitlementId,
+        );
       }
 
       return paywallResult;
@@ -89,9 +90,8 @@ class RevenueCatService {
 
       // print('Paywall Result: $paywallResult');
 
-      // await _analytics.logEvent(
-      //   name: 'customer_center_viewed',
-      // );
+      // Customer Center Viewed Event
+      AnalyticsService.logCustomCustomerCenterViewed();
     } catch (e) {
       print("Error PresentPayWallIfNeeded Purchases: $e");
     }
@@ -105,6 +105,8 @@ class RevenueCatService {
       final hadPurchase =
           _customerInfo?.entitlements.active.isNotEmpty ?? false;
       final hasPurchaseNow = customerInfo.entitlements.active.isNotEmpty;
+
+      print('hadPurchase: $hadPurchase, hasPurchaseNow: $hasPurchaseNow');
 
       // If we didn't have active entitlements before but do now, it's a new purchase
       if (!hadPurchase && hasPurchaseNow) {
@@ -135,18 +137,13 @@ class RevenueCatService {
       print('Tracking purchase: $productId, $price $currency');
 
       // 1. Log to Firebase Analytics
-      // await _analytics.logPurchase(
-      //   currency: currency,
-      //   value: price,
-      //   items: [
-      //     AnalyticsEventItem(
-      //       itemId: productId,
-      //       itemName: entitlementId,
-      //       price: price,
-      //       quantity: 1,
-      //     ),
-      //   ],
-      // );
+      // Purchase Event
+      AnalyticsService.logCustomPurchase(
+        currency: currency,
+        price: price,
+        productId: productId,
+        entitlementId: entitlementId,
+      );
 
       print('Purchase tracked successfully');
     } catch (e) {
@@ -165,72 +162,6 @@ class RevenueCatService {
     }
   }
 
-  //------------------------------------------//
-  //
-  // // Track purchase made from paywall
-  // Future<void> _trackPurchaseFromPaywall(
-  //   CustomerInfo customerInfo,
-  //   String entitlementId,
-  // ) async {
-  //   try {
-  //     final entitlement = customerInfo.entitlements.all[entitlementId];
-  //
-  //     if (entitlement == null || !entitlement.isActive) {
-  //       print('No active entitlement found for: $entitlementId');
-  //       return;
-  //     }
-  //
-  //     final productId = entitlement.productIdentifier;
-  //     final price = entitlement.productPriceAmountMicros / 1000000;
-  //     final currency = entitlement.currencyCode ?? 'USD';
-  //     final verification = customerInfo.entitlements.verification;
-  //
-  //     print('Purchase verification: $verification');
-  //
-  //     // Only track verified or non-requested purchases
-  //     if (verification == VerificationResult.verified ||
-  //         verification == VerificationResult.notRequested) {
-  //       // 1. Log to Firebase Analytics
-  //       // await _analytics.logPurchase(
-  //       //   currency: currency,
-  //       //   value: price,
-  //       //   items: [
-  //       //     AnalyticsEventItem(
-  //       //       itemId: productId,
-  //       //       itemName: entitlementId,
-  //       //       price: price,
-  //       //       quantity: 1,
-  //       //     ),
-  //       //   ],
-  //       // );
-  //
-  //       // 2. Save to Firestore
-  //       // await _savePurchaseToFirestore(
-  //       //   customerInfo: customerInfo,
-  //       //   entitlement: entitlement,
-  //       //   price: price,
-  //       //   currency: currency,
-  //       // );
-  //     } else {
-  //       print('Purchase verification failed: $verification');
-  //     }
-  //   } catch (e) {
-  //     print('Error tracking purchase from paywall: $e');
-  //   }
-  // }
-
-  // Check if user has active subscription
-  Future<bool> hasActiveEntitlement(String entitlementId) async {
-    try {
-      final customerInfo = await Purchases.getCustomerInfo();
-      final entitlement = customerInfo.entitlements.all[entitlementId];
-      return entitlement?.isActive ?? false;
-    } catch (e) {
-      print('Error checking entitlement: $e');
-      return false;
-    }
-  }
-
   // Restore purchases
   Future<void> restorePurchases() async {
     try {
@@ -239,12 +170,10 @@ class RevenueCatService {
       final customerInfo = await Purchases.restorePurchases();
       _customerInfo = customerInfo;
 
-      // await _analytics.logEvent(
-      //   name: 'purchases_restored',
-      //   parameters: {
-      //     'active_entitlements': customerInfo.entitlements.active.length,
-      //   },
-      // );
+      // Purchases Restored Event (with entitlement_id)
+      AnalyticsService.logCustomPurchasesRestored(
+        entitlementId: customerInfo.entitlements.active.length.toString(),
+      );
 
       print(
           'Purchases restored. Active entitlements: ${customerInfo.entitlements.active.length}');
@@ -259,10 +188,6 @@ class RevenueCatService {
     try {
       // Refresh offerings if not loaded
       final offerings = await Purchases.getOfferings();
-
-      if (offerings == null) {
-        return {'price': 0.0, 'currency': 'USD'};
-      }
 
       // Search through all offerings for the product
       for (final offering in offerings.all.values) {
@@ -294,6 +219,69 @@ class RevenueCatService {
       return {'price': 0.0, 'currency': 'USD'};
     }
   }
+
+//*****************************************
+// Subscription Status Check
+//*****************************************
+
+  static Future<bool> checkSubscriptionStatus() async {
+    try {
+      print("Checking subscription status...");
+
+      // Get the current customer info from RevenueCat
+      final CustomerInfo customerInfo = await Purchases.getCustomerInfo();
+
+      // Check if there are any active entitlements
+      final bool hasActiveSubscription =
+          customerInfo.entitlements.active.isNotEmpty;
+
+      print("Subscription active: $hasActiveSubscription");
+      return hasActiveSubscription;
+    } catch (e) {
+      print("Error checking subscription status: $e");
+      return false;
+    }
+  }
+
+  // Check if subscription status has been loaded
+  static bool isSubscriptionActive() {
+    print('Customer Info ${_customerInfo}');
+    // Check if there are any active entitlements
+    final bool hasActiveSubscription =
+        _customerInfo!.entitlements.active.isNotEmpty;
+
+    return hasActiveSubscription;
+  }
+
+  // Alternative: Check for a specific entitlement
+  static Future<bool> hasActiveEntitlement(String entitlementId) async {
+    try {
+      print("Checking entitlement: $entitlementId");
+
+      final CustomerInfo customerInfo = await Purchases.getCustomerInfo();
+
+      // Check if the specific entitlement is active
+      final bool isActive =
+          customerInfo.entitlements.all[entitlementId]?.isActive ?? false;
+
+      print("Entitlement $entitlementId active: $isActive");
+      return isActive;
+    } catch (e) {
+      print("Error checking entitlement: $e");
+      return false;
+    }
+  }
+
+  // Future<bool> hasActiveEntitlement(String entitlementId) async {
+  //   try {
+  //     final customerInfo = await Purchases.getCustomerInfo();
+  //     final entitlement = customerInfo.entitlements.all[entitlementId];
+  //     return entitlement?.isActive ?? false;
+  //   } catch (e) {
+  //     print('Error checking entitlement: $e');
+  //     return false;
+  //   }
+  // }
 }
 
 // print('REVENUE_CAT PURCHASE PRICE ${verification}');
