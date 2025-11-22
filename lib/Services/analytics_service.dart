@@ -629,4 +629,86 @@ class AnalyticsService {
       }
     }
   }
+  //*****************************************
+  // Retention & Targeting Event Logs
+  //*****************************************
+
+  /// Log standardized retention events (e.g., app_open, session_start, milestones)
+  static Future<void> logRetentionEvent(
+      String eventName, Map<String, dynamic> params) async {
+    if (_isFoundersVersion == false) {
+      try {
+        final Map<String, Object> finalParams = {
+          "platform": Platform.operatingSystem,
+        };
+
+        // Safely add params that are non-null Objects
+        params.forEach((key, value) {
+          if (value != null) {
+            finalParams[key] = value as Object;
+          }
+        });
+
+        print("Logging retention event: $eventName");
+        await FirebaseAnalytics.instance.logEvent(
+          name: eventName,
+          parameters: finalParams,
+        );
+      } catch (e) {
+        print("Error logging retention event ($eventName): $e");
+      }
+    }
+  }
+
+  /// Log user segment changes (e.g., became_loyal, at_risk)
+  static Future<void> logUserSegmentEvent(
+      String segmentEvent, Map<String, dynamic> params) async {
+    if (_isFoundersVersion == false) {
+      try {
+        final Map<String, Object> finalParams = {
+          "platform": Platform.operatingSystem,
+        };
+
+        params.forEach((key, value) {
+          if (value != null) {
+            finalParams[key] = value as Object;
+          }
+        });
+
+        print("Logging user segment event: $segmentEvent");
+        await FirebaseAnalytics.instance.logEvent(
+          name: segmentEvent,
+          parameters: finalParams,
+        );
+      } catch (e) {
+        print("Error logging user segment event ($segmentEvent): $e");
+      }
+    }
+  }
+
+  /// Log targeting events (e.g., offer_shown, feature_targeted)
+  static Future<void> logTargetingEvent(
+      String eventName, Map<String, dynamic> params) async {
+    if (_isFoundersVersion == false) {
+      try {
+        final Map<String, Object> finalParams = {
+          "platform": Platform.operatingSystem,
+        };
+
+        params.forEach((key, value) {
+          if (value != null) {
+            finalParams[key] = value as Object;
+          }
+        });
+
+        print("Logging targeting event: $eventName");
+        await FirebaseAnalytics.instance.logEvent(
+          name: eventName,
+          parameters: finalParams,
+        );
+      } catch (e) {
+        print("Error logging targeting event ($eventName): $e");
+      }
+    }
+  }
 }

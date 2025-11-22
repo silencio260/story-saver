@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:storysaver/Analytics/UserTargetingManager.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
@@ -60,6 +61,7 @@ void main() async {
       await AdConfig.ensureInitialized();
     });
 
+    await UserTargetingManager.startTracking();
     FeedBackHelper.init();
 
     // await AdConfig.ensureInitialized();
