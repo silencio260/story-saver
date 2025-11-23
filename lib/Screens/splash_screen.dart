@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
 import 'package:storysaver/Screens/home_page.dart';
 import 'package:storysaver/Services/analytics_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -27,12 +29,26 @@ class _SplashScreenState extends State<SplashScreen> {
   void navigate() {
     Future.delayed(
       const Duration(seconds: 2),
-      () {
+      () async {
         AnalyticsService.logGotoHomePage();
-        Navigator.pushAndRemoveUntil(
+
+        final prefs = await SharedPreferences.getInstance();
+        final bool hasSeenOnboarding =
+            prefs.getBool('has_seen_onboarding') ?? false;
+
+        if (hasSeenOnboarding == true || true) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(builder: (_) => const OnboardingScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
             context,
             CupertinoPageRoute(builder: (_) => const HomePage()),
-            (route) => false);
+            (route) => false,
+          );
+        }
       },
     );
   }

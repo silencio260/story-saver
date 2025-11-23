@@ -4,6 +4,8 @@ import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Widget/HelpModal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -118,6 +120,28 @@ class SettingsPage extends StatelessWidget {
             label: 'Share',
             onTap: () {
               shareAppLink(context);
+            },
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.only(left: 8.0, bottom: 8.0),
+            child: Text("Developer Options",
+                style:
+                    TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          _buildSettingsItem(
+            context: context,
+            icon: Icons.restart_alt,
+            label: 'Reset Onboarding',
+            onTap: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('has_seen_onboarding', false);
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const OnboardingScreen(forceShow: true)),
+                  (route) => false);
             },
           ),
         ],
