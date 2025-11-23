@@ -17,6 +17,7 @@ import 'package:storysaver/Screens/TopNavPages/Images/image.dart';
 import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
 import 'package:storysaver/Utils/checkBusinessMode.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -61,6 +62,10 @@ class _HomePageState extends State<HomePage>
       "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval},"
       "min_insta_ad_interval -> ${AdConfig.min_insta_ad_interval}",
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AdvancedAppRatingService.showReviewDialogIfEligible(context);
+    });
   }
 
   // Future<void> _enableSessionReplay() async {

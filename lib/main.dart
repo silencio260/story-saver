@@ -20,7 +20,7 @@ import 'package:storysaver/Utils/checkDevelopmentMode.dart';
 import 'package:storysaver/Utils/globalNavigationKey.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
 
-import 'Monetization/SubscriptionManager.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 void main() async {
   try {
@@ -57,6 +57,7 @@ void main() async {
 
     await AnalyticsService.init();
     await AdConfig.ensureInitialized();
+    await AdvancedAppRatingService.initialize();
 
     await UserTargetingManager.startTracking();
     FeedBackHelper.init();
