@@ -6,6 +6,8 @@ import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Widget/HelpModal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
+import 'package:storysaver/Services/OnboardingManager.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -135,8 +137,7 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.restart_alt,
             label: 'Reset Onboarding',
             onTap: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('has_seen_onboarding', false);
+              await OnboardingManager.resetOnboarding();
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(

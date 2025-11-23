@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Screens/home_page.dart';
+import 'package:storysaver/Services/OnboardingManager.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final bool forceShow;
@@ -16,6 +16,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   bool _isLastPage = false;
+  bool _isLoading = false;
 
   final List<OnboardingPageModel> _pages = [
     OnboardingPageModel(
@@ -42,32 +43,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              onPageChanged: (index) {
-                setState(() {
-                  _isLastPage = index == _pages.length - 1;
-                });
-              },
-              itemCount: _pages.length,
-              itemBuilder: (context, index) {
-                return _buildPage(_pages[index]);
-              },
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                onPageChanged: (index) {
+                  setState(() {
+                    _isLastPage = index == _pages.length - 1;
+                  });
+                },
+                itemCount: _pages.length,
+                itemBuilder: (context, index) {
+                  return _buildPage(_pages[index]);
+                },
+              ),
             ),
-          ),
-          Container(
-            padding:
-                const EdgeInsets.only(bottom: 50), // Increased bottom padding
-            child: SafeArea(
+            Container(
+              padding: const EdgeInsets.only(bottom: 50, left: 20, right: 20),
               child: _isLastPage
-                  ? Container(
-                      height: 80,
+                  ? SizedBox(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
+                      height: 60,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
@@ -76,105 +74,115 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                         ),
-                        onPressed: () async {
-                          await _completeOnboarding();
-                        },
-                        child: const Text(
-                          "Start Free Trial",
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                await _completeOnboarding();
+                              },
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                "Get Started",
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
                       ),
                     )
-                  : Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      height: 80,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: () =>
-                                _controller.jumpToPage(_pages.length - 1),
-                            child: const Text(
-                              "SKIP",
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold),
-                            ),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () =>
+                              _controller.jumpToPage(_pages.length - 1),
+                          child: const Text(
+                            "Skip",
+                            style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600),
                           ),
-                          Center(
-                            child: SmoothPageIndicator(
-                              controller: _controller,
-                              count: _pages.length,
-                              effect: const WormEffect(
-                                spacing: 16,
-                                dotColor: Colors.black26,
-                                activeDotColor: Color(CustomColors.AppBarColor),
-                              ),
-                              onDotClicked: (index) =>
-                                  _controller.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeIn,
-                              ),
-                            ),
+                        ),
+                        SmoothPageIndicator(
+                          controller: _controller,
+                          count: _pages.length,
+                          effect: const WormEffect(
+                            spacing: 12,
+                            dotHeight: 10,
+                            dotWidth: 10,
+                            dotColor: Colors.black12,
+                            activeDotColor: Color(CustomColors.AppBarColor),
                           ),
-                          TextButton(
-                            onPressed: () => _controller.nextPage(
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut,
-                            ),
-                            child: const Text(
-                              "NEXT",
-                              style: TextStyle(
-                                  color: Color(CustomColors.AppBarColor),
-                                  fontWeight: FontWeight.bold),
-                            ),
+                        ),
+                        TextButton(
+                          onPressed: () => _controller.nextPage(
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
                           ),
-                        ],
-                      ),
+                          child: const Text(
+                            "Next",
+                            style: TextStyle(
+                                color: Color(CustomColors.AppBarColor),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPage(OnboardingPageModel page) {
-    return Container(
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            page.imagePath,
-            height: 350,
-            width: double.infinity,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 40),
-          Text(
-            page.title,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          Expanded(
+            flex: 3,
+            child: Image.asset(
+              page.imagePath,
+              fit: BoxFit.contain,
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              page.description,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
+          const SizedBox(height: 30),
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                Text(
+                  page.title,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  page.description,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
         ],
@@ -183,16 +191,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('has_seen_onboarding', true);
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Navigate to Home
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
+    try {
+      // Show Paywall and wait for it to close (or fail)
+      // We don't enforce a strict timeout on the *viewing* duration,
+      // but the loading state handles the "loading a bit" UX.
+      await RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+    } catch (e) {
+      print("Error showing paywall: $e");
+    } finally {
+      if (mounted) {
+        // Use Helper Class
+        await OnboardingManager.setOnboardingSeen();
 
-    // Show Paywall
-    RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+        // Navigate to Home
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    }
   }
 }
 
