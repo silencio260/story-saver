@@ -59,7 +59,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.only(bottom: 50), // Increased bottom padding
+            padding:
+                const EdgeInsets.only(bottom: 50), // Increased bottom padding
             child: SafeArea(
               child: _isLastPage
                   ? Container(
