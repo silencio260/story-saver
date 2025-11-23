@@ -6,6 +6,7 @@ import 'package:storysaver/Services/analytics_service.dart';
 import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
 import 'package:storysaver/Widget/rating_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:storysaver/Monetization/AdSuppressionManager.dart';
 
 class AdvancedAppRatingService {
   static const String _installDateKey = "app_install_date";
@@ -71,8 +72,25 @@ class AdvancedAppRatingService {
   /// Set [force] to true to bypass all checks (for testing).
   static Future<void> showReviewDialogIfEligible(BuildContext context,
       {bool force = false}) async {
+    // Check if the current route is the top-most route
+    // This prevents showing the dialog over other modals (like Paywall)
+    if (!force) {
+      final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
+      if (!isCurrent) {
+        print(
+            "AdvancedAppRatingService: Skipping rating dialog because another modal is active.");
+        return;
+      }
+    }
+
     if (force || await _meetsConditions()) {
-      AdvancedAppRatingService().showRatingDialog(context);
+      // Suppress ads while the rating dialog is open
+      await AdSuppressionManager().withAdsSuppressed(
+        reason: 'rating_dialog',
+        action: () async {
+          await AdvancedAppRatingService().showRatingDialog(context);
+        },
+      );
     }
   }
 
