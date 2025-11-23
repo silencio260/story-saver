@@ -41,98 +41,109 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: PageView.builder(
-          controller: _controller,
-          onPageChanged: (index) {
-            setState(() {
-              _isLastPage = index == _pages.length - 1;
-            });
-          },
-          itemCount: _pages.length,
-          itemBuilder: (context, index) {
-            return _buildPage(_pages[index]);
-          },
-        ),
-      ),
-      bottomSheet: _isLastPage
-          ? Container(
-              height: 80,
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(CustomColors.AppBarColor),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                onPressed: () async {
-                  await _completeOnboarding();
-                },
-                child: const Text(
-                  "Start Free Trial",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            )
-          : Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              height: 80,
-              color: Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => _controller.jumpToPage(_pages.length - 1),
-                    child: const Text(
-                      "SKIP",
-                      style: TextStyle(
-                          color: Colors.grey, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Center(
-                    child: SmoothPageIndicator(
-                      controller: _controller,
-                      count: _pages.length,
-                      effect: const WormEffect(
-                        spacing: 16,
-                        dotColor: Colors.black26,
-                        activeDotColor: Color(CustomColors.AppBarColor),
-                      ),
-                      onDotClicked: (index) => _controller.animateToPage(
-                        index,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeIn,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _controller.nextPage(
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    ),
-                    child: const Text(
-                      "NEXT",
-                      style: TextStyle(
-                          color: Color(CustomColors.AppBarColor),
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              onPageChanged: (index) {
+                setState(() {
+                  _isLastPage = index == _pages.length - 1;
+                });
+              },
+              itemCount: _pages.length,
+              itemBuilder: (context, index) {
+                return _buildPage(_pages[index]);
+              },
             ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(bottom: 50), // Increased bottom padding
+            child: SafeArea(
+              child: _isLastPage
+                  ? Container(
+                      height: 80,
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(CustomColors.AppBarColor),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await _completeOnboarding();
+                        },
+                        child: const Text(
+                          "Start Free Trial",
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      height: 80,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () =>
+                                _controller.jumpToPage(_pages.length - 1),
+                            child: const Text(
+                              "SKIP",
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Center(
+                            child: SmoothPageIndicator(
+                              controller: _controller,
+                              count: _pages.length,
+                              effect: const WormEffect(
+                                spacing: 16,
+                                dotColor: Colors.black26,
+                                activeDotColor: Color(CustomColors.AppBarColor),
+                              ),
+                              onDotClicked: (index) =>
+                                  _controller.animateToPage(
+                                index,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeIn,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => _controller.nextPage(
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            ),
+                            child: const Text(
+                              "NEXT",
+                              style: TextStyle(
+                                  color: Color(CustomColors.AppBarColor),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildPage(OnboardingPageModel page) {
     return Container(
-      color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
