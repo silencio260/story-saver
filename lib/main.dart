@@ -55,11 +55,8 @@ void main() async {
 
     await handleGDPRConsent();
 
-    AnalyticsService.init().then((onval) async {
-      // final remoteConfigService = FirebaseRemoteConfigService();
-      // remoteConfigService.initialize();
-      await AdConfig.ensureInitialized();
-    });
+    await AnalyticsService.init();
+    await AdConfig.ensureInitialized();
 
     await UserTargetingManager.startTracking();
     FeedBackHelper.init();
