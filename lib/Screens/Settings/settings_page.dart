@@ -177,6 +177,7 @@ class SettingsPage extends StatelessWidget {
                   await subscriptionManager.toggleDebugPremium(value);
                   setState(() {}); // Rebuild switch
                 },
+                activeColor: Colors.green,
                 secondary:
                     const Icon(Icons.admin_panel_settings, color: Colors.grey),
               );
