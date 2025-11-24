@@ -126,6 +126,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           const Divider(),
+          const SizedBox(height: 24), // Added spacing
           const Padding(
             padding: EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text("Developer Options",
@@ -145,6 +146,19 @@ class SettingsPage extends StatelessWidget {
                   (route) => false);
             },
           ),
+          const SizedBox(height: 12),
+          _buildSettingsItem(
+            context: context,
+            icon: Icons.restore,
+            label: 'Reset count to first review popup',
+            onTap: () async {
+              await AdvancedAppRatingService.resetDownloadCount();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Download count reset to 0")),
+              );
+            },
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );

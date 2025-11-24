@@ -11,6 +11,7 @@ import 'package:storysaver/Utils/ShareToApp.dart';
 import 'package:storysaver/Utils/fileExistsDialog.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 class ImageView extends StatefulWidget {
   final String? imagePath;
@@ -59,6 +60,7 @@ class _ImageViewState extends State<ImageView> {
     final result = await mediaManager.saveMedia(widget.imagePath!);
 
     saveStatus(context, widget.imagePath!);
+    AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
 
     // isAlreadySaved = true;
     print('Aready Saved');
@@ -73,8 +75,9 @@ class _ImageViewState extends State<ImageView> {
   void _shareMedia(BuildContext context) {
     // print("share");
     if (!widget.isLoading) {
-      Share.shareXFiles([XFile(widget.imagePath!)],
-              text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
+      Share.shareXFiles([
+        XFile(widget.imagePath!)
+      ], text: 'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}')
           .then((value) {
         // ScaffoldMessenger.of(context)
         //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
@@ -85,8 +88,10 @@ class _ImageViewState extends State<ImageView> {
   void _shareMediaToWhatsapp(BuildContext context) {
     if (!widget.isLoading) {
       // print("share");
-      shareToWhatsApp('Shared From the Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
-          filePath: widget.imagePath!, context: context);
+      shareToWhatsApp(
+          'Shared From the Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
+          filePath: widget.imagePath!,
+          context: context);
     }
   }
 

@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
             await OnboardingManager.hasSeenOnboarding();
 
         if (mounted) {
-          if (hasSeenOnboarding == true || true) {
+          if (hasSeenOnboarding == false) {
             Navigator.pushAndRemoveUntil(
               context,
               CupertinoPageRoute(builder: (_) => const OnboardingScreen()),

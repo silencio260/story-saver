@@ -13,6 +13,7 @@ class AdvancedAppRatingService {
   static const String _appOpensKey = "app_opens_count";
   static const String _neverShowRatingKey = "never_show_rating";
   static const String _lastShownDateKey = "last_rating_shown_date";
+  static const String _downloadCountKey = "download_count";
 
   // Configuration variables
   static int _minAppOpens = 5; // Minimum app opens before showing review
@@ -45,6 +46,34 @@ class AdvancedAppRatingService {
     if (minDaysBetweenReviews != null)
       _minDaysBetweenReviews = minDaysBetweenReviews;
     if (snoozeDays != null) _snoozeDays = snoozeDays;
+  }
+
+  static Future<void> trackDownloadAndShowRatingIfNeeded(
+      BuildContext context) async {
+    print("AdvancedAppRatingService: trackDownloadAndShowRatingIfNeeded");
+    final prefs = await SharedPreferences.getInstance();
+    int downloads = prefs.getInt(_downloadCountKey) ?? 0;
+    downloads++;
+    await prefs.setInt(_downloadCountKey, downloads);
+
+    // Check if user has already rated or opted out
+    // bool neverShow = prefs.getBool(_neverShowRatingKey) ?? false;
+    // if (neverShow) return;
+
+    // Trigger after exactly 2 downloads
+    if (downloads == 2) {
+      print("AdvancedAppRatingService: Triggering rating after 2 downloads");
+      // Use force=true to bypass time/app-open constraints, but we still respect "never show" (checked above)
+      await showReviewDialogIfEligible(context, force: true);
+    }
+  }
+
+  static Future<void> resetDownloadCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_downloadCountKey, 0);
+    await prefs.setBool(_neverShowRatingKey, false); // Reset never show
+    await prefs.setInt(_lastShownDateKey, 0); // Reset last shown
+    print("AdvancedAppRatingService: Download count and rating flags reset");
   }
 
   static Future<bool> _meetsConditions() async {

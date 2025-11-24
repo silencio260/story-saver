@@ -12,6 +12,7 @@ import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/GalleryPhotoViewWrapper.dart';
 import 'package:storysaver/Widget/LocalCachedImage.dart';
 import 'package:storysaver/Widget/PremiumUpgradeModal.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 class MediaListItem extends StatefulWidget {
   final String mediaPath;
@@ -87,6 +88,9 @@ class _MediaListItemState extends State<MediaListItem>
 
     saveStatus(context,
         widget.isVideo == true ? widget.videoFilePath! : widget.mediaPath);
+
+    // Track download and potentially show rating dialog
+    AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
 
     // isAlreadySaved = true;
     print('Aready Saved');

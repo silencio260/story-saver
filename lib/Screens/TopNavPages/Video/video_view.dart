@@ -13,6 +13,7 @@ import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
+import 'package:storysaver/Services/AppRatingService.dart';
 
 class VideoView extends StatefulWidget {
   final String? videoPath;
@@ -56,6 +57,7 @@ class _VideoViewState extends State<VideoView> {
     final result = await mediaManager.saveMedia(widget.videoPath!);
 
     saveStatus(context, widget.videoPath!);
+    AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
 
     // isAlreadySaved = true;
     print('Aready Saved');
