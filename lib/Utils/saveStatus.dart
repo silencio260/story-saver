@@ -11,113 +11,12 @@ import 'package:media_scanner/media_scanner.dart';
 
 Future<void> saveStatus(BuildContext context, String filePath) async {
   try {
-    // Step 1: Ensure the file exists
-    File originalFile = File(filePath);
-    if (!await originalFile.exists()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error: File does not exist")),
-      );
-      return;
-    }
+    bool success = await _saveStatusLogic(context, filePath);
 
-    // Step 2: Request storage permissions using permission_handler
-    if (await AppStoragePermission().getStoragePermission() == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Storage permission required")),
-      );
-      return;
-    }
-
-    // // Step 3: Define the save directory and file name
-    // String saveDirectory = "Pictures/YourApp/Saved Statuses"; // Gallery subfolder
-    // String fileName = originalFile.uri.pathSegments.last;
-
-    // ✅ Step 3: Define target save directory
-    // String saveDirectory = "/storage/emulated/0/Pictures/YourApp/Saved Statuses";
-    //'/Pictures/Saved Statuses/';
-    String saveDirectory = await DeviceFileInfo().GetSavedMediaAbsolutePath();
-    Directory directory = Directory(saveDirectory);
-
-    // ✅ Step 4: Ensure directory exists
-    if (!directory.existsSync()) {
-      directory.createSync(recursive: true);
-    }
-
-    // ✅ Step 5: Extract file name & check if it already exists
-    String fileName = originalFile.uri.pathSegments.last;
-    String newFilePath = "$saveDirectory/$fileName";
-    File newFile = File(newFilePath);
-
-    var path = await DeviceFileInfo().GetSavedMediaAbsolutePath();
-    var path2 = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
-    // checkVersion();
-    print('ExternalPath $path');
-    print('ExternalPath222 $path2');
-    print('File(filePath) ${File(filePath)}');
-    print('File Exist newFile.path ${newFile.path}');
-    print("newFile.existsSync() ${newFile.existsSync()}");
-    print('directory!.path ${directory.path}');
-
-    if (newFile.existsSync()) {
-      // ✅ File already exists, delete it
-      print('File Exist ${newFile.path} ${newFile.existsSync()}');
-      // await newFile.delete();
-      // newFile.deleteSync();
-      // print('File successfully deleted');
-
-      await deleteFileFromAppFolderWithMediaStore(
-          fileName: fileName, appFolder: saveDirectory.split('/').last);
-    }
-
-    // Step 4: Determine if it's an image or video
-    String fileExtension = fileName.split('.').last.toLowerCase();
-    AssetEntity? savedMedia;
-    var relativeFilePath = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
-    print('relativeFilePath2 ${relativeFilePath} ${fileName} ${filePath}');
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic']
-        .contains(fileExtension)) {
-      // Save image
-      savedMedia = await PhotoManager.editor.saveImageWithPath(
-        filePath, //await DeviceFileInfo().GetSavedMediaBasedOnDevice(),
-        title: fileName,
-        relativePath: relativeFilePath,
-      );
-      print('savedMedia ${savedMedia.relativePath}');
-    } else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv']
-        .contains(fileExtension)) {
-      // Save video
-      savedMedia = await PhotoManager.editor.saveVideo(File(filePath),
-          title: fileName, relativePath: relativeFilePath);
-
-      // final MediaInfo mediaInfo = MediaInf();
-
-      // if (await savedMedia.videoDuration == 0) {
-      //   File? savedFile = await savedMedia.file;
-      //
-      //   final length = await savedFile?.length();
-      //   // if (length! < 1000) { // adjust threshold if needed
-      //     print("Likely broken or incomplete video.");
-      //   // }
-      //
-      //   await MediaScanner.loadMedia(path: savedFile?.path ?? filePath);
-      // }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unsupported file format.")),
-      );
-      return;
-    }
-
-    // Step 5: Handle success or failure
-    if (await savedMedia.exists == true) {
-      // Update the provider with the new media
-      context
-          .read<GetSavedMediaProvider>()
-          .preventDuplicateAddition(savedMedia);
-      context.read<GetSavedMediaProvider>().addNewMediaToTop(savedMedia);
-
+    if (success) {
       // Notify the user of success
+      String fileName = File(filePath).uri.pathSegments.last;
+      String fileExtension = fileName.split('.').last.toLowerCase();
       String successMessage =
           fileExtension.startsWith('mp4') || fileExtension.startsWith('mov')
               ? "Video saved successfully!"
@@ -128,14 +27,86 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
 
       // Optional: Log event to Firebase
       await AnalyticsService().logSaveStatus();
-    } else {
-      throw Exception("Failed to save media.");
     }
   } catch (e) {
     // Handle errors
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Error saving file: $e")),
     );
+  }
+}
+
+Future<bool> saveStatusSilent(BuildContext context, String filePath) async {
+  try {
+    return await _saveStatusLogic(context, filePath);
+  } catch (e) {
+    print("Error in saveStatusSilent: $e");
+    return false;
+  }
+}
+
+Future<bool> _saveStatusLogic(BuildContext context, String filePath) async {
+  // Step 1: Ensure the file exists
+  File originalFile = File(filePath);
+  if (!await originalFile.exists()) {
+    throw Exception("File does not exist");
+  }
+
+  // Step 2: Request storage permissions using permission_handler
+  if (await AppStoragePermission().getStoragePermission() == false) {
+    throw Exception("Storage permission required");
+  }
+
+  // ✅ Step 3: Define target save directory
+  String saveDirectory = await DeviceFileInfo().GetSavedMediaAbsolutePath();
+  Directory directory = Directory(saveDirectory);
+
+  // ✅ Step 4: Ensure directory exists
+  if (!directory.existsSync()) {
+    directory.createSync(recursive: true);
+  }
+
+  // ✅ Step 5: Extract file name & check if it already exists
+  String fileName = originalFile.uri.pathSegments.last;
+  String newFilePath = "$saveDirectory/$fileName";
+  File newFile = File(newFilePath);
+
+  if (newFile.existsSync()) {
+    // ✅ File already exists, delete it
+    await deleteFileFromAppFolderWithMediaStore(
+        fileName: fileName, appFolder: saveDirectory.split('/').last);
+  }
+
+  // Step 4: Determine if it's an image or video
+  String fileExtension = fileName.split('.').last.toLowerCase();
+  AssetEntity? savedMedia;
+  var relativeFilePath = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
+
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic']
+      .contains(fileExtension)) {
+    // Save image
+    savedMedia = await PhotoManager.editor.saveImageWithPath(
+      filePath,
+      title: fileName,
+      relativePath: relativeFilePath,
+    );
+  } else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv']
+      .contains(fileExtension)) {
+    // Save video
+    savedMedia = await PhotoManager.editor.saveVideo(File(filePath),
+        title: fileName, relativePath: relativeFilePath);
+  } else {
+    throw Exception("Unsupported file format.");
+  }
+
+  // Step 5: Handle success or failure
+  if (await savedMedia.exists == true) {
+    // Update the provider with the new media
+    context.read<GetSavedMediaProvider>().preventDuplicateAddition(savedMedia);
+    context.read<GetSavedMediaProvider>().addNewMediaToTop(savedMedia);
+    return true;
+  } else {
+    throw Exception("Failed to save media.");
   }
 }
 
