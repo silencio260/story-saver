@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Utils/checkDevelopmentMode.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionManager extends ChangeNotifier {
   // Singleton pattern
@@ -28,8 +29,14 @@ class SubscriptionManager extends ChangeNotifier {
 
   bool get isInitialized => _isInitialized;
 
+  static const String _debugPremiumKey = "debug_premium_override";
+
   /// Initialize and check subscription status
   Future<void> initialize() async {
+    // Load debug override state
+    final prefs = await SharedPreferences.getInstance();
+    debugOverridePremium = prefs.getBool(_debugPremiumKey) ?? false;
+
     if (_isInitialized && _lastChecked != null) {
       // If checked within last 5 minutes, use cached value
       final difference = DateTime.now().difference(_lastChecked!);
@@ -41,6 +48,15 @@ class SubscriptionManager extends ChangeNotifier {
     }
 
     await checkSubscriptionStatus();
+  }
+
+  /// Toggle debug premium override
+  Future<void> toggleDebugPremium(bool value) async {
+    debugOverridePremium = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_debugPremiumKey, value);
+    notifyListeners();
+    print('SubscriptionManager: Debug premium override set to $value');
   }
 
   /// Check current subscription status from RevenueCat

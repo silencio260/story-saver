@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
+import 'package:storysaver/Monetization/SubscriptionManager.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -155,6 +156,29 @@ class SettingsPage extends StatelessWidget {
               await AdvancedAppRatingService.resetDownloadCount();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Download count reset to 0")),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          StatefulBuilder(
+            builder: (context, setState) {
+              final subscriptionManager = SubscriptionManager();
+              return SwitchListTile(
+                title: const Text(
+                  "Dev Premium Access",
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                subtitle: const Text(
+                  "Bypass paywalls for testing",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                value: subscriptionManager.debugOverridePremium,
+                onChanged: (bool value) async {
+                  await subscriptionManager.toggleDebugPremium(value);
+                  setState(() {}); // Rebuild switch
+                },
+                secondary:
+                    const Icon(Icons.admin_panel_settings, color: Colors.grey),
               );
             },
           ),
