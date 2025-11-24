@@ -18,6 +18,7 @@ import 'package:storysaver/Screens/TopNavPages/Video/video.dart';
 import 'package:double_tap_to_exit/double_tap_to_exit.dart';
 import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
+import 'package:storysaver/Services/BatchDownloadService.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -224,11 +225,24 @@ class _HomePageState extends State<HomePage>
                         },
                         icon: Icon(Icons.diamond_outlined, color: Colors.white),
                       )
-                    : SizedBox(
-                        // child: DarkModeToggleButton(),
-                        // width: 10,
-                        // height: 10,
-                        ),
+                    : IconButton(
+                        onPressed: () {
+                          final statusProvider = Provider.of<GetStatusProvider>(
+                              context,
+                              listen: false);
+                          List<String> imagePaths = statusProvider.getImages
+                              .map((e) => e.path)
+                              .toList();
+                          List<String> videoPaths = statusProvider.getVideos
+                              .map((e) => e.path)
+                              .toList();
+
+                          BatchDownloadService.downloadAll(
+                              context, imagePaths, videoPaths);
+                        },
+                        icon: Icon(Icons.download, color: Colors.white),
+                        tooltip: "Download All",
+                      ),
               ],
               backgroundColor: const Color(CustomColors.AppBarColor),
               foregroundColor: Colors.white,

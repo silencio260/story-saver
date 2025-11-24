@@ -53,6 +53,20 @@ class GetStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearCacheFromDisk() async {
+    try {
+      final docManCacheDir = Directory(
+          '/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia');
+      if (await docManCacheDir.exists()) {
+        await docManCacheDir.delete(recursive: true);
+        print("Cache directory deleted");
+      }
+      clearAllStatus();
+    } catch (e) {
+      print("Error clearing cache from disk: $e");
+    }
+  }
+
   Future<List<File>> deleteExistingMediaCache(
       List<File> existingCachedFiles) async {
     // --- Start of new block ---

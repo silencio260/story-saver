@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:storysaver/Utils/deviceDirectory.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SavedMediaManager {
   static const String _mediaKey = "saved_media"; // Key for shared prefs
-  static const int _expiryDuration = 25 * 60 * 60 * 1000; // 25 hours in milliseconds
+  static const int _expiryDuration =
+      25 * 60 * 60 * 1000; // 25 hours in milliseconds
 
   /// Check if a media is already saved
   Future<bool> isMediaSaved(String mediaPath) async {
     final prefs = await SharedPreferences.getInstance();
     final savedMedia = prefs.getString(_mediaKey);
     if (savedMedia == null) return false;
-
 
     final mediaList = jsonDecode(savedMedia) as List<dynamic>;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -44,9 +46,6 @@ class SavedMediaManager {
       await prefs.setString(_mediaKey, jsonEncode(mediaList));
     }
 
-
-
-
     // String fileName = path.split('/').last.split('.').first;
 
     print('SavedMediaManager ${mediaList} -  ${mediaList.length}');
@@ -57,8 +56,8 @@ class SavedMediaManager {
       double differenceHours = differenceMs / (1000 * 60 * 60);
       bool isOlderThan24Hours = differenceHours > 24;
 
-      print("object ${media['path']} - ${differenceHours.toStringAsFixed(1)} Hrs (${isOlderThan24Hours ? 'Older' : 'Newer'} than 24h)");
-
+      print(
+          "object ${media['path']} - ${differenceHours.toStringAsFixed(1)} Hrs (${isOlderThan24Hours ? 'Older' : 'Newer'} than 24h)");
     }
   }
 
@@ -69,13 +68,13 @@ class SavedMediaManager {
 
     if (savedMedia != null) {
       List<dynamic> mediaList = jsonDecode(savedMedia);
-      mediaList.removeWhere((media) => media['path'] == mediaPath || media['path'].contains(mediaPath));
+      mediaList.removeWhere((media) =>
+          media['path'] == mediaPath || media['path'].contains(mediaPath));
       await prefs.setString(_mediaKey, jsonEncode(mediaList));
 
       print('deleteMedia ${mediaList} -  ${mediaList.length}');
       // print('object');
     }
-
   }
 
   /// Remove expired media from shared preferences
@@ -92,7 +91,34 @@ class SavedMediaManager {
     List<dynamic> mediaList = jsonDecode(savedMedia);
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    mediaList.removeWhere((media) => now - media['timestamp'] > _expiryDuration);
+    mediaList
+        .removeWhere((media) => now - media['timestamp'] > _expiryDuration);
     await prefs.setString(_mediaKey, jsonEncode(mediaList));
+  }
+
+  /// Delete all saved content (files and cache)
+  Future<void> deleteAllSavedContent() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Delete files from the saved directory
+    try {
+      String savedPath = await DeviceFileInfo().GetSavedMediaAbsolutePath();
+      Directory savedDir = Directory(savedPath);
+
+      if (await savedDir.exists()) {
+        List<FileSystemEntity> files = savedDir.listSync();
+        for (var file in files) {
+          if (file is File) {
+            await file.delete();
+            print("Deleted file from storage: ${file.path}");
+          }
+        }
+      }
+    } catch (e) {
+      print("Error deleting files from storage: $e");
+    }
+
+    // 2. Clear shared preferences
+    await prefs.remove(_mediaKey);
   }
 }

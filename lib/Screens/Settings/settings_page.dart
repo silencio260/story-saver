@@ -9,6 +9,10 @@ import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Provider/getStatusProvider.dart';
+import 'package:provider/provider.dart';
+import 'package:storysaver/Screens/splash_screen.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -180,6 +184,70 @@ class SettingsPage extends StatelessWidget {
                 activeColor: Colors.green,
                 secondary:
                     const Icon(Icons.admin_panel_settings, color: Colors.grey),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSettingsItem(
+            context: context,
+            icon: Icons.delete_forever,
+            label: 'Delete All Saved & Cache',
+            onTap: () async {
+              // Show loading dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return const AlertDialog(
+                    content: Row(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(width: 20),
+                        Text("Deleting..."),
+                      ],
+                    ),
+                  );
+                },
+              );
+
+              try {
+                await SavedMediaManager().deleteAllSavedContent();
+                await Provider.of<GetStatusProvider>(context, listen: false)
+                    .clearCacheFromDisk();
+
+                // Close loading dialog
+                Navigator.of(context, rootNavigator: true).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text("All saved content and cache deleted")),
+                );
+
+                // Redirect to Splash Screen
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SplashScreen()),
+                  (route) => false,
+                );
+              } catch (e) {
+                // Close loading dialog if error
+                Navigator.of(context, rootNavigator: true).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Error deleting content: $e")),
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSettingsItem(
+            context: context,
+            icon: Icons.cleaning_services,
+            label: 'Clear Cache (Fresh Start)',
+            onTap: () async {
+              await Provider.of<GetStatusProvider>(context, listen: false)
+                  .clearCacheFromDisk();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Cache cleared")),
               );
             },
           ),

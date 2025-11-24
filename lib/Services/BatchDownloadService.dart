@@ -3,16 +3,18 @@ import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 
 class BatchDownloadService {
-  static Future<void> downloadAll(
-      BuildContext context, List<String> filePaths, bool isVideo) async {
-    if (filePaths.isEmpty) {
+  static Future<void> downloadAll(BuildContext context, List<String> imagePaths,
+      List<String> videoPaths) async {
+    List<String> allPaths = [...imagePaths, ...videoPaths];
+
+    if (allPaths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No items to download")),
       );
       return;
     }
 
-    int total = filePaths.length;
+    int total = allPaths.length;
     ValueNotifier<int> completedNotifier = ValueNotifier(0);
     int successCount = 0;
     int failCount = 0;
@@ -47,7 +49,7 @@ class BatchDownloadService {
     );
 
     // Process downloads
-    for (String path in filePaths) {
+    for (String path in allPaths) {
       bool success = await saveStatusSilent(context, path);
       if (success) {
         successCount++;

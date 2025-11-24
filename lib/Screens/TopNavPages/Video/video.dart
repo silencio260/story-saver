@@ -12,8 +12,6 @@ import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Widget/GrantPermissionButton.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
-import 'package:storysaver/Monetization/SubscriptionManager.dart';
-import 'package:storysaver/Services/BatchDownloadService.dart';
 
 class VideoHomePage extends StatefulWidget {
   const VideoHomePage({Key? key}) : super(key: key);
@@ -148,26 +146,7 @@ class _VideoHomePageState extends State<VideoHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // Check premium status for FAB visibility
-    final isPremium = SubscriptionManager().isPremium;
-
     return Scaffold(
-      floatingActionButton: isPremium
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                final file =
-                    Provider.of<GetStatusProvider>(context, listen: false);
-                if (file.getVideos.isNotEmpty) {
-                  List<String> paths =
-                      file.getVideos.map((e) => e.path).toList();
-                  BatchDownloadService.downloadAll(context, paths, true);
-                }
-              },
-              label: const Text("Download All"),
-              icon: const Icon(Icons.download),
-              backgroundColor: Colors.green,
-            )
-          : null,
       body: Consumer<GetStatusProvider>(builder: (context, file, child) {
         final permission =
             Provider.of<PermissionProvider>(context, listen: false);

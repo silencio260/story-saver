@@ -12,8 +12,6 @@ import 'package:storysaver/Utils/getStoragePermission.dart';
 import 'package:storysaver/Widget/GrantPermissionButton.dart';
 import 'package:storysaver/Widget/MediaListItem.dart';
 import 'package:storysaver/Widget/MyRouteObserver.dart';
-import 'package:storysaver/Monetization/SubscriptionManager.dart';
-import 'package:storysaver/Services/BatchDownloadService.dart';
 
 class ImageHomePage extends StatefulWidget {
   const ImageHomePage({Key? key}) : super(key: key);
@@ -248,25 +246,25 @@ class _ImageHomePageState extends State<ImageHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     // Check premium status for FAB visibility
-    final isPremium = SubscriptionManager().isPremium;
+    // final isPremium = SubscriptionManager().isPremium;
 
     return Scaffold(
-      floatingActionButton: isPremium
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                final file =
-                    Provider.of<GetStatusProvider>(context, listen: false);
-                if (file.getImages.isNotEmpty) {
-                  List<String> paths =
-                      file.getImages.map((e) => e.path).toList();
-                  BatchDownloadService.downloadAll(context, paths, false);
-                }
-              },
-              label: const Text("Download All"),
-              icon: const Icon(Icons.download),
-              backgroundColor: Colors.green,
-            )
-          : null,
+      // floatingActionButton: isPremium
+      //     ? FloatingActionButton.extended(
+      //         onPressed: () {
+      //           final file =
+      //               Provider.of<GetStatusProvider>(context, listen: false);
+      //           if (file.getImages.isNotEmpty) {
+      //             List<String> paths =
+      //                 file.getImages.map((e) => e.path).toList();
+      //             BatchDownloadService.downloadAll(context, paths, false);
+      //           }
+      //         },
+      //         label: const Text("Download All"),
+      //         icon: const Icon(Icons.download),
+      //         backgroundColor: Colors.green,
+      //       )
+      //     : null,
       body: Consumer<GetStatusProvider>(
         builder: (context, file, child) {
           final permission =
