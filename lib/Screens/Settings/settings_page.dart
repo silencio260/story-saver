@@ -9,10 +9,12 @@ import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
-import 'package:storysaver/Utils/SavedMediaManager.dart';
+
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
+import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
+import 'package:storysaver/Provider/savedMediaProvider.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -211,7 +213,11 @@ class SettingsPage extends StatelessWidget {
               );
 
               try {
-                await SavedMediaManager().deleteAllSavedContent();
+                // await SavedMediaManager().deleteAllSavedContent();
+                await deleteSavedMeidaUtils().deleteAllMedia(context,
+                    Provider.of<GetSavedMediaProvider>(context, listen: false),
+                    showCompletionSnackBar: false);
+
                 await Provider.of<GetStatusProvider>(context, listen: false)
                     .clearCacheFromDisk();
 

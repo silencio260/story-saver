@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +51,7 @@ class MediaListItem extends StatefulWidget {
 class _MediaListItemState extends State<MediaListItem>
     with AutomaticKeepAliveClientMixin {
   late bool isAlreadySaved;
-  late Future<bool> _future;
+
   final mediaManager = SavedMediaManager();
 
   bool get wantKeepAlive => false;
@@ -66,12 +67,31 @@ class _MediaListItemState extends State<MediaListItem>
     }
   }
 
+  StreamSubscription<String>? _subscription;
+
   @override
   void initState() {
     super.initState();
-    _future = mediaManager.isMediaSaved(
-        widget.mediaPath); //widget.checkMediaSaved(widget.mediaPath);
     isAlreadySaved = false;
+
+    // Listen for external save events (e.g., Download All)
+    _subscription = SavedMediaManager.onSaved.listen((path) {
+      if (path == 'ALL' ||
+          path == widget.mediaPath ||
+          (widget.videoFilePath != null && path == widget.videoFilePath)) {
+        if (mounted) {
+          setState(() {
+            // Trigger rebuild to refresh FutureBuilder
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   void _toggleSavedStatus() async {

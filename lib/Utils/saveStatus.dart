@@ -149,23 +149,27 @@ Future<void> deleteFileFromAppFolderWithMediaStore(
   // );
 }
 
-Future<void> deleteSaveStatusFromDevice(
-    BuildContext context, String filePath) async {
+Future<void> deleteSaveStatusFromDevice(BuildContext context, String filePath,
+    {bool showSnackBar = true}) async {
   try {
     // Step 1: Ensure the file exists
     File originalFile = File(filePath);
     if (!await originalFile.exists()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error: File does not exist")),
-      );
+      if (showSnackBar) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: File does not exist")),
+        );
+      }
       return;
     }
 
     // Step 2: Request storage permissions using permission_handler
     if (await AppStoragePermission().getStoragePermission() == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Storage permission required")),
-      );
+      if (showSnackBar) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Storage permission required")),
+        );
+      }
       return;
     }
 
@@ -176,18 +180,22 @@ Future<void> deleteSaveStatusFromDevice(
       originalFile.deleteSync();
       await MediaScanner.loadMedia(path: filePath);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Media Successfully Deleted")),
-      );
+      if (showSnackBar) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Media Successfully Deleted")),
+        );
+      }
     }
 
     // Optional: Log event to Firebase
     // await AnalyticsService().logSaveStatus();
   } catch (e) {
     // Handle errors
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error saving file: $e")),
-    );
+    if (showSnackBar) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error saving file: $e")),
+      );
+    }
   }
 }
 

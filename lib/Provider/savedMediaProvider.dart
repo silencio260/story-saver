@@ -64,6 +64,11 @@ class GetSavedMediaProvider extends ChangeNotifier {
     notifyListeners(); // Notify UI listeners
   }
 
+  void clearAll() {
+    _getMediaFile.clear();
+    notifyListeners();
+  }
+
   void addNewMediaToTop(AssetEntity newMedia) {
     // _prevFirstItem = _getMediaFile[0];
     _buildCachedFirstItem = true;

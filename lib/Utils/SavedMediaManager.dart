@@ -7,7 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SavedMediaManager {
   static const String _mediaKey = "saved_media"; // Key for shared prefs
   static const int _expiryDuration =
-      25 * 60 * 60 * 1000; // 25 hours in milliseconds
+      24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  // Stream to notify listeners about saved media changes
+  static final StreamController<String> _savedStreamController =
+      StreamController.broadcast();
+  static Stream<String> get onSaved => _savedStreamController.stream;
 
   /// Check if a media is already saved
   Future<bool> isMediaSaved(String mediaPath) async {
@@ -120,5 +125,8 @@ class SavedMediaManager {
 
     // 2. Clear shared preferences
     await prefs.remove(_mediaKey);
+
+    // Notify listeners
+    _savedStreamController.add('ALL');
   }
 }
