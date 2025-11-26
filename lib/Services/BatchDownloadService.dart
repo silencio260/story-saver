@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
 
 class BatchDownloadService {
   static Future<void> downloadAll(BuildContext context, List<String> imagePaths,
@@ -53,6 +54,8 @@ class BatchDownloadService {
       bool success = await saveStatusSilent(context, path);
       if (success) {
         successCount++;
+        // Update the cache and notify listeners
+        await SavedMediaManager().saveMedia(path);
       } else {
         failCount++;
       }

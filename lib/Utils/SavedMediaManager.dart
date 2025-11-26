@@ -64,6 +64,9 @@ class SavedMediaManager {
       print(
           "object ${media['path']} - ${differenceHours.toStringAsFixed(1)} Hrs (${isOlderThan24Hours ? 'Older' : 'Newer'} than 24h)");
     }
+
+    // Notify listeners
+    _savedStreamController.add(mediaPath);
   }
 
   /// Delete media manually
@@ -79,6 +82,9 @@ class SavedMediaManager {
 
       print('deleteMedia ${mediaList} -  ${mediaList.length}');
       // print('object');
+
+      // Notify listeners
+      _savedStreamController.add(mediaPath);
     }
   }
 

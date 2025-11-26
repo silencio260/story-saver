@@ -42,6 +42,7 @@ class _VideoViewState extends State<VideoView> {
     Icon(Icons.delete),
   ];
   final mediaManager = SavedMediaManager();
+  bool _isSaved = false;
 
   ChewieController? _chewieController;
   late VideoPlayerController _videoPlayerController;
@@ -58,6 +59,12 @@ class _VideoViewState extends State<VideoView> {
 
     saveStatus(context, widget.videoPath!);
     AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+
+    if (mounted) {
+      setState(() {
+        _isSaved = true;
+      });
+    }
 
     // isAlreadySaved = true;
     print('Aready Saved');
@@ -96,8 +103,21 @@ class _VideoViewState extends State<VideoView> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _isSaved = widget.isSavedMedia;
+    _checkIfSaved();
 
     _onStart();
+  }
+
+  Future<void> _checkIfSaved() async {
+    if (widget.videoPath != null) {
+      bool saved = await mediaManager.isMediaSaved(widget.videoPath!);
+      if (mounted) {
+        setState(() {
+          _isSaved = saved;
+        });
+      }
+    }
   }
 
   void _onStart() {
@@ -218,8 +238,8 @@ class _VideoViewState extends State<VideoView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
-            if ((widget.isSavedMedia == false && index != 4) ||
-                (widget.isSavedMedia == true && index != 1)) {
+            if ((_isSaved == false && index != 4) ||
+                (_isSaved == true && index != 1)) {
               return FloatingActionButton(
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(CustomColors.ButtonColor),
@@ -247,7 +267,7 @@ class _VideoViewState extends State<VideoView> {
                       break;
 
                     case 4:
-                      if (widget.isSavedMedia && widget.currentIndex != null) {
+                      if (_isSaved && widget.currentIndex != null) {
                         final mediaProvider =
                             Provider.of<GetSavedMediaProvider>(context,
                                 listen: false);

@@ -40,13 +40,27 @@ class _ImageViewState extends State<ImageView> {
     Icon(Icons.delete),
   ];
   final mediaManager = SavedMediaManager();
+  bool _isSaved = false;
 
   @override
   void initState() {
     super.initState();
+    _isSaved = widget.isSavedMedia;
+    _checkIfSaved();
 
     if (!widget.isLoading) if (checkFileExists(widget.imagePath!) == false)
       showErrorDialog(context, "File does not exists");
+  }
+
+  Future<void> _checkIfSaved() async {
+    if (widget.imagePath != null) {
+      bool saved = await mediaManager.isMediaSaved(widget.imagePath!);
+      if (mounted) {
+        setState(() {
+          _isSaved = saved;
+        });
+      }
+    }
   }
 
   void _toggleSavedStatus() async {
@@ -61,6 +75,12 @@ class _ImageViewState extends State<ImageView> {
 
     saveStatus(context, widget.imagePath!);
     AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+
+    if (mounted) {
+      setState(() {
+        _isSaved = true;
+      });
+    }
 
     // isAlreadySaved = true;
     print('Aready Saved');
@@ -126,8 +146,8 @@ class _ImageViewState extends State<ImageView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
-            if ((widget.isSavedMedia == false && index != 4) ||
-                (widget.isSavedMedia == true && index != 1)) {
+            if ((_isSaved == false && index != 4) ||
+                (_isSaved == true && index != 1)) {
               return FloatingActionButton(
                 foregroundColor: Colors.white,
                 backgroundColor: const Color(CustomColors.ButtonColor),
@@ -155,7 +175,7 @@ class _ImageViewState extends State<ImageView> {
                       break;
 
                     case 4:
-                      if (widget.isSavedMedia && widget.currentIndex != null) {
+                      if (_isSaved && widget.currentIndex != null) {
                         final mediaProvider =
                             Provider.of<GetSavedMediaProvider>(context,
                                 listen: false);
