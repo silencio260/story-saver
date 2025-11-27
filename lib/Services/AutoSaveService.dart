@@ -236,6 +236,7 @@ class AutoSaveService {
       channelDescription: 'Notifications for auto-saved statuses',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      icon: 'ic_stat_download', // Custom icon
     );
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
@@ -257,5 +258,9 @@ class AutoSaveService {
       'Saved $count new statuses to your gallery.',
       platformChannelSpecifics,
     );
+  }
+
+  static Future<void> showTestNotification() async {
+    await _showNotification(1);
   }
 }

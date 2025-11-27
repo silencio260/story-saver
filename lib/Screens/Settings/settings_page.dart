@@ -295,6 +295,18 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 12),
           _buildSettingsItem(
             context: context,
+            icon: Icons.notifications_active,
+            label: 'Test Notification',
+            onTap: () async {
+              await AutoSaveService.showTestNotification();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Notification sent")),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSettingsItem(
+            context: context,
             icon: Icons.delete_forever,
             label: 'Delete All Saved & Cache',
             onTap: () async {
