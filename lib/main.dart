@@ -83,6 +83,9 @@ void main() async {
     await UserTargetingManager.startTracking();
     FeedBackHelper.init();
 
+    // Resume Auto Save Dev Mode if enabled
+    await AutoSaveService.checkAndResumeDevMode();
+
     // await AdConfig.ensureInitialized();
 
     // await FirebaseRemoteConfigService().initialize();
@@ -102,8 +105,20 @@ void main() async {
   AnalyticsService.logGotoSplashScreen();
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final MyRouteObserver routeObserver = MyRouteObserver();
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    print("MyApp reassemble: Checking and resuming Dev Mode if needed");
+    AutoSaveService.checkAndResumeDevMode();
+  }
 
   @override
   Widget build(BuildContext context) {

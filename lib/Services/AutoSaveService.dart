@@ -53,9 +53,14 @@ class AutoSaveService {
 
   static void startDevTestMode() {
     stopDevTestMode(); // Ensure no duplicates
+
+    // Re-initialize notifications if they might have been lost (though plugin handles this well usually)
+    // But more importantly, ensure _devTimer is fresh.
+
     print("AutoSaveService: Starting Dev Test Mode (10s interval)");
-    _devTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+    _devTimer = Timer.periodic(const Duration(seconds: 20), (timer) async {
       print("AutoSaveService: Dev Timer Tick");
+      // Re-check initialization if needed, or just run logic
       await _checkAndSaveNewStatuses(isDevMode: true);
     });
   }
@@ -65,6 +70,18 @@ class AutoSaveService {
       _devTimer!.cancel();
       _devTimer = null;
       print("AutoSaveService: Dev Test Mode Stopped");
+    }
+  }
+
+  // Check SharedPreferences and resume Dev Mode if it was enabled
+  static Future<void> checkAndResumeDevMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDevModeEnabled =
+        prefs.getBool("is_dev_auto_save_test_mode") ?? false;
+
+    if (isDevModeEnabled) {
+      print("AutoSaveService: Resuming Dev Test Mode from persistent state");
+      startDevTestMode();
     }
   }
 
