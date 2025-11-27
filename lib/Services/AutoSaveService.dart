@@ -58,7 +58,7 @@ class AutoSaveService {
     // But more importantly, ensure _devTimer is fresh.
 
     print("AutoSaveService: Starting Dev Test Mode (10s interval)");
-    _devTimer = Timer.periodic(const Duration(seconds: 20), (timer) async {
+    _devTimer = Timer.periodic(const Duration(seconds: 50), (timer) async {
       print("AutoSaveService: Dev Timer Tick");
       // Re-check initialization if needed, or just run logic
       await _checkAndSaveNewStatuses(isDevMode: true);
@@ -234,11 +234,22 @@ class AutoSaveService {
       'auto_save_channel',
       'Auto Save Notifications',
       channelDescription: 'Notifications for auto-saved statuses',
-      importance: Importance.low,
-      priority: Priority.low,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
     );
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    // Ensure channel exists (critical for Android 8+)
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          'auto_save_channel',
+          'Auto Save Notifications',
+          description: 'Notifications for auto-saved statuses',
+          importance: Importance.defaultImportance,
+        ));
 
     await flutterLocalNotificationsPlugin.show(
       0,
