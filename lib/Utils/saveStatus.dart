@@ -224,3 +224,78 @@ Future<void> deleteSaveStatusWithPhotoManager(
     );
   }
 }
+
+Future<bool> saveStatusBackground(String filePath) async {
+  try {
+    // Step 1: Ensure the file exists
+    File originalFile = File(filePath);
+    if (!await originalFile.exists()) {
+      print("Background Save Error: File does not exist - $filePath");
+      return false;
+    }
+
+    // Step 2: Request storage permissions using permission_handler
+    // Note: In background, we assume permissions are already granted.
+    // If not, this will fail silently or we should check before calling.
+    if (await AppStoragePermission().getStoragePermission() == false) {
+      print("Background Save Error: Storage permission required");
+      return false;
+    }
+
+    // ✅ Step 3: Define target save directory
+    String saveDirectory = await DeviceFileInfo().GetSavedMediaAbsolutePath();
+    Directory directory = Directory(saveDirectory);
+
+    // ✅ Step 4: Ensure directory exists
+    if (!directory.existsSync()) {
+      directory.createSync(recursive: true);
+    }
+
+    // ✅ Step 5: Extract file name & check if it already exists
+    String fileName = originalFile.uri.pathSegments.last;
+    String newFilePath = "$saveDirectory/$fileName";
+    File newFile = File(newFilePath);
+
+    if (newFile.existsSync()) {
+      // ✅ File already exists, delete it
+      await deleteFileFromAppFolderWithMediaStore(
+          fileName: fileName, appFolder: saveDirectory.split('/').last);
+    }
+
+    // Step 4: Determine if it's an image or video
+    String fileExtension = fileName.split('.').last.toLowerCase();
+    AssetEntity? savedMedia;
+    var relativeFilePath = await DeviceFileInfo().GetSavedMediaBasedOnDevice();
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic']
+        .contains(fileExtension)) {
+      // Save image
+      savedMedia = await PhotoManager.editor.saveImageWithPath(
+        filePath,
+        title: fileName,
+        relativePath: relativeFilePath,
+      );
+    } else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv']
+        .contains(fileExtension)) {
+      // Save video
+      savedMedia = await PhotoManager.editor.saveVideo(File(filePath),
+          title: fileName, relativePath: relativeFilePath);
+    } else {
+      print("Background Save Error: Unsupported file format - $fileExtension");
+      return false;
+    }
+
+    // Step 5: Handle success or failure
+    if (await savedMedia.exists == true) {
+      // Update the provider with the new media - NOT POSSIBLE IN BACKGROUND
+      // Instead, we rely on SavedMediaManager to update the cache
+      return true;
+    } else {
+      print("Background Save Error: Failed to save media.");
+      return false;
+    }
+  } catch (e) {
+    print("Background Save Error: $e");
+    return false;
+  }
+}

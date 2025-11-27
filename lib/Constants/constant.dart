@@ -9,6 +9,8 @@ class AppConstants {
   final IS_WHATSAPP_STATUS_PERMISSION =
       "is_whatsapp_status_folder_permission_granted";
 
+  final IS_AUTO_SAVE_ENABLED = "is_auto_save_enabled";
+
   static List<String> WHATSAPP_PATH_LIST = [
     // "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/",
 

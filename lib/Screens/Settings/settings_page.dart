@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:storysaver/Services/AutoSaveService.dart';
+import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
 import 'package:storysaver/Utils/ShareToApp.dart';
@@ -103,6 +105,60 @@ class SettingsPage extends StatelessWidget {
               RevenueCatService().PresentRevenueCatCustomerCenter();
             },
           ),
+          const SizedBox(height: 12),
+          // Auto Save Feature (Premium Only)
+          StatefulBuilder(
+            builder: (context, setState) {
+              final isPremium = SubscriptionManager().isPremium;
+              return FutureBuilder<bool>(
+                future: SharedPreferences.getInstance().then((prefs) =>
+                    prefs.getBool(AppConstants().IS_AUTO_SAVE_ENABLED) ??
+                    false),
+                builder: (context, snapshot) {
+                  bool isEnabled = snapshot.data ?? false;
+                  return SwitchListTile(
+                    title: const Text(
+                      "Auto Save Statuses",
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      "Automatically save new statuses in background (Premium)",
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    value: isEnabled,
+                    onChanged: (bool value) async {
+                      if (!isPremium) {
+                        RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+                        return;
+                      }
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool(
+                          AppConstants().IS_AUTO_SAVE_ENABLED, value);
+                      setState(() {
+                        isEnabled = value;
+                      });
+
+                      if (value) {
+                        await AutoSaveService.registerPeriodicTask();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Auto Save Enabled (Every 1 hr)")),
+                        );
+                      } else {
+                        await AutoSaveService.cancelAllTasks();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Auto Save Disabled")),
+                        );
+                      }
+                    },
+                    activeColor: Colors.green,
+                    secondary: const Icon(Icons.download_for_offline,
+                        color: Colors.grey),
+                  );
+                },
+              );
+            },
+          ),
           const SizedBox(height: 24),
           const SizedBox(height: 24),
           _buildSettingsItem(
@@ -186,6 +242,53 @@ class SettingsPage extends StatelessWidget {
                 activeColor: Colors.green,
                 secondary:
                     const Icon(Icons.admin_panel_settings, color: Colors.grey),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          // Dev Auto Save Test Mode
+          StatefulBuilder(
+            builder: (context, setState) {
+              return FutureBuilder<bool>(
+                future: SharedPreferences.getInstance().then((prefs) =>
+                    prefs.getBool("is_dev_auto_save_test_mode") ?? false),
+                builder: (context, snapshot) {
+                  bool isEnabled = snapshot.data ?? false;
+                  return SwitchListTile(
+                    title: const Text(
+                      "Test Auto Save (High Freq)",
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      "Polls every 10s (Dev Only)",
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    value: isEnabled,
+                    onChanged: (bool value) async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool("is_dev_auto_save_test_mode", value);
+                      setState(() {
+                        isEnabled = value;
+                      });
+
+                      if (value) {
+                        AutoSaveService.startDevTestMode();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Dev Test Mode Started (10s)")),
+                        );
+                      } else {
+                        AutoSaveService.stopDevTestMode();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Dev Test Mode Stopped")),
+                        );
+                      }
+                    },
+                    activeColor: Colors.orange,
+                    secondary: const Icon(Icons.speed, color: Colors.grey),
+                  );
+                },
               );
             },
           ),

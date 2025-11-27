@@ -22,6 +22,21 @@ import 'package:storysaver/Widget/MyRouteObserver.dart';
 
 import 'package:storysaver/Services/AppRatingService.dart';
 
+import 'package:storysaver/Services/AutoSaveService.dart';
+import 'package:workmanager/workmanager.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    print("WorkManager: executing task $task");
+    if (task == AutoSaveService.taskName) {
+      await AutoSaveService.initialize(); // Init notifications
+      await AutoSaveService.executeBackgroundTask();
+    }
+    return Future.value(true);
+  });
+}
+
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +58,12 @@ void main() async {
     MobileAds.instance.updateRequestConfiguration(requestConfiguration);
 
     print('ensureInitialized');
+
+    // Initialize WorkManager
+    Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: DevelopmentModeUtils.checkDevelopmentMode(),
+    );
 
     String envvar = const String.fromEnvironment("founders_version");
     String e = AppConstants.SAVED_STORY_PATH;
