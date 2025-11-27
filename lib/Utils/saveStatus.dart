@@ -287,8 +287,12 @@ Future<bool> saveStatusBackground(String filePath) async {
 
     // Step 5: Handle success or failure
     if (await savedMedia.exists == true) {
-      // Update the provider with the new media - NOT POSSIBLE IN BACKGROUND
-      // Instead, we rely on SavedMediaManager to update the cache
+      // Force gallery refresh
+      try {
+        await MediaScanner.loadMedia(path: newFilePath);
+      } catch (e) {
+        print("Error scanning media: $e");
+      }
       return true;
     } else {
       print("Background Save Error: Failed to save media.");

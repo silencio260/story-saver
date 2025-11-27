@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:storysaver/Constants/constant.dart';
+import 'package:storysaver/Utils/SavedMediaManager.dart';
 
 class GetSavedMediaProvider extends ChangeNotifier {
   bool _isFolderAvailable = false;
@@ -18,6 +19,15 @@ class GetSavedMediaProvider extends ChangeNotifier {
   void setIsLoading(bool value) {
     _isLoading = value;
     notifyListeners(); // ✅ Notify UI when state changes
+  }
+
+  // Constructor to listen for updates
+  GetSavedMediaProvider() {
+    SavedMediaManager.onSaved.listen((_) {
+      print(
+          "GetSavedMediaProvider: Received update from SavedMediaManager, refreshing...");
+      refreshMedia();
+    });
   }
 
   bool _isProcessingMedia = false;
@@ -393,6 +403,38 @@ class GetSavedMediaProvider extends ChangeNotifier {
     notifyListeners();
 
     // print('end of savedMediaProvide');
+  }
+
+  Future<void> refreshMedia() async {
+    try {
+      final permission = await PhotoManager.requestPermissionExtend();
+
+      // Fetch albums
+      final List<AssetPathEntity> mediaAlbums =
+          await PhotoManager.getAssetPathList(
+        type: RequestType.fromTypes([RequestType.image, RequestType.video]),
+      );
+
+      if (mediaAlbums.isNotEmpty) {
+        final specificAlbum = mediaAlbums.firstWhere(
+          (album) => album.name == AppConstants.SAVED_STORY_PATH,
+          orElse: () => throw Exception('Album "Story Saver" not found'),
+        );
+
+        // Fetch the most recent item (index 0)
+        final List<AssetEntity> recent = await specificAlbum.getAssetListRange(
+          start: 0,
+          end: 1,
+        );
+
+        if (recent.isNotEmpty) {
+          preventDuplicateAddition(recent.first);
+          addNewMediaToTop(recent.first);
+        }
+      }
+    } catch (e) {
+      print("Error refreshing media: $e");
+    }
   }
 }
 
