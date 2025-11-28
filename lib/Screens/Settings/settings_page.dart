@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:storysaver/Screens/splash_screen.dart';
 import 'package:storysaver/Widget/deleteSavedMediaUtils.dart';
 import 'package:storysaver/Provider/savedMediaProvider.dart';
+import 'package:storysaver/Services/Notifications/PushNotification.dart';
 
 const canvasColor = Color(0xff154734);
 
@@ -302,6 +303,63 @@ class SettingsPage extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Notification sent")),
               );
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildSettingsItem(
+            context: context,
+            icon: Icons.notifications_active,
+            label: 'Test OneSignal Notification',
+            onTap: () async {
+              try {
+                final userId = await PushNotification.getUserId();
+                if (userId != null && userId.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('OneSignal User ID'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Your OneSignal User ID:'),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            userId,
+                            style: const TextStyle(fontFamily: 'monospace'),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'To send a test notification:\n'
+                            '1. Go to OneSignal Dashboard\n'
+                            '2. Click "Messages" > "New Push"\n'
+                            '3. Select "Send to Particular Users"\n'
+                            '4. Paste the User ID above',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('User not subscribed to push notifications'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
             },
           ),
           const SizedBox(height: 12),
