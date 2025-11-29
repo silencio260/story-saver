@@ -64,6 +64,26 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4210665095499726~4296169317"/>
 
+        <!-- OneSignal Notification Icon Configuration -->
+        <!-- New Key -->
+        <meta-data
+            android:name="com.onesignal.notifications.icon"
+            android:resource="@drawable/ic_onesignal_small_icon"/>
+        <!-- Legacy Key (for compatibility) -->
+        <meta-data
+            android:name="com.onesignal.NotificationOpened.DEFAULT_ICON"
+            android:resource="@drawable/ic_onesignal_small_icon"/>
+        
+        <!-- Large icon - shows your app logo in full color -->
+        <meta-data
+            android:name="com.onesignal.LargeIcon"
+            android:resource="@mipmap/launcher_icon"/>
+        
+        <!-- Optional: Set accent color for notification icon background -->
+        <meta-data
+            android:name="com.onesignal.NotificationAccentColor.DEFAULT"
+            android:value="FF154734"/>
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

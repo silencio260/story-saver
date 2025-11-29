@@ -60,6 +60,26 @@ class PushNotification {
         // You can handle other action IDs for other In-App Message buttons here
       });
 
+      // Monitor subscription state changes
+      OneSignal.User.pushSubscription.addObserver((state) {
+        print("PushNotification: Subscription state changed!");
+        print("PushNotification: User ID: ${state.current.id}");
+        print("PushNotification: Push Token: ${state.current.token}");
+        print("PushNotification: Opted In: ${state.current.optedIn}");
+
+        if (!state.current.optedIn) {
+          print(
+              "PushNotification: WARNING - User is NOT opted in to push notifications!");
+        }
+      });
+
+      // Log initial subscription state
+      final subscriptionState = OneSignal.User.pushSubscription;
+      print("PushNotification: Initial subscription state:");
+      print("PushNotification: User ID: ${subscriptionState.id}");
+      print("PushNotification: Token: ${subscriptionState.token}");
+      print("PushNotification: Opted In: ${subscriptionState.optedIn}");
+
       // final observer = (bool hasPermission) {
       //   print("Notification permission: $hasPermission");
       // };
