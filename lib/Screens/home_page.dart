@@ -19,6 +19,7 @@ import 'package:double_tap_to_exit/double_tap_to_exit.dart';
 import 'package:storysaver/Utils/checkBusinessMode.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/BatchDownloadService.dart';
+import 'package:storysaver/Widget/PremiumUpgradeModal.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -50,10 +51,17 @@ class _HomePageState extends State<HomePage>
     super.initState();
 
     checkIsBusinessMode(context);
+    // Auto-switch users out of Business Mode if subscription expired
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkAndEnforceBusinessModeAccess(context);
+    });
 
     controller = TabController(length: 3, vsync: this);
 
     AdmobWrapper().addListener(_rebuild);
+
+    // Listen to subscription status changes and enforce premium features
+    SubscriptionManager().addListener(_onSubscriptionChanged);
 
     // AdmobWrapper().loadBannerAd();
     AdmobWrapper().loadInterstitialAd();
@@ -67,6 +75,12 @@ class _HomePageState extends State<HomePage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AdvancedAppRatingService.showReviewDialogIfEligible(context);
     });
+  }
+
+  void _onSubscriptionChanged() {
+    print("HomePage: Subscription status changed, enforcing premium features");
+    checkAndEnforceBusinessModeAccess(context);
+    if (mounted) setState(() {});
   }
 
   // Future<void> _enableSessionReplay() async {
@@ -83,6 +97,7 @@ class _HomePageState extends State<HomePage>
     controller.dispose();
 
     AdmobWrapper().removeListener(_rebuild);
+    SubscriptionManager().removeListener(_onSubscriptionChanged);
     AdmobWrapper.disposeAds();
 
     super.dispose();
@@ -193,7 +208,26 @@ class _HomePageState extends State<HomePage>
                   ]),
               actions: [
                 IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Check if switching TO Business Mode (currently in Personal Mode)
+                    if (!_isBusinessMode) {
+                      // Switching to Business Mode - check premium
+                      final isPremium = SubscriptionManager().isPremium;
+                      if (!isPremium) {
+                        final result = await showPremiumUpgradeModal(
+                          context,
+                          title: 'Unlock Business Mode',
+                          message:
+                              'Access WhatsApp Business statuses with Premium! Start your free trial now',
+                        );
+                        if (result == true) {
+                          await RevenueCatService()
+                              .PresentRevenueCatPayWallIfNeeded();
+                        }
+                        return;
+                      }
+                    }
+                    // Allow switch if going to Personal Mode OR user has premium
                     switchToBusinessMode(context);
                   },
                   icon: _isBusinessMode == false

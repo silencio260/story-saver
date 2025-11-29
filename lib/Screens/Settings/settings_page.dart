@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:storysaver/Utils/checkDevelopmentMode.dart';
 import 'package:storysaver/Services/AutoSaveService.dart';
 import 'package:storysaver/Constants/constant.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
@@ -11,6 +12,7 @@ import 'package:storysaver/Screens/Onboarding/onboarding_screen.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
+import 'package:storysaver/Widget/PremiumUpgradeModal.dart';
 
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +58,26 @@ class SettingsPage extends StatelessWidget {
             label: checkIsBusinessMode(context) == false
                 ? 'Business Mode'
                 : 'Personal Status',
-            onTap: () {
+            onTap: () async {
+              // Check if switching TO Business Mode (currently in Personal Mode)
+              if (!checkIsBusinessMode(context)) {
+                // Switching to Business Mode - check premium
+                final isPremium = SubscriptionManager().isPremium;
+                if (!isPremium) {
+                  final result = await showPremiumUpgradeModal(
+                    context,
+                    title: 'Unlock Business Mode',
+                    message:
+                        'Access WhatsApp Business statuses with Premium! Start your free trial now',
+                  );
+                  if (result == true) {
+                    await RevenueCatService()
+                        .PresentRevenueCatPayWallIfNeeded();
+                  }
+                  return;
+                }
+              }
+              // Allow switch if going to Personal Mode OR user has premium
               switchToBusinessMode(context);
             },
           ),
@@ -129,7 +150,16 @@ class SettingsPage extends StatelessWidget {
                     value: isEnabled,
                     onChanged: (bool value) async {
                       if (!isPremium) {
-                        RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+                        final result = await showPremiumUpgradeModal(
+                          context,
+                          title: 'Unlock Auto Save',
+                          message:
+                              'Automatically save new statuses in the background with Premium! Start your free trial now',
+                        );
+                        if (result == true) {
+                          await RevenueCatService()
+                              .PresentRevenueCatPayWallIfNeeded();
+                        }
                         return;
                       }
                       final prefs = await SharedPreferences.getInstance();
@@ -160,7 +190,8 @@ class SettingsPage extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 24),
+
+          const Divider(),
           const SizedBox(height: 24),
           _buildSettingsItem(
             context: context,
@@ -189,248 +220,255 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 24), // Added spacing
-          const Padding(
-            padding: EdgeInsets.only(left: 8.0, bottom: 8.0),
-            child: Text("Developer Options",
-                style:
-                    TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.restart_alt,
-            label: 'Reset Onboarding',
-            onTap: () async {
-              await OnboardingManager.resetOnboarding();
-              Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const OnboardingScreen(forceShow: true)),
-                  (route) => false);
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.restore,
-            label: 'Reset count to first review popup',
-            onTap: () async {
-              await AdvancedAppRatingService.resetDownloadCount();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Download count reset to 0")),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          StatefulBuilder(
-            builder: (context, setState) {
-              final subscriptionManager = SubscriptionManager();
-              return SwitchListTile(
-                title: const Text(
-                  "Dev Premium Access",
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                subtitle: const Text(
-                  "Bypass paywalls for testing",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                value: subscriptionManager.debugOverridePremium,
-                onChanged: (bool value) async {
-                  await subscriptionManager.toggleDebugPremium(value);
-                  setState(() {}); // Rebuild switch
-                },
-                activeColor: Colors.green,
-                secondary:
-                    const Icon(Icons.admin_panel_settings, color: Colors.grey),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          // Dev Auto Save Test Mode
-          StatefulBuilder(
-            builder: (context, setState) {
-              return FutureBuilder<bool>(
-                future: SharedPreferences.getInstance().then((prefs) =>
-                    prefs.getBool("is_dev_auto_save_test_mode") ?? false),
-                builder: (context, snapshot) {
-                  bool isEnabled = snapshot.data ?? false;
-                  return SwitchListTile(
-                    title: const Text(
-                      "Test Auto Save (High Freq)",
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    subtitle: const Text(
-                      "Polls every 10s (Dev Only)",
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    value: isEnabled,
-                    onChanged: (bool value) async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool("is_dev_auto_save_test_mode", value);
-                      setState(() {
-                        isEnabled = value;
-                      });
+          if (DevelopmentModeUtils.checkDevelopmentMode()) ...[
+            const Divider(),
+            const SizedBox(height: 24), // Added spacing
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0, bottom: 8.0),
+              child: Text("Developer Options",
+                  style: TextStyle(
+                      color: Colors.grey, fontWeight: FontWeight.bold)),
+            ),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.restart_alt,
+              label: 'Reset Onboarding',
+              onTap: () async {
+                await OnboardingManager.resetOnboarding();
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            const OnboardingScreen(forceShow: true)),
+                    (route) => false);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.restore,
+              label: 'Reset count to first review popup',
+              onTap: () async {
+                await AdvancedAppRatingService.resetDownloadCount();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Download count reset to 0")),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            StatefulBuilder(
+              builder: (context, setState) {
+                final subscriptionManager = SubscriptionManager();
+                return SwitchListTile(
+                  title: const Text(
+                    "Dev Premium Access",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    "Bypass paywalls for testing",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  value: subscriptionManager.debugOverridePremium,
+                  onChanged: (bool value) async {
+                    await subscriptionManager.toggleDebugPremium(value);
+                    setState(() {}); // Rebuild switch
+                  },
+                  activeColor: Colors.green,
+                  secondary: const Icon(Icons.admin_panel_settings,
+                      color: Colors.grey),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            // Dev Auto Save Test Mode
+            StatefulBuilder(
+              builder: (context, setState) {
+                return FutureBuilder<bool>(
+                  future: SharedPreferences.getInstance().then((prefs) =>
+                      prefs.getBool("is_dev_auto_save_test_mode") ?? false),
+                  builder: (context, snapshot) {
+                    bool isEnabled = snapshot.data ?? false;
+                    return SwitchListTile(
+                      title: const Text(
+                        "Test Auto Save (High Freq)",
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: const Text(
+                        "Polls every 10s (Dev Only)",
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      value: isEnabled,
+                      onChanged: (bool value) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool(
+                            "is_dev_auto_save_test_mode", value);
+                        setState(() {
+                          isEnabled = value;
+                        });
 
-                      if (value) {
-                        AutoSaveService.startDevTestMode();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("Dev Test Mode Started (10s)")),
-                        );
-                      } else {
-                        AutoSaveService.stopDevTestMode();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("Dev Test Mode Stopped")),
-                        );
-                      }
-                    },
-                    activeColor: Colors.orange,
-                    secondary: const Icon(Icons.speed, color: Colors.grey),
-                  );
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.notifications_active,
-            label: 'Test Notification',
-            onTap: () async {
-              await AutoSaveService.showTestNotification();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Notification sent")),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.notifications_active,
-            label: 'Test OneSignal Notification',
-            onTap: () async {
-              try {
-                final userId = await PushNotification.getUserId();
-                if (userId != null && userId.isNotEmpty) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('OneSignal User ID'),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Your OneSignal User ID:'),
-                          const SizedBox(height: 8),
-                          SelectableText(
-                            userId,
-                            style: const TextStyle(fontFamily: 'monospace'),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'To send a test notification:\n'
-                            '1. Go to OneSignal Dashboard\n'
-                            '2. Click "Messages" > "New Push"\n'
-                            '3. Select "Send to Particular Users"\n'
-                            '4. Paste the User ID above',
-                            style: TextStyle(fontSize: 12),
+                        if (value) {
+                          AutoSaveService.startDevTestMode();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Dev Test Mode Started (10s)")),
+                          );
+                        } else {
+                          AutoSaveService.stopDevTestMode();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Dev Test Mode Stopped")),
+                          );
+                        }
+                      },
+                      activeColor: Colors.orange,
+                      secondary: const Icon(Icons.speed, color: Colors.grey),
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.notifications_active,
+              label: 'Test Notification',
+              onTap: () async {
+                await AutoSaveService.showTestNotification();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Notification sent")),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.notifications_active,
+              label: 'Test OneSignal Notification',
+              onTap: () async {
+                try {
+                  final userId = await PushNotification.getUserId();
+                  if (userId != null && userId.isNotEmpty) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('OneSignal User ID'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Your OneSignal User ID:'),
+                            const SizedBox(height: 8),
+                            SelectableText(
+                              userId,
+                              style: const TextStyle(fontFamily: 'monospace'),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'To send a test notification:\n'
+                              '1. Go to OneSignal Dashboard\n'
+                              '2. Click "Messages" > "New Push"\n'
+                              '3. Select "Send to Particular Users"\n'
+                              '4. Paste the User ID above',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Close'),
                           ),
                         ],
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Close'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content:
+                            Text('User not subscribed to push notifications'),
+                      ),
+                    );
+                  }
+                } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content:
-                          Text('User not subscribed to push notifications'),
-                    ),
+                    SnackBar(content: Text('Error: $e')),
                   );
                 }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.delete_forever,
+              label: 'Delete All Saved & Cache',
+              onTap: () async {
+                // Show loading dialog
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const AlertDialog(
+                      content: Row(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(width: 20),
+                          Text("Deleting..."),
+                        ],
+                      ),
+                    );
+                  },
                 );
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.delete_forever,
-            label: 'Delete All Saved & Cache',
-            onTap: () async {
-              // Show loading dialog
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (BuildContext context) {
-                  return const AlertDialog(
-                    content: Row(
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(width: 20),
-                        Text("Deleting..."),
-                      ],
-                    ),
+
+                try {
+                  // await SavedMediaManager().deleteAllSavedContent();
+                  await deleteSavedMeidaUtils().deleteAllMedia(
+                      context,
+                      Provider.of<GetSavedMediaProvider>(context,
+                          listen: false),
+                      showCompletionSnackBar: false);
+
+                  await Provider.of<GetStatusProvider>(context, listen: false)
+                      .clearCacheFromDisk();
+
+                  // Close loading dialog
+                  Navigator.of(context, rootNavigator: true).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("All saved content and cache deleted")),
                   );
-                },
-              );
 
-              try {
-                // await SavedMediaManager().deleteAllSavedContent();
-                await deleteSavedMeidaUtils().deleteAllMedia(context,
-                    Provider.of<GetSavedMediaProvider>(context, listen: false),
-                    showCompletionSnackBar: false);
-
+                  // Redirect to Splash Screen
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SplashScreen()),
+                    (route) => false,
+                  );
+                } catch (e) {
+                  // Close loading dialog if error
+                  Navigator.of(context, rootNavigator: true).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error deleting content: $e")),
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsItem(
+              context: context,
+              icon: Icons.cleaning_services,
+              label: 'Clear Cache (Fresh Start)',
+              onTap: () async {
                 await Provider.of<GetStatusProvider>(context, listen: false)
                     .clearCacheFromDisk();
-
-                // Close loading dialog
-                Navigator.of(context, rootNavigator: true).pop();
-
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("All saved content and cache deleted")),
+                  const SnackBar(content: Text("Cache cleared")),
                 );
-
-                // Redirect to Splash Screen
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SplashScreen()),
-                  (route) => false,
-                );
-              } catch (e) {
-                // Close loading dialog if error
-                Navigator.of(context, rootNavigator: true).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Error deleting content: $e")),
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildSettingsItem(
-            context: context,
-            icon: Icons.cleaning_services,
-            label: 'Clear Cache (Fresh Start)',
-            onTap: () async {
-              await Provider.of<GetStatusProvider>(context, listen: false)
-                  .clearCacheFromDisk();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Cache cleared")),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
         ],
       ),
     );
