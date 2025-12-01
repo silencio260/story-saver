@@ -14,6 +14,7 @@ Future<bool?> showPremiumUpgradeModal(
       'Unlock one-click downloads with Premium! Start your free trial now',
   String yesButtonText = 'Start Free Trial',
   String noButtonText = 'Maybe Later',
+  bool showMaybeLaterButton = false, // Hidden by default
   Color? primaryColor, // Defaults to app's green
   Color? accentColor, // Defaults to lighter green
   Color? iconColor, // Defaults to gold
@@ -136,32 +137,34 @@ Future<bool?> showPremiumUpgradeModal(
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  if (showMaybeLaterButton) ...[
+                    const SizedBox(height: 12),
 
-                  // No button - secondary action
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop(false);
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            Colors.grey[850], // Much darker for visibility
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // No button - secondary action
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor:
+                              Colors.grey[850], // Much darker for visibility
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        noButtonText,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[850], // Darker for readability
+                        child: Text(
+                          noButtonText,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[850], // Darker for readability
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],

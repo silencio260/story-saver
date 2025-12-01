@@ -51,6 +51,7 @@ class MediaListItem extends StatefulWidget {
 class _MediaListItemState extends State<MediaListItem>
     with AutomaticKeepAliveClientMixin {
   late bool isAlreadySaved;
+  bool _isSaving = false; // Prevent duplicate saves
 
   final mediaManager = SavedMediaManager();
 
@@ -95,28 +96,45 @@ class _MediaListItemState extends State<MediaListItem>
   }
 
   void _toggleSavedStatus() async {
-    if (_checkFileExists() == false) {
-      // _showErrorDialog("Error: Files does not exist");
+    // Prevent multiple simultaneous save operations
+    if (_isSaving) {
+      print("Save already in progress, ignoring click");
       return;
     }
 
-    // Handle the click event here
-    print("Icon tapped!");
-    final result = await mediaManager.saveMedia(
-      widget.videoFilePath != null ? widget.videoFilePath! : widget.mediaPath,
-    );
+    if (!_checkFileExists()) {
+      return;
+    }
 
-    saveStatus(context,
-        widget.isVideo == true ? widget.videoFilePath! : widget.mediaPath);
-
-    // Track download and potentially show rating dialog
-    AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
-
-    // isAlreadySaved = true;
-    print('Aready Saved');
+    // Set flag to prevent duplicate saves
     setState(() {
-      isAlreadySaved = !isAlreadySaved; // Toggle the state
+      _isSaving = true;
     });
+
+    try {
+      // Handle the click event here
+      print("Icon tapped!");
+      final result = await mediaManager.saveMedia(
+        widget.videoFilePath != null ? widget.videoFilePath! : widget.mediaPath,
+      );
+
+      saveStatus(context,
+          widget.isVideo == true ? widget.videoFilePath! : widget.mediaPath);
+
+      // Track download and potentially show rating dialog
+      AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+
+      // isAlreadySaved = true;
+      print('Already Saved');
+      setState(() {
+        isAlreadySaved = !isAlreadySaved; // Toggle the state
+      });
+    } finally {
+      // Always reset the flag when done
+      setState(() {
+        _isSaving = false;
+      });
+    }
 
     // _showErrorDialog("Status Saved");
   }
