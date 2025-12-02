@@ -13,6 +13,7 @@ import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
 import 'package:storysaver/Monetization/SubscriptionManager.dart';
 import 'package:storysaver/Widget/PremiumUpgradeModal.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 import 'package:storysaver/Provider/getStatusProvider.dart';
 import 'package:provider/provider.dart';
@@ -86,7 +87,8 @@ class SettingsPage extends StatelessWidget {
             context: context,
             icon: Icons.workspace_premium,
             label: 'Remove Ads',
-            onTap: () {
+            onTap: () async {
+              await AnalyticsService.logRemoveAdsClicked();
               RevenueCatService().PresentRevenueCatPayWallIfNeeded();
             },
           ),
@@ -170,12 +172,14 @@ class SettingsPage extends StatelessWidget {
                       });
 
                       if (value) {
+                        await AnalyticsService.logAutoSaveEnabled();
                         await AutoSaveService.registerPeriodicTask();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               content: Text("Auto Save Enabled (Every 1 hr)")),
                         );
                       } else {
+                        await AnalyticsService.logAutoSaveDisabled();
                         await AutoSaveService.cancelAllTasks();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Auto Save Disabled")),

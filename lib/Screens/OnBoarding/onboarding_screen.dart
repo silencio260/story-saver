@@ -4,6 +4,7 @@ import 'package:storysaver/Constants/CustomColors.dart';
 import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
 import 'package:storysaver/Screens/home_page.dart';
 import 'package:storysaver/Services/OnboardingManager.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final bool forceShow;
@@ -204,6 +205,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       print("Error showing paywall: $e");
     } finally {
       if (mounted) {
+        // Track analytics
+        await AnalyticsService.logOnboardingComplete();
+
         // Use Helper Class
         await OnboardingManager.setOnboardingSeen();
 

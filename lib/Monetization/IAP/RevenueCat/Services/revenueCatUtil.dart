@@ -45,6 +45,10 @@ class RevenueCatService {
       {String entitlementId = 'Pro'}) async {
     try {
       print('in PresentRevenueCatPayWallIfNeeded');
+
+      // Track analytics
+      await AnalyticsService.logViewPaywall();
+
       final paywallResult =
           await RevenueCatUI.presentPaywallIfNeeded(entitlementId);
 

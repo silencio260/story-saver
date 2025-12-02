@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:storysaver/Constants/CustomColors.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 /// Shows a premium upgrade modal dialog with app-consistent green branding
 ///
@@ -19,6 +20,8 @@ Future<bool?> showPremiumUpgradeModal(
   Color? accentColor, // Defaults to lighter green
   Color? iconColor, // Defaults to gold
 }) async {
+  // Track analytics
+  await AnalyticsService.logViewPaywallModal();
   // Use app colors if not specified
   final primary = primaryColor ?? const Color(CustomColors.PremiumPrimary);
   final accent = accentColor ?? const Color(CustomColors.PremiumAccent);

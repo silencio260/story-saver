@@ -608,6 +608,129 @@ class AnalyticsService {
   }
 
 //*****************************************
+// User Journey Event Logs
+//*****************************************
+
+  static Future<void> logOnboardingComplete() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging onboarding_complete event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "onboarding_complete",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("onboarding_complete event logged successfully");
+      } catch (e) {
+        print("Error logging onboarding_complete: $e");
+      }
+    }
+  }
+
+  static Future<void> logViewPaywallModal() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging view_paywall_modal event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "view_paywall_modal",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("view_paywall_modal event logged successfully");
+      } catch (e) {
+        print("Error logging view_paywall_modal: $e");
+      }
+    }
+  }
+
+  static Future<void> logViewPaywall() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging view_paywall event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "view_paywall",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("view_paywall event logged successfully");
+      } catch (e) {
+        print("Error logging view_paywall: $e");
+      }
+    }
+  }
+
+  static Future<void> logAutoSaveEnabled() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging auto_save_enabled event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "auto_save_enabled",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("auto_save_enabled event logged successfully");
+      } catch (e) {
+        print("Error logging auto_save_enabled: $e");
+      }
+    }
+  }
+
+  static Future<void> logAutoSaveDisabled() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging auto_save_disabled event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "auto_save_disabled",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("auto_save_disabled event logged successfully");
+      } catch (e) {
+        print("Error logging auto_save_disabled: $e");
+      }
+    }
+  }
+
+  static Future<void> logDownloadAll() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging download_all event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "download_all",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("download_all event logged successfully");
+      } catch (e) {
+        print("Error logging download_all: $e");
+      }
+    }
+  }
+
+  static Future<void> logRemoveAdsClicked() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging remove_ads_clicked event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "remove_ads_clicked",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("remove_ads_clicked event logged successfully");
+      } catch (e) {
+        print("Error logging remove_ads_clicked: $e");
+      }
+    }
+  }
+
+//*****************************************
 // RevenueCat Event Logs
 //*****************************************
 

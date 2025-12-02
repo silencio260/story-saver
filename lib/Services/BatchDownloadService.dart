@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:storysaver/Utils/saveStatus.dart';
 import 'package:storysaver/Services/AppRatingService.dart';
 import 'package:storysaver/Utils/SavedMediaManager.dart';
+import 'package:storysaver/Services/analytics_service.dart';
 
 class BatchDownloadService {
   static Future<void> downloadAll(BuildContext context, List<String> imagePaths,
       List<String> videoPaths) async {
+    // Track analytics
+    await AnalyticsService.logDownloadAll();
+
     List<String> allPaths = [...imagePaths, ...videoPaths];
 
     if (allPaths.isEmpty) {
