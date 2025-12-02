@@ -145,6 +145,8 @@ class AdvancedAppRatingService {
 
     switch (response.action) {
       case RatingAction.maybeLater:
+        // Track analytics
+        await AnalyticsService.logRatingMaybeLater();
         // Note: The snooze duration is handled by _meetsConditions checking _minDaysBetweenReviews
         // However, if we want a specific shorter snooze for "Maybe Later" vs "Already Rated" (if we allowed re-rating),
         // we might need separate logic. For now, "Maybe Later" just resets the timer.
@@ -154,9 +156,19 @@ class AdvancedAppRatingService {
         await _snoozeRating();
         break;
       case RatingAction.never:
+        await AnalyticsService.logRatingNever();
         await _setNeverShowRating();
         break;
       case RatingAction.continue_:
+        await AnalyticsService.logRatingSubmitted(response.rating);
+
+        // Log special events for high ratings
+        if (response.rating == 4) {
+          await AnalyticsService.logRating4Stars();
+        } else if (response.rating == 5) {
+          await AnalyticsService.logRating5Stars();
+        }
+
         await _setNeverShowRating(); // Don't show again after they've rated/given feedback
         if (response.rating >= 4) {
           _launchPlayStoreOrInAppReview();

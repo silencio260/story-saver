@@ -518,6 +518,96 @@ class AnalyticsService {
   }
 
 //*****************************************
+// Rating Dialog Event Logs
+//*****************************************
+
+  static Future<void> logRatingMaybeLater() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging rating_maybe_later event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "rating_maybe_later",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("rating_maybe_later event logged successfully");
+      } catch (e) {
+        print("Error logging rating_maybe_later: $e");
+      }
+    }
+  }
+
+  static Future<void> logRatingNever() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging rating_never event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "rating_never",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("rating_never event logged successfully");
+      } catch (e) {
+        print("Error logging rating_never: $e");
+      }
+    }
+  }
+
+  static Future<void> logRatingSubmitted(int stars) async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging rating_submitted event with $stars stars...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "rating_submitted",
+          parameters: {
+            "platform": Platform.operatingSystem,
+            "star_count": stars,
+          },
+        );
+        print("rating_submitted event logged successfully");
+      } catch (e) {
+        print("Error logging rating_submitted: $e");
+      }
+    }
+  }
+
+  static Future<void> logRating4Stars() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging rating_4_stars event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "rating_4_stars",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("rating_4_stars event logged successfully");
+      } catch (e) {
+        print("Error logging rating_4_stars: $e");
+      }
+    }
+  }
+
+  static Future<void> logRating5Stars() async {
+    if (_isFoundersVersion == false) {
+      try {
+        print("Logging rating_5_stars event...");
+        await FirebaseAnalytics.instance.logEvent(
+          name: "rating_5_stars",
+          parameters: {
+            "platform": Platform.operatingSystem,
+          },
+        );
+        print("rating_5_stars event logged successfully");
+      } catch (e) {
+        print("Error logging rating_5_stars: $e");
+      }
+    }
+  }
+
+//*****************************************
 // RevenueCat Event Logs
 //*****************************************
 
