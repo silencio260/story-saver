@@ -109,10 +109,13 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
       return const SizedBox();
     }
 
-    return SizedBox(
-      width: _bannerAd.size.width.toDouble(),
-      height: _bannerAd.size.height.toDouble(),
-      child: AdWidget(ad: _bannerAd),
+    return SafeArea(
+      bottom: true,
+      child: SizedBox(
+        width: _bannerAd.size.width.toDouble(),
+        height: _bannerAd.size.height.toDouble(),
+        child: AdWidget(ad: _bannerAd),
+      ),
     );
   }
 }

@@ -168,128 +168,135 @@ class _HomePageState extends State<HomePage>
           }
         },
 
-        child: Scaffold(
-            key: _key,
-            // drawer: AppSideBar(controller: _controller),
-            appBar: AppBar(
-              // leading: IconButton(
-              //   onPressed: () {
-              //     _key.currentState?.openDrawer();
-              //     // print("_key.currentState?.isDrawerOpen ${_key.currentState?.isDrawerOpen}");
-              //   },
-              //   icon: const Icon(Icons.menu),
-              // ),
-              title: Text(
-                  _isBusinessMode == false ? "Story Saver" : "WB Story Saver"),
-              automaticallyImplyLeading: false,
-              bottom: TabBar(
-                  controller: controller,
-                  indicatorColor: Colors.white,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  tabs: [
-                    Tab(
-                      child: Text(
-                        'Image',
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+        child: SafeArea(
+          bottom: true,
+          top: false,
+          left: false,
+          child: Scaffold(
+              key: _key,
+              // drawer: AppSideBar(controller: _controller),
+              appBar: AppBar(
+                // leading: IconButton(
+                //   onPressed: () {
+                //     _key.currentState?.openDrawer();
+                //     // print("_key.currentState?.isDrawerOpen ${_key.currentState?.isDrawerOpen}");
+                //   },
+                //   icon: const Icon(Icons.menu),
+                // ),
+                title: Text(_isBusinessMode == false
+                    ? "Story Saver"
+                    : "WB Story Saver"),
+                automaticallyImplyLeading: false,
+                bottom: TabBar(
+                    controller: controller,
+                    indicatorColor: Colors.white,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    tabs: [
+                      Tab(
+                        child: Text(
+                          'Image',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
-                    ),
-                    Tab(
-                      child: Text(
-                        'Video',
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      Tab(
+                        child: Text(
+                          'Video',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
-                    ),
-                    Tab(
-                      child: Text(
-                        'Gallery',
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      Tab(
+                        child: Text(
+                          'Gallery',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ]),
-              actions: [
-                IconButton(
-                  onPressed: () async {
-                    // Check if switching TO Business Mode (currently in Personal Mode)
-                    if (!_isBusinessMode) {
-                      // Switching to Business Mode - check premium
-                      final isPremium = SubscriptionManager().isPremium;
-                      if (!isPremium) {
-                        final result = await showPremiumUpgradeModal(
-                          context,
-                          title: 'Unlock Business Mode',
-                          message:
-                              'Access WhatsApp Business statuses with Premium! Start your free trial now',
-                        );
-                        if (result == true) {
-                          await RevenueCatService()
-                              .PresentRevenueCatPayWallIfNeeded();
+                    ]),
+                actions: [
+                  IconButton(
+                    onPressed: () async {
+                      // Check if switching TO Business Mode (currently in Personal Mode)
+                      if (!_isBusinessMode) {
+                        // Switching to Business Mode - check premium
+                        final isPremium = SubscriptionManager().isPremium;
+                        if (!isPremium) {
+                          final result = await showPremiumUpgradeModal(
+                            context,
+                            title: 'Unlock Business Mode',
+                            message:
+                                'Access WhatsApp Business statuses with Premium! Start your free trial now',
+                          );
+                          if (result == true) {
+                            await RevenueCatService()
+                                .PresentRevenueCatPayWallIfNeeded();
+                          }
+                          return;
                         }
-                        return;
                       }
-                    }
-                    // Allow switch if going to Personal Mode OR user has premium
-                    switchToBusinessMode(context);
-                  },
-                  icon: _isBusinessMode == false
-                      ? businessWhatsAppsSvgIcon
-                      : whatsAppsSvgIcon,
-                  color: Colors.white,
-                ),
-                IconButton(
-                  onPressed: () {
-                    // _switchToBusinessMode();
-                    // HelpModal().showHelpDialog(context);
-                    // Navigator.of(context).push<void>(
-                    //   MaterialPageRoute<void>(builder: (_) => SettingsPage()),
-                    // );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.settings, color: Colors.white),
-                ),
-                !SubscriptionManager().isPremium
-                    ? IconButton(
-                        onPressed: () {
-                          RevenueCatService()
-                              .PresentRevenueCatPayWallIfNeeded();
-                        },
-                        icon: Icon(Icons.diamond_outlined, color: Colors.white),
-                      )
-                    : IconButton(
-                        onPressed: () {
-                          final statusProvider = Provider.of<GetStatusProvider>(
-                              context,
-                              listen: false);
-                          List<String> imagePaths = statusProvider.getImages
-                              .map((e) => e.path)
-                              .toList();
-                          List<String> videoPaths = statusProvider.getVideos
-                              .map((e) => e.path)
-                              .toList();
+                      // Allow switch if going to Personal Mode OR user has premium
+                      switchToBusinessMode(context);
+                    },
+                    icon: _isBusinessMode == false
+                        ? businessWhatsAppsSvgIcon
+                        : whatsAppsSvgIcon,
+                    color: Colors.white,
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      // _switchToBusinessMode();
+                      // HelpModal().showHelpDialog(context);
+                      // Navigator.of(context).push<void>(
+                      //   MaterialPageRoute<void>(builder: (_) => SettingsPage()),
+                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.settings, color: Colors.white),
+                  ),
+                  !SubscriptionManager().isPremium
+                      ? IconButton(
+                          onPressed: () {
+                            RevenueCatService()
+                                .PresentRevenueCatPayWallIfNeeded();
+                          },
+                          icon:
+                              Icon(Icons.diamond_outlined, color: Colors.white),
+                        )
+                      : IconButton(
+                          onPressed: () {
+                            final statusProvider =
+                                Provider.of<GetStatusProvider>(context,
+                                    listen: false);
+                            List<String> imagePaths = statusProvider.getImages
+                                .map((e) => e.path)
+                                .toList();
+                            List<String> videoPaths = statusProvider.getVideos
+                                .map((e) => e.path)
+                                .toList();
 
-                          BatchDownloadService.downloadAll(
-                              context, imagePaths, videoPaths);
-                        },
-                        icon: Icon(Icons.download, color: Colors.white),
-                        tooltip: "Download All",
-                      ),
-              ],
-              backgroundColor: const Color(CustomColors.AppBarColor),
-              foregroundColor: Colors.white,
-            ),
-            body: Stack(
-              children: [
-                TabBarView(controller: controller, children: pages),
-              ],
-            ),
-            bottomNavigationBar:
-                DisplayBannerAdWidget() //AdmobWrapper().DisplayBannerAdWidget(),
+                            BatchDownloadService.downloadAll(
+                                context, imagePaths, videoPaths);
+                          },
+                          icon: Icon(Icons.download, color: Colors.white),
+                          tooltip: "Download All",
+                        ),
+                ],
+                backgroundColor: const Color(CustomColors.AppBarColor),
+                foregroundColor: Colors.white,
+              ),
+              body: Stack(
+                children: [
+                  TabBarView(controller: controller, children: pages),
+                ],
+              ),
+              bottomNavigationBar:
+                  DisplayBannerAdWidget() //AdmobWrapper().DisplayBannerAdWidget(),
 
-            ),
+              ),
+        ),
       ),
     );
   }

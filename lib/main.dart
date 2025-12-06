@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
@@ -40,6 +41,13 @@ void callbackDispatcher() {
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Enable Edge-to-Edge mode
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
 
     // PushNotification().initialize();
 
@@ -133,14 +141,16 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        // themeMode: themeProvider.themeMode,
-        // theme: ThemeData.light(),
-        // darkTheme: ThemeData.dark(),
-        // theme: ThemeData(
-        //   colorScheme: ColorScheme.light(
-        //     primary: Colors.green, // Set the custom primary color
-        //   ),
-        // ),
+        theme: ThemeData(
+          snackBarTheme: const SnackBarThemeData(
+            behavior: SnackBarBehavior.fixed,
+          ),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.green,
+            primary: Colors.green,
+          ),
+          useMaterial3: true,
+        ),
         navigatorObservers: [routeObserver, PosthogObserver()],
         navigatorKey: myGlobalNavigatorKey,
         home: const SplashScreen(),
