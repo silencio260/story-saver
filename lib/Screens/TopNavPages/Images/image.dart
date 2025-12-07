@@ -318,38 +318,36 @@ class _ImageHomePageState extends State<ImageHomePage>
                                     // ),
                                     controller: _refreshController,
                                     onRefresh: _onRefresh,
-                                    child: GridView(
-                                      gridDelegate:
-                                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                                        maxCrossAxisExtent:
-                                            300, // Each item max width = 150
-                                        crossAxisSpacing: 5,
-                                        mainAxisSpacing: 8,
-                                        childAspectRatio: 0.95,
-                                      ),
-                                      children: List.generate(
-                                        file.getImages.length,
-                                        (index) {
-                                          final data = file.getImages[index];
-
-                                          // final stat = await file.stat();
-                                          print(
-                                              '---- data.path -> ${data.path} - ${data.stat()}');
-                                          // final mediaManager = SavedMediaManager();
-
-                                          // bool isSaved = mediaManager.isMediaSaved(data.path);
-
-                                          return MediaListItem(
-                                            // key: mediaListItemKey,
-                                            // key: ValueKey(index),
-                                            key: ValueKey(data.path),
-                                            mediaPath: data.path,
-                                            currentIndex: index,
-                                            itemIndex:
-                                                index, // NEW: Pass item index
-                                          );
-                                        },
-                                      ),
+                                    child: CustomScrollView(
+                                      slivers: [
+                                        SliverGrid(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                            maxCrossAxisExtent:
+                                                300, // Each item max width = 150
+                                            crossAxisSpacing: 5,
+                                            mainAxisSpacing: 8,
+                                            childAspectRatio: 0.95,
+                                          ),
+                                          delegate: SliverChildBuilderDelegate(
+                                            (context, index) {
+                                              final data =
+                                                  file.getImages[index];
+                                              // print('---- data.path -> ${data.path} - ${data.stat()}');
+                                              return MediaListItem(
+                                                key: ValueKey(data.path),
+                                                mediaPath: data.path,
+                                                currentIndex: index,
+                                                itemIndex: index,
+                                              );
+                                            },
+                                            childCount: file.getImages.length,
+                                          ),
+                                        ),
+                                        const SliverToBoxAdapter(
+                                          child: SizedBox(height: 20),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );

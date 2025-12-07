@@ -20,7 +20,8 @@ class SavedMediaPage extends StatefulWidget {
   _SavedMediaPageState createState() => _SavedMediaPageState();
 }
 
-class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAliveClientMixin {
+class _SavedMediaPageState extends State<SavedMediaPage>
+    with AutomaticKeepAliveClientMixin {
   List<AssetEntity> videoAssets = [];
   bool isLoading = true;
   int reBuildCount = 0;
@@ -30,15 +31,14 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
   bool _keepWidgetAlive = true;
 
   void toggleKeepAlive(bool value) {
-    if(_keepWidgetAlive != value)
-    setState(() {
-      _keepWidgetAlive = value;
-    });
+    if (_keepWidgetAlive != value)
+      setState(() {
+        _keepWidgetAlive = value;
+      });
   }
 
   @override
   bool get wantKeepAlive => true;
-
 
   @override
   void initState() {
@@ -46,9 +46,10 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     // loadVideos();
 
     // print("SavedMediaPage initState");
-    final savedMediaProvider = Provider.of<GetSavedMediaProvider>(context, listen: false);//.loadVMediaInStaggeredBatches();
+    final savedMediaProvider = Provider.of<GetSavedMediaProvider>(context,
+        listen: false); //.loadVMediaInStaggeredBatches();
     // print("SavedMediaPage ${savedMediaProvider.getMediaFile.length}");
-    if(savedMediaProvider.getMediaFile.isEmpty){
+    if (savedMediaProvider.getMediaFile.isEmpty) {
       // print('savedMediaProvider.getMediaFile.isNotEmpty 1');
       savedMediaProvider.loadVMediaInStaggeredBatches();
       // print('savedMediaProvider.getMediaFile.isNotEmpty 2 ${savedMediaProvider.getMediaFile.length}');
@@ -60,7 +61,8 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     final now = DateTime.now();
 
     if (cacheDir.existsSync()) {
-      final files = cacheDir.listSync(); // List all files in the cache directory
+      final files =
+          cacheDir.listSync(); // List all files in the cache directory
 
       for (final file in files) {
         final stat = file.statSync(); // Get file stats
@@ -68,11 +70,11 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
 
         print("temp dir $file $lastModified ${files.length}");
 
-        print("file life ${now.difference(lastModified).inHours }");
+        print("file life ${now.difference(lastModified).inHours}");
 
         // Check if the file is older than 24 hours
         if (now.difference(lastModified) > const Duration(hours: 24)) {
-          print("file life ${now.difference(lastModified) }");
+          print("file life ${now.difference(lastModified)}");
           file.deleteSync(); // Delete the file
         }
       }
@@ -92,11 +94,13 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     return match != null ? int.parse(match.group(0)!) : null;
   }
 
-  void loadMoreItem () {
-    Provider.of<GetSavedMediaProvider>(context, listen: false).loadVMediaInStaggeredBatches();
+  void loadMoreItem() {
+    Provider.of<GetSavedMediaProvider>(context, listen: false)
+        .loadVMediaInStaggeredBatches();
   }
 
-  void confirmFileDeleteDialog(BuildContext context, String message, String fileName, GetSavedMediaProvider file, int index) {
+  void confirmFileDeleteDialog(BuildContext context, String message,
+      String fileName, GetSavedMediaProvider file, int index) {
     Future.delayed(Duration.zero, () {
       showDialog(
         context: context,
@@ -111,7 +115,10 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
                 onPressed: () {
                   Navigator.popUntil(dialogContext, (route) => route.isFirst);
                 },
-                child: Text("Cancel", style: TextStyle(color: Colors.grey),),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -119,7 +126,10 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
                   deleteMedia(fileName, file, index);
                   Navigator.popUntil(dialogContext, (route) => route.isFirst);
                 },
-                child: Text("OK", style: TextStyle(color: Colors.red),),
+                child: Text(
+                  "OK",
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           );
@@ -128,8 +138,8 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     });
   }
 
-  void deleteMedia(String fileName, GetSavedMediaProvider file, int index) async {
-
+  void deleteMedia(
+      String fileName, GetSavedMediaProvider file, int index) async {
     File? fileToDelete = await file.getMediaFile[index].file;
     String? filePath = fileToDelete?.path;
     // print('delete_path ${filePath?.path}');
@@ -149,137 +159,155 @@ class _SavedMediaPageState extends State<SavedMediaPage> with AutomaticKeepAlive
     return Scaffold(
       // appBar: AppBar(title: Text("MediaStore Videos")),
       body: Consumer<GetSavedMediaProvider>(builder: (context, file, child) {
+        final permission =
+            Provider.of<PermissionProvider>(context, listen: false);
 
-        final permission = Provider.of<PermissionProvider>(context, listen: false);
-
-        return permission.hasStoragePermission != true ?
-          const Center(
-            child: Text('No Storage Permission'),
-          )
+        return permission.hasStoragePermission != true
+            ? const Center(
+                child: Text('No Storage Permission'),
+              )
             : file.isLoading
-              ? Center(child: CircularProgressIndicator())
-              : file.getMediaFile.isNotEmpty
-              ?
-          GridView.builder(
-            // key: ValueKey(file.getMediaFile.length),
-            gridDelegate:
-            const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 300, // Each item max width = 150
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.95,
-            ),
-            itemCount: file.getMediaFile.length,
-              itemBuilder: (BuildContext context, int index) {
-
-                // print('GetSavedMediaProvider().getMediaFile[index] $video');
-
-                final mediaFile = file.getMediaFile[index];
-
-
-                return AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  key: ValueKey(file.getMediaFile[index]),
-                  child: VisibilityDetector(
-                    key: Key('item_$index'),
-                    onVisibilityChanged: (visibilityInfo) {
-                      var visiblePercentage = visibilityInfo.visibleFraction * 100;
-                      String nextLoadTriggerItem = 'item_${file.nextLoadTrigger}';
-
-                      debugPrint(
-                          'Widget ${visibilityInfo.key} is ${visiblePercentage}% visible');
-
-
-                      debugPrint(
-                          'NextTrigger - $nextLoadTriggerItem - ${file.nextLoadTrigger} = extractKeyString key is ${extractKeyString(visibilityInfo.key)} // key = ${visibilityInfo.key}');
-                      print('file.getMediaFile.length ${file.getMediaFile.length}');
-
-                      String keyAsString = extractKeyString(visibilityInfo.key);
-                      int? keyAsInt = extractNumberAsInt(keyAsString);
-
-                      if((keyAsString == nextLoadTriggerItem && visiblePercentage >= 50) ||
-                          ( keyAsInt != null && keyAsInt >= file.nextLoadTrigger) ){
-
-                        if(file.numLoadedAssets <= file.totalNumAssets && !file.isProcessingMedia){
-                          loadMoreItem();
-                          file.setNewLoadTrigger();
-                          print('Load More Media Files nextLoadTrigger = ${file.nextLoadTrigger} - numLoadedAssets = ${file.numLoadedAssets} ');
-                        }
-
-                      }
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0),
-                      ),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: 160,
-                            child: GestureDetector(
-                              // behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                              // print('--------------------*******************---------------------------');
-
-                              Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                    builder: (_) =>
-                                        SavedMediaPhotoViewWrapper(
-                                            initialIndex: index,
-                                            isVideoView: true,
-                                            file: file,
-                                            galleryItems: Provider.of<GetSavedMediaProvider>(context, listen: false).getMediaFile
-                                        ),
-                                ),
-                              );
-                          },
-                          child: Container(child: SavedMediaGridItem(mediaFile: mediaFile)),
+                ? Center(child: CircularProgressIndicator())
+                : file.getMediaFile.isNotEmpty
+                    ? CustomScrollView(
+                        slivers: [
+                          SliverGrid(
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent:
+                                  300, // Each item max width = 150
+                              crossAxisSpacing: 5,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 0.95,
                             ),
-                          ),//160),
+                            delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
+                                // print('GetSavedMediaProvider().getMediaFile[index] $video');
 
+                                final mediaFile = file.getMediaFile[index];
 
-                          GestureDetector(
+                                return AnimatedSwitcher(
+                                  duration: Duration(milliseconds: 300),
+                                  key: ValueKey(file.getMediaFile[index]),
+                                  child: VisibilityDetector(
+                                    key: Key('item_$index'),
+                                    onVisibilityChanged: (visibilityInfo) {
+                                      var visiblePercentage =
+                                          visibilityInfo.visibleFraction * 100;
+                                      String nextLoadTriggerItem =
+                                          'item_${file.nextLoadTrigger}';
 
-                            onTap: () =>
-                            {
-                              // deleteSaveStatus(context, file.getMediaFile[index]),
-                              print('Media Manger ${file.getMediaFile[index].title.toString()}'),
+                                      debugPrint(
+                                          'Widget ${visibilityInfo.key} is ${visiblePercentage}% visible');
 
-                              confirmFileDeleteDialog(
-                                  context,
-                                  'Are you sure you want to delete?',
-                                  file.getMediaFile[index].title.toString(),
-                                file,
-                                index
-                              ),
+                                      debugPrint(
+                                          'NextTrigger - $nextLoadTriggerItem - ${file.nextLoadTrigger} = extractKeyString key is ${extractKeyString(visibilityInfo.key)} // key = ${visibilityInfo.key}');
+                                      print(
+                                          'file.getMediaFile.length ${file.getMediaFile.length}');
 
-                              // _deleteMedia(context, file.getMediaFile[index])
-                              // mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
-                              // file.removeFrom(index)
-                            },
-                            child:  Align(
-                              alignment: Alignment.bottomRight,
-                              child: Padding(
-                                padding: const EdgeInsets.all(3.0), // Adjust distance
-                                child: Icon(
-                                  Icons.delete,
-                                  color: Colors.black,
-                                  size: 20,
-                                ),
-                              ),
+                                      String keyAsString =
+                                          extractKeyString(visibilityInfo.key);
+                                      int? keyAsInt =
+                                          extractNumberAsInt(keyAsString);
+
+                                      if ((keyAsString == nextLoadTriggerItem &&
+                                              visiblePercentage >= 50) ||
+                                          (keyAsInt != null &&
+                                              keyAsInt >=
+                                                  file.nextLoadTrigger)) {
+                                        if (file.numLoadedAssets <=
+                                                file.totalNumAssets &&
+                                            !file.isProcessingMedia) {
+                                          loadMoreItem();
+                                          file.setNewLoadTrigger();
+                                          print(
+                                              'Load More Media Files nextLoadTrigger = ${file.nextLoadTrigger} - numLoadedAssets = ${file.numLoadedAssets} ');
+                                        }
+                                      }
+                                    },
+                                    child: Card(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          SizedBox(
+                                            height: 160,
+                                            child: GestureDetector(
+                                              // behavior: HitTestBehavior.opaque,
+                                              onTap: () {
+                                                // print('--------------------*******************---------------------------');
+
+                                                Navigator.push(
+                                                  context,
+                                                  CupertinoPageRoute(
+                                                    builder: (_) =>
+                                                        SavedMediaPhotoViewWrapper(
+                                                            initialIndex: index,
+                                                            isVideoView: true,
+                                                            file: file,
+                                                            galleryItems: Provider.of<
+                                                                        GetSavedMediaProvider>(
+                                                                    context,
+                                                                    listen:
+                                                                        false)
+                                                                .getMediaFile),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
+                                                  child: SavedMediaGridItem(
+                                                      mediaFile: mediaFile)),
+                                            ),
+                                          ), //160),
+
+                                          GestureDetector(
+                                            onTap: () => {
+                                              // deleteSaveStatus(context, file.getMediaFile[index]),
+                                              print(
+                                                  'Media Manger ${file.getMediaFile[index].title.toString()}'),
+
+                                              confirmFileDeleteDialog(
+                                                  context,
+                                                  'Are you sure you want to delete?',
+                                                  file.getMediaFile[index].title
+                                                      .toString(),
+                                                  file,
+                                                  index),
+
+                                              // _deleteMedia(context, file.getMediaFile[index])
+                                              // mediaManager.deleteMedia(file.getMediaFile[index].title.toString()),
+                                              // file.removeFrom(index)
+                                            },
+                                            child: Align(
+                                              alignment: Alignment.bottomRight,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                    3.0), // Adjust distance
+                                                child: Icon(
+                                                  Icons.delete,
+                                                  color: Colors.black,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              childCount: file.getMediaFile.length,
                             ),
                           ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 20),
+                          ),
                         ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-          )
-              : Center(child: Text("No Saved Media Found"));
-        }
-      ),
+                      )
+                    : Center(child: Text("No Saved Media Found"));
+      }),
     );
   }
 }

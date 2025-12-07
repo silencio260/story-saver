@@ -207,62 +207,72 @@ class _VideoHomePageState extends State<VideoHomePage>
                                           controller: _refreshController,
                                           onRefresh: _onRefresh,
 
-                                          child: GridView(
-                                            gridDelegate:
-                                                const SliverGridDelegateWithMaxCrossAxisExtent(
-                                              maxCrossAxisExtent:
-                                                  300, // Each item max width = 150
-                                              crossAxisSpacing: 5,
-                                              mainAxisSpacing: 8,
-                                              childAspectRatio: 0.95,
-                                            ),
-                                            children: List.generate(
-                                              file.getVideos.length,
-                                              (index) {
-                                                // print('---------------------');
-                                                // print(file.getVideos.length);
-                                                final data =
-                                                    file.getVideos[index];
-                                                return FutureBuilder<String>(
-                                                    future: file
-                                                        .generateThumbnailFromListAllVideosForFutureBuilder(
-                                                            data.path),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      print(
-                                                          'video File path - snapshot.data.toString() -> ${snapshot.data.toString()}'
-                                                          ' - videoFilePath -> ${data.path}');
+                                          child: CustomScrollView(
+                                            slivers: [
+                                              SliverGrid(
+                                                gridDelegate:
+                                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                  maxCrossAxisExtent:
+                                                      300, // Each item max width = 150
+                                                  crossAxisSpacing: 5,
+                                                  mainAxisSpacing: 8,
+                                                  childAspectRatio: 0.95,
+                                                ),
+                                                delegate:
+                                                    SliverChildBuilderDelegate(
+                                                  (context, index) {
+                                                    final data =
+                                                        file.getVideos[index];
+                                                    return FutureBuilder<
+                                                            String>(
+                                                        future: file
+                                                            .generateThumbnailFromListAllVideosForFutureBuilder(
+                                                                data.path),
+                                                        builder: (context,
+                                                            snapshot) {
+                                                          print(
+                                                              'video File path - snapshot.data.toString() -> ${snapshot.data.toString()}'
+                                                              ' - videoFilePath -> ${data.path}');
 
-                                                      return snapshot.hasData
-                                                          ? MediaListItem(
-                                                              currentIndex:
-                                                                  index,
-                                                              mediaPath: snapshot
-                                                                  .data
-                                                                  .toString(),
-                                                              isVideo: true,
-                                                              videoFilePath:
-                                                                  data.path,
-                                                              itemIndex:
-                                                                  index) // NEW: Pass item index
-                                                          : Center(
-                                                              child: Column(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                children: [
-                                                                  Icon(
-                                                                      Icons
-                                                                          .broken_image,
-                                                                      color: Colors
-                                                                          .grey),
-                                                                  // Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
-                                                                ],
-                                                              ),
-                                                            );
-                                                    });
-                                              },
-                                            ),
+                                                          return snapshot
+                                                                  .hasData
+                                                              ? MediaListItem(
+                                                                  currentIndex:
+                                                                      index,
+                                                                  mediaPath:
+                                                                      snapshot
+                                                                          .data
+                                                                          .toString(),
+                                                                  isVideo: true,
+                                                                  videoFilePath:
+                                                                      data.path,
+                                                                  itemIndex:
+                                                                      index) // NEW: Pass item index
+                                                              : Center(
+                                                                  child: Column(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    children: [
+                                                                      Icon(
+                                                                          Icons
+                                                                              .broken_image,
+                                                                          color:
+                                                                              Colors.grey),
+                                                                      // Text("Thumbnail not available", style: TextStyle(color: Colors.grey),)
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                        });
+                                                  },
+                                                  childCount:
+                                                      file.getVideos.length,
+                                                ),
+                                              ),
+                                              const SliverToBoxAdapter(
+                                                child: SizedBox(height: 20),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       );
