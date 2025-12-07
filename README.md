@@ -23,4 +23,6 @@ flutter emulators --launch Pixel_9_Pro_API_35-ext15
 flutter clean build  
 flutter build appbundle --dart-define-from-file=env/release.json
 
+shorebird release android -- --dart-define-from-file=env/release.json
+
 zip -d Archive.zip "__MACOSX*" 
