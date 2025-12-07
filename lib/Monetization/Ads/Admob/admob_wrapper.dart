@@ -11,7 +11,19 @@ class AdmobWrapper extends ChangeNotifier {
   // Singleton pattern
   static final AdmobWrapper _instance = AdmobWrapper._internal();
   factory AdmobWrapper() => _instance;
-  AdmobWrapper._internal();
+  AdmobWrapper._internal() {
+    SubscriptionManager().addListener(_onSubscriptionChanged);
+  }
+
+  void _onSubscriptionChanged() {
+    if (SubscriptionManager().isPremium) {
+      print('AdmobWrapper: Premium activated, disposing interstitial ads');
+      _interstitialAd?.dispose();
+      _interstitialAd = null;
+      _isInterstitialAdReady = false;
+      notifyListeners();
+    }
+  }
 
   // BannerAd? _bannerAd;
   static InterstitialAd? _interstitialAd;

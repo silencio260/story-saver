@@ -13,7 +13,7 @@ class DisplayBannerAdWidget extends StatefulWidget {
 }
 
 class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
-  late final BannerAd _bannerAd;
+  BannerAd? _bannerAd;
   bool _isAdLoaded = false;
   bool _shouldRetryFailedBannerAdRequest = false;
   bool _isPremium = false;
@@ -22,6 +22,19 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
   void initState() {
     super.initState();
     _checkSubscriptionAndLoadAd();
+    SubscriptionManager().addListener(_onSubscriptionChanged);
+  }
+
+  void _onSubscriptionChanged() {
+    if (SubscriptionManager().isPremium) {
+      setState(() {
+        _isPremium = true;
+        _isAdLoaded = false;
+        _bannerAd?.dispose();
+        _bannerAd = null;
+      });
+      print('DisplayBannerAdWidget: Premium activated, removed banner ad');
+    }
   }
 
   Future<void> _checkSubscriptionAndLoadAd() async {
@@ -84,8 +97,9 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
   void dispose() {
     // Only dispose if ad was actually loaded (not premium user)
     if (!_isPremium && _isAdLoaded) {
-      _bannerAd.dispose();
+      _bannerAd?.dispose();
     }
+    SubscriptionManager().removeListener(_onSubscriptionChanged);
     super.dispose();
   }
 
@@ -105,16 +119,16 @@ class _DisplayBannerAdWidgetState extends State<DisplayBannerAdWidget> {
       });
     }
 
-    if (!_isAdLoaded) {
+    if (!_isAdLoaded || _bannerAd == null) {
       return const SizedBox();
     }
 
     return SafeArea(
       bottom: true,
       child: SizedBox(
-        width: _bannerAd.size.width.toDouble(),
-        height: _bannerAd.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd),
+        width: _bannerAd!.size.width.toDouble(),
+        height: _bannerAd!.size.height.toDouble(),
+        child: AdWidget(ad: _bannerAd!),
       ),
     );
   }
