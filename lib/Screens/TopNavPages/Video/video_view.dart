@@ -39,7 +39,6 @@ class _VideoViewState extends State<VideoView> {
     Icon(Icons.download),
     Icon(Icons.share),
     Icon(Icons.repeat_outlined),
-    Icon(Icons.delete),
   ];
   final mediaManager = SavedMediaManager();
   bool _isSaved = false;
@@ -238,55 +237,35 @@ class _VideoViewState extends State<VideoView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: List.generate(buttonsList.length, (index) {
-            if ((_isSaved == false && index != 4) ||
-                (_isSaved == true && index != 1)) {
-              return FloatingActionButton(
-                foregroundColor: Colors.white,
-                backgroundColor: const Color(CustomColors.ButtonColor),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(70), // Adjust radius here
-                ),
-                elevation: 0,
-                heroTag: '$index',
-                onPressed: () {
-                  switch (index) {
-                    case 0:
-                      Navigator.pop(context);
-                      break;
-                    case 1:
-                      print("Save");
-                      saveMedia();
-                      break;
+            return FloatingActionButton(
+              foregroundColor: Colors.white,
+              backgroundColor: const Color(CustomColors.ButtonColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(70), // Adjust radius here
+              ),
+              elevation: 0,
+              heroTag: '$index',
+              onPressed: () {
+                switch (index) {
+                  case 0:
+                    Navigator.pop(context);
+                    break;
+                  case 1:
+                    print("Save");
+                    saveMedia();
+                    break;
 
-                    case 2:
-                      _shareMedia(context);
-                      break;
+                  case 2:
+                    _shareMedia(context);
+                    break;
 
-                    case 3:
-                      _shareMediaToWhatsapp(context);
-                      break;
-
-                    case 4:
-                      if (_isSaved && widget.currentIndex != null) {
-                        final mediaProvider =
-                            Provider.of<GetSavedMediaProvider>(context,
-                                listen: false);
-                        deleteSavedMeidaUtils().confirmFileDeleteDialog(
-                          context,
-                          'Are you sure you want to delete?',
-                          mediaProvider,
-                          widget.currentIndex!,
-                        );
-                      }
-                      break;
-                  }
-                },
-                child: buttonsList[index],
-              );
-            } else
-              return Container(
-                child: Text(''),
-              );
+                  case 3:
+                    _shareMediaToWhatsapp(context);
+                    break;
+                }
+              },
+              child: buttonsList[index],
+            );
           }),
         ),
       ),
