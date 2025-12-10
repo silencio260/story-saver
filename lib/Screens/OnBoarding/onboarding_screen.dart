@@ -200,7 +200,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // Show Paywall and wait for it to close (or fail)
       // We don't enforce a strict timeout on the *viewing* duration,
       // but the loading state handles the "loading a bit" UX.
-      await RevenueCatService().PresentRevenueCatPayWallIfNeeded();
+      //
+      // Added timeout to prevent infinite loading if the SDK or bad connection hangs
+      await RevenueCatService()
+          .PresentRevenueCatPayWallIfNeeded()
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
       print("Error showing paywall: $e");
     } finally {

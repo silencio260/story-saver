@@ -26,3 +26,22 @@ flutter build appbundle --dart-define-from-file=env/release.json
 shorebird release android -- --dart-define-from-file=env/release.json
 
 zip -d Archive.zip "__MACOSX*" 
+
+
+flutter clean
+flutter build apk --release --dart-define-from-file=env/release.json
+
+build/app/outputs/flutter-apk/app-release.apk
+
+Option A: Using flutter install
+flutter install --release
+
+Option B: Using adb directly
+adb devices
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+adb uninstall com.yourcompany.yourapp
+
+
+
+
+
