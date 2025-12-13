@@ -15,6 +15,11 @@ For help getting started with Flutter, view our
 [online documentation](https://flutter.dev/docs), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+
+
+
+### Dev Section
+
 adb connect 192.168.171.228:5555
 
 flutter emulators
@@ -43,5 +48,22 @@ adb uninstall com.yourcompany.yourapp
 
 
 
+flutter run --release
+flutter run --release --dart-define-from-file=env/release.json
+
+
+
+-------------------------
+https://docs.shorebird.dev/code-push/initialize/
+shorebird init
+
+https://docs.shorebird.dev/code-push/release/
+shorebird release android
+
+
+https://docs.shorebird.dev/code-push/patch/
+shorebird patch android
+shorebird patch android --release-version latest
+shorebird patch android --release-version 0.1.0+1
 
 
