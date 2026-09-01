@@ -1,0 +1,8 @@
+[submodule ".agents"]
+	path = .agents
+	url = git@github.com:silencio260/genrevibes-projects-skills.git
+	ignore = dirty
+[submodule "packages/genrevibes_starter_kit"]
+	path = packages/genrevibes_starter_kit
+	url = https://github.com/silencio260/genrevibes_starter_kit.git
+	ignore = dirty
