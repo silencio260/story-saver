@@ -1,160 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:media_store_plus/media_store_plus.dart';
-import 'package:posthog_flutter/posthog_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:storysaver/Analytics/UserTargetingManager.dart';
-import 'package:storysaver/Constants/constant.dart';
-import 'package:storysaver/Monetization/Ads/Admob/adConfig.dart';
-import 'package:storysaver/Monetization/IAP/RevenueCat/Services/revenueCatUtil.dart';
-import 'package:storysaver/Provider/PermissionProvider.dart';
-import 'package:storysaver/Provider/topNavProvider.dart';
-import 'package:storysaver/Provider/getStatusProvider.dart';
-import 'package:storysaver/Provider/savedMediaProvider.dart';
-import 'package:storysaver/Screens/splash_screen.dart';
-import 'package:storysaver/Services/Feedback_Helper/feedback_helper.dart';
-import 'package:storysaver/Services/GDPR_Consent/gdprConsentMessage.dart';
-import 'package:storysaver/Services/PostHogWrapper/posthog_wrapper.dart';
-import 'package:storysaver/Services/analytics_service.dart';
-import 'package:storysaver/Utils/checkDevelopmentMode.dart';
-import 'package:storysaver/Utils/globalNavigationKey.dart';
-import 'package:storysaver/Widget/MyRouteObserver.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:storysaver/Services/AppRatingService.dart';
+import 'bloc_observer.dart';
+import 'container_injector.dart';
+import 'core/usecase/base_usecase.dart';
+import 'features/analytics/domain/usecases/initialize_analytics_usecase.dart';
+import 'features/app_services/domain/usecases/initialize_app_services_usecase.dart';
+import 'features/settings/presentation/services/legacy/app_rating_service.dart';
+import 'features/settings/presentation/services/legacy/feedback_helper.dart';
+import 'my_app.dart';
 
-import 'package:storysaver/Services/AutoSaveService.dart';
-import 'package:workmanager/workmanager.dart';
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    print("WorkManager: executing task $task");
-    if (task == AutoSaveService.taskName) {
-      await AutoSaveService.initialize(); // Init notifications
-      await AutoSaveService.executeBackgroundTask();
-    }
-    return Future.value(true);
-  });
-}
-
-void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
-
-    // Enable Edge-to-Edge mode
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Bloc.observer = const AppBlocObserver();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
-    ));
+    ),
+  );
 
-    // PushNotification().initialize();
+  initAppDependencies();
+  await sl<InitializeAnalyticsUseCase>()(NoParams.instance);
+  await sl<InitializeAppServicesUseCase>()(NoParams.instance);
+  await AdvancedAppRatingService.initialize();
+  FeedBackHelper.init();
 
-    RevenueCatService().ConfigureRevenueCatSDK();
-
-    if (DevelopmentModeUtils.checkDevelopmentMode()) {
-      // Enable premium testing
-      // SubscriptionManager().debugOverridePremium = true;
-    }
-
-    PostHogWrapper.init();
-
-    MobileAds.instance.initialize();
-    RequestConfiguration requestConfiguration = RequestConfiguration(
-        testDeviceIds: ['5e2d630f-0073-4c73-b2b8-f05738eb5b6f']);
-    MobileAds.instance.updateRequestConfiguration(requestConfiguration);
-
-    print('ensureInitialized');
-
-    // Initialize WorkManager
-    Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: DevelopmentModeUtils.checkDevelopmentMode(),
-    );
-
-    String envvar = const String.fromEnvironment("founders_version");
-    String e = AppConstants.SAVED_STORY_PATH;
-    debugPrint(
-        '#### Staging Env - $envvar - ${e} -  ${const String.fromEnvironment("firebase_api_key_android")} '
-        '${const String.fromEnvironment("founders_version")}');
-
-    //Init MediaStore
-    await MediaStore.ensureInitialized();
-
-    await handleGDPRConsent();
-
-    await AnalyticsService.init();
-    await AdConfig.ensureInitialized();
-    await AdvancedAppRatingService.initialize();
-
-    await UserTargetingManager.startTracking();
-    FeedBackHelper.init();
-
-    // Resume Auto Save Dev Mode if enabled
-    await AutoSaveService.checkAndResumeDevMode();
-
-    // await AdConfig.ensureInitialized();
-
-    // await FirebaseRemoteConfigService().initialize();
-
-    // await Firebase.initializeApp();
-
-    // final remoteConfigService = FirebaseRemoteConfigService();
-    // remoteConfigService.initialize();
-  } catch (e) {
-    print('Error in main function: $e');
-  }
-
-  runApp(MyApp());
-
-  AnalyticsService.logAppOpen();
-
-  AnalyticsService.logGotoSplashScreen();
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final MyRouteObserver routeObserver = MyRouteObserver();
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    print("MyApp reassemble: Checking and resuming Dev Mode if needed");
-    AutoSaveService.checkAndResumeDevMode();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PostHogWidget(
-        child: MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => TopNavProvider()),
-        ChangeNotifierProvider(create: (_) => GetStatusProvider()),
-        ChangeNotifierProvider(create: (_) => GetSavedMediaProvider()),
-        ChangeNotifierProvider(create: (_) => PermissionProvider()),
-        // ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          snackBarTheme: const SnackBarThemeData(
-            behavior: SnackBarBehavior.fixed,
-          ),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.green,
-            primary: Colors.green,
-          ),
-          useMaterial3: true,
-        ),
-        navigatorObservers: [routeObserver, PosthogObserver()],
-        navigatorKey: myGlobalNavigatorKey,
-        home: const SplashScreen(),
-      ),
-    ));
-  }
+  runApp(const MyApp());
 }

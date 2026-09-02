@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.gentech.starter_kit">
+    <application>
+        <!-- 
+          GENREVIBES STARTER KIT - PRE-CONFIGURATION
+          Neutralizes the mandatory AdMob SDK check by providing a default Test ID.
+          This ensures the host app doesn't crash on launch if it hasn't 
+          configured its own AdMob Application ID yet.
+          
+          Google Play Store submission: You MUST override this in your 
+          app's own AndroidManifest.xml with your real production ID.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+    </application>
+</manifest>

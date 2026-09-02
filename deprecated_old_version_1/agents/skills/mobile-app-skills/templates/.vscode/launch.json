@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define-from-file=env/dev.json"
+            ]
+        },
+        {
+            "name": "Release",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "release",
+            "args": [
+                "--dart-define-from-file=env/release.json"
+            ]
+        },
+        {
+            "name": "Special Dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define-from-file=env/special_dev.json"
+            ]
+        }
+    ]
+}

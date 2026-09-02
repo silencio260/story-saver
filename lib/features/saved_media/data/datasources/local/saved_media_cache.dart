@@ -1,0 +1,142 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:storysaver/features/saved_media/data/datasources/local/device_directory.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SavedMediaManager {
+  static const String _mediaKey = "saved_media"; // Key for shared prefs
+  static const int _expiryDuration =
+      24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  // Stream to notify listeners about saved media changes
+  static final StreamController<String> _savedStreamController =
+      StreamController.broadcast();
+  static Stream<String> get onSaved => _savedStreamController.stream;
+
+  /// Check if a media is already saved
+  Future<bool> isMediaSaved(String mediaPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMedia = prefs.getString(_mediaKey);
+    if (savedMedia == null) return false;
+
+    final mediaList = jsonDecode(savedMedia) as List<dynamic>;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    for (var media in mediaList) {
+      if (media['path'] == mediaPath) {
+        final savedTime = media['timestamp'];
+        // Check if the media has expired
+        if (now - savedTime > _expiryDuration) {
+          await _removeExpiredMedia(mediaPath);
+          return false;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Save media to shared preferences
+  Future<void> saveMedia(String mediaPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMedia = prefs.getString(_mediaKey);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    List<dynamic> mediaList = savedMedia != null ? jsonDecode(savedMedia) : [];
+
+    // Prevent duplicates
+    if (!await isMediaSaved(mediaPath)) {
+      mediaList.add({'path': mediaPath, 'timestamp': now});
+      await prefs.setString(_mediaKey, jsonEncode(mediaList));
+    }
+
+    // String fileName = path.split('/').last.split('.').first;
+
+    print('SavedMediaManager ${mediaList} -  ${mediaList.length}');
+    print('SavedMediaManagerLength -  ${mediaList.length}');
+    for (var media in mediaList) {
+      int currentTime = DateTime.now().millisecondsSinceEpoch;
+      final differenceMs = currentTime - media['timestamp'];
+      double differenceHours = differenceMs / (1000 * 60 * 60);
+      bool isOlderThan24Hours = differenceHours > 24;
+
+      print(
+        "object ${media['path']} - ${differenceHours.toStringAsFixed(1)} Hrs (${isOlderThan24Hours ? 'Older' : 'Newer'} than 24h)",
+      );
+    }
+
+    // Notify listeners
+    _savedStreamController.add(mediaPath);
+  }
+
+  /// Delete media manually
+  Future<void> deleteMediaFromCache(String mediaPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMedia = prefs.getString(_mediaKey);
+
+    if (savedMedia != null) {
+      List<dynamic> mediaList = jsonDecode(savedMedia);
+      mediaList.removeWhere(
+        (media) =>
+            media['path'] == mediaPath || media['path'].contains(mediaPath),
+      );
+      await prefs.setString(_mediaKey, jsonEncode(mediaList));
+
+      print('deleteMedia ${mediaList} -  ${mediaList.length}');
+      // print('object');
+
+      // Notify listeners
+      _savedStreamController.add(mediaPath);
+    }
+  }
+
+  /// Remove expired media from shared preferences
+  Future<void> _removeExpiredMedia(String mediaPath) async {
+    await deleteMediaFromCache(mediaPath);
+  }
+
+  /// Delete all expired media from shared preferences
+  Future<void> cleanExpiredMedia() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMedia = prefs.getString(_mediaKey);
+    if (savedMedia == null) return;
+
+    List<dynamic> mediaList = jsonDecode(savedMedia);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    mediaList.removeWhere(
+      (media) => now - media['timestamp'] > _expiryDuration,
+    );
+    await prefs.setString(_mediaKey, jsonEncode(mediaList));
+  }
+
+  /// Delete all saved content (files and cache)
+  Future<void> deleteAllSavedContent() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Delete files from the saved directory
+    try {
+      String savedPath = await DeviceFileInfo().GetSavedMediaAbsolutePath();
+      Directory savedDir = Directory(savedPath);
+
+      if (await savedDir.exists()) {
+        List<FileSystemEntity> files = savedDir.listSync();
+        for (var file in files) {
+          if (file is File) {
+            await file.delete();
+            print("Deleted file from storage: ${file.path}");
+          }
+        }
+      }
+    } catch (e) {
+      print("Error deleting files from storage: $e");
+    }
+
+    // 2. Clear shared preferences
+    await prefs.remove(_mediaKey);
+
+    // Notify listeners
+    _savedStreamController.add('ALL');
+  }
+}

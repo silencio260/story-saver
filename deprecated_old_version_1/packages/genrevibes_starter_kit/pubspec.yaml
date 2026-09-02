@@ -1,0 +1,85 @@
+name: genrevibes_starter_kit
+description: A reusable Flutter plugin with IAP, Ads, Analytics, Onboarding, Settings, and support services (feedback, GDPR, remote config, push notifications).
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core (align with host app to avoid resolution conflicts)
+  get_it: ^9.0.0
+  equatable: ^2.0.5
+  flutter_bloc: ^9.0.0
+  dartz: ^0.10.1
+
+  # Logging
+  logger: ^2.0.0
+
+  # Ads
+  google_mobile_ads: ^5.0.0
+
+  # Firebase (analytics, crashlytics, remote config) — requires Firebase.init in host app
+  firebase_core: ^3.0.0
+  firebase_analytics: ^11.0.0
+  firebase_crashlytics: ^4.0.0  # used by FirebaseAnalyticsRemoteDataSourceImpl + AnalyticsBloc error path
+  firebase_remote_config: ^5.0.0
+
+  # Firebase Authentication
+  firebase_auth: ^5.0.0
+  google_sign_in: ^6.0.0
+  sign_in_with_apple: ^6.0.0
+
+  # Firebase Database
+  cloud_firestore: ^5.0.0
+
+  # Firebase Storage (for direct client-side uploads)
+  firebase_storage: ^12.0.0
+
+  # Networking
+  dio: ^5.0.0
+
+  # Navigation
+  
+  # Push notifications
+  onesignal_flutter: ^5.0.0
+
+  # Analytics – PostHog (kept in code, dormant by default)
+  posthog_flutter: ^4.0.0
+
+  # Analytics – Mixpanel (events + session replay)
+  mixpanel_flutter: ^2.3.1
+  mixpanel_flutter_session_replay: ^0.1.0-beta.3
+
+  # Device & storage
+  permission_handler: ^11.0.0
+  device_info_plus: ^10.0.0
+  uuid: ^4.0.0
+  shared_preferences: ^2.0.0
+
+  # IAP – RevenueCat
+  purchases_flutter: ^8.0.0
+
+  # App rating
+  in_app_review: ^2.0.0
+
+  # Feedback & launcher
+  url_launcher: ^6.0.0
+
+  # Animations
+  lottie: ^3.1.2
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.gentech.starter_kit
+        pluginClass: StarterKitPlugin
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

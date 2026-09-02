@@ -1,0 +1,47 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+buildscript {
+    // Define ext.kotlin_version if it's not already defined
+    // If you have this line elsewhere, ensure it's a compatible version.
+    // If not, we're adding it here.
+    ext.kotlin_version = '2.1.0' // <--- CORRECTED
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.1'
+        // --- ADD THIS LINE ---
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// subprojects {
+//    afterEvaluate { project ->
+//        if (project.hasProperty('android')) {
+//            project.android {
+//                if (namespace == null) {
+//                    namespace project.group
+//                }
+//            }
+//        }
+//    }
+// }
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

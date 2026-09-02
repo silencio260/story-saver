@@ -1,0 +1,67 @@
+{
+  "parameters": {
+    "min_app_open_ad": {
+      "defaultValue": {
+        "value": "1"
+      },
+      "valueType": "NUMBER"
+    },
+    "time_before_first_rewared_ad": {
+      "defaultValue": {
+        "value": "10"
+      },
+      "valueType": "NUMBER"
+    },
+    "should_show_app_open_ad": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Should Show App Open Ads",
+      "valueType": "BOOLEAN"
+    },
+    "min_rewarded_ad_interval": {
+      "defaultValue": {
+        "value": "13"
+      },
+      "description": "Minimum intervals btw showing Rewarded interstitial ads in  seconds",
+      "valueType": "NUMBER"
+    }
+  },
+  "version": {
+    "versionNumber": "3",
+    "updateTime": "2026-01-13T00:15:01.911197Z",
+    "updateUser": {
+      "email": "bountyhunter603@gmail.com"
+    },
+    "updateOrigin": "CONSOLE",
+    "updateType": "INCREMENTAL_UPDATE"
+  },
+  "parameterGroups": {
+    "Ads Group": {
+      "description": "The settings for ads",
+      "parameters": {
+        "min_insta_ad_interval": {
+          "defaultValue": {
+            "value": "7"
+          },
+          "description": "Minimum intervals btw showing interstitial ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "min_banner_ad_interval": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Minimum intervals btw showing banner ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "time_before_first_insta_ad": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Time before dispalying first insta ad",
+          "valueType": "NUMBER"
+        }
+      }
+    }
+  }
+}

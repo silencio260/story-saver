@@ -1,0 +1,16 @@
+{
+  "founders_version": false,
+  "special_version_mode": false,
+  "development_mode": false,
+  "firebase_api_key_android": "YOUR_FIREBASE_API_KEY_ANDROID",
+  "firebase_api_key_ios": "YOUR_FIREBASE_API_KEY_IOS",
+  "banner_ad_id": "YOUR_PRODUCTION_BANNER_AD_ID",
+  "interstitial_ad_id": "YOUR_PRODUCTION_INTERSTITIAL_AD_ID",
+  "app_open_ad_id": "YOUR_PRODUCTION_APP_OPEN_AD_ID",
+  "rewarded_ad_id": "YOUR_PRODUCTION_REWARDED_AD_ID",
+  "native_ad_id": "YOUR_PRODUCTION_NATIVE_AD_ID",
+  "one_signal_app_id": "YOUR_ONESIGNAL_APP_ID",
+  "revenue_cat_api_key_android": "YOUR_REVENUECAT_KEY",
+  "posthog_api_key": "YOUR_POSTHOG_KEY",
+  "feed_back_nest_api_key": "YOUR_FEEDBACK_NEST_KEY"
+}

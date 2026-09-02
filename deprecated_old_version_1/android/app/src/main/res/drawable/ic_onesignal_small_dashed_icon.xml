@@ -1,0 +1,35 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- Top Segment -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2C13.8,2 15.5,2.5 17,3.4L16,5.1C14.8,4.4 13.4,4 12,4C9.2,4 6.8,5.1 5.1,6.9L3.7,5.5C5.8,3.3 8.8,2 12,2Z"/>
+        
+    <!-- Right Segment -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M22,12C22,13.8 21.5,15.5 20.6,17L18.9,16C19.6,14.8 20,13.4 20,12C20,9.2 18.9,6.8 17.1,5.1L18.5,3.7C20.7,5.8 22,8.8 22,12Z"/>
+        
+    <!-- Bottom Segment -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,22C10.2,22 8.5,21.5 7,20.6L8,18.9C9.2,19.6 10.6,20 12,20C14.8,20 17.2,18.9 18.9,17.1L20.3,18.5C18.2,20.7 15.2,22 12,22Z"/>
+        
+    <!-- Left Segment -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2,12C2,10.2 2.5,8.5 3.4,7L5.1,8C4.4,9.2 4,10.6 4,12C4,14.8 5.1,17.2 6.9,18.9L5.5,20.3C3.3,18.2 2,15.2 2,12Z"/>
+
+    <!-- Download Arrow (Larger and Centered) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,6L12,16M8,12L12,16L16,12"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>
