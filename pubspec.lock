@@ -496,6 +496,167 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  genrevibes_ads:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_ads"
+      relative: true
+    source: path
+    version: "0.1.0-dev.2"
+  genrevibes_ads_admob:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_ads_admob"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_analytics:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_analytics"
+      relative: true
+    source: path
+    version: "0.1.0-dev.2"
+  genrevibes_analytics_firebase:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_analytics_firebase"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_analytics_posthog:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_analytics_posthog"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_app_rating:
+    dependency: "direct overridden"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_app_rating"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_consent:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_consent"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_consent_ump:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_consent_ump"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_core:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_core"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_crash:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_crash"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_crash_crashlytics:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_crash_crashlytics"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_device_identity:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_device_identity"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_device_identity_platform:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_device_identity_platform"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_feedback:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_feedback"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_feedbacknest:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_feedbacknest"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_iap:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_iap"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_iap_revenuecat:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_iap_revenuecat_ui:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat_ui"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_notifications:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_notifications"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_notifications_onesignal:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_notifications_onesignal"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_starter_kit:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_starter_kit"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_storage:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_storage"
+      relative: true
+    source: path
+    version: "0.1.0-dev.2"
+  genrevibes_storage_shared_preferences:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/packages/genrevibes_storage_shared_preferences"
+      relative: true
+    source: path
+    version: "0.1.0-dev.2"
   get_it:
     dependency: "direct main"
     description:
@@ -757,10 +918,10 @@ packages:
     dependency: "direct main"
     description:
       name: onesignal_flutter
-      sha256: b5bb43bf496ddb5e3975ba54c6477cc2d1fcd18fb3698f195d2e0bfd376ddafd
+      sha256: "712e241ee08c6ef41ea8743e4983179b28c46f5f4010c047b360b3d3aa687e8b"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.4"
+    version: "5.6.8"
   package_info_plus:
     dependency: transitive
     description:

@@ -5,14 +5,9 @@ import 'package:flutter_feedback_dialog/flutter_feedback_dialog.dart';
 import 'package:flutter_feedback_dialog/models/communication_type.dart';
 
 class FeedBackHelper {
-  static void init() async {
-    final api_key = const String.fromEnvironment("feed_back_nest_api_key");
-
-    Feedbacknest.init(
-      api_key,
-      // userIdentifier: "user@example.com", // Optional
-    );
-  }
+  /// FeedbackNest is initialized by the kit's feedback provider, from the
+  /// bootstrap. This was fire-and-forget, so it raced `runApp`.
+  static void init() {}
 
   void showFeedBackDialog(BuildContext context) {
     FlutterFeedbackDialog.show(

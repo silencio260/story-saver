@@ -14,68 +14,22 @@ class AnalyticsService {
     "founders_version",
   );
 
-  // In class AnalyticsService
+  /// Firebase is initialized once, by the bootstrap, before any app code runs.
+  ///
+  /// This used to delete any existing [DEFAULT] app and re-create it, inside a
+  /// try/catch that only printed. Running it now would destroy the app the
+  /// bootstrap created and take analytics, remote config and crash reporting
+  /// down with it. Only the founders-version collection switch is kept.
   static Future<void> init() async {
-    try {
-      print('AnalyticsService: Forcing Firebase initialization...');
-
-      // Check if a [DEFAULT] Firebase app already exists.
-      FirebaseApp? existingDefaultApp;
-      try {
-        existingDefaultApp =
-            Firebase.app(); // This gets the [DEFAULT] app or throws if not found.
-      } catch (e) {
-        // No [DEFAULT] app exists, which is fine.
-        print('AnalyticsService: No existing [DEFAULT] Firebase app found.');
-      }
-
-      if (existingDefaultApp != null) {
-        print(
-          'AnalyticsService: Existing [DEFAULT] Firebase app found. Deleting it now...',
-        );
-        await existingDefaultApp.delete();
-        print('AnalyticsService: Existing [DEFAULT] Firebase app deleted.');
-      }
-
-      // Now, initialize Firebase. This will become the new [DEFAULT] app.
-      print('AnalyticsService: Initializing new [DEFAULT] Firebase app...');
-
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      print('AnalyticsService: Firebase has been forcibly re-initialized.');
-
-      if (_isFoundersVersion) {
-        // print("AnalyticsService: Founders version, skipping Firebase init.");
-        // return;
-        // You can disable analytics collection like this:
-        await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
-      }
-      // You can disable analytics collection like this:
-      // await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
-
-      // Initialize Crashlytics after a successful Firebase init.
-      initCrashlytics();
-    } catch (e) {
-      print(
-        'AnalyticsService: CRITICAL ERROR during forced Firebase re-initialization: $e',
-      );
-      // Depending on your app's needs, you might want to rethrow the error
-      // or handle it in a way that prevents the app from continuing in an unstable state.
-      // For example: throw Exception('Failed to forcibly re-initialize Firebase: $e');
+    if (_isFoundersVersion) {
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
     }
   }
 
-  static void initCrashlytics() {
-    // Capture Flutter framework errors
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-
-    // Capture uncaught asynchronous errors
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
-  }
+  /// Crash handlers are owned by `CrashHooks`, installed once from `main`.
+  ///
+  /// A second wiring here would double-report every crash.
+  static void initCrashlytics() {}
 
   static void testCrash() {
     throw const FormatException('Custom format error occurred');

@@ -5,18 +5,16 @@ class PushNotification {
     "one_signal_app_id",
   );
 
+  /// Prompts for push permission.
+  ///
+  /// OneSignal itself is initialized by the kit's push provider, from the
+  /// bootstrap. This used to initialize it too, buried inside the storage
+  /// permission flow; initializing twice re-registers the device.
   Future<void> initializeAndPrompt() async {
     try {
-      // Enable verbose logging for debugging (remove in production)
-      OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-      // Initialize with your OneSignal App ID
-      OneSignal.initialize(ONE_SIGNAL_ID);
-      // Use this method to prompt for push notifications.
-      // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-
       await OneSignal.Notifications.requestPermission(false);
     } catch (e) {
-      print("Error initializing OneSignal: $e");
+      print("Error prompting for push permission: $e");
     }
   }
 

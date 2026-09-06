@@ -7,39 +7,18 @@ import 'package:storysaver/features/analytics/data/services/firebase_analytics_s
 class RevenueCatService {
   static CustomerInfo? _customerInfo;
 
+  /// `Purchases.configure` is owned by the kit's RevenueCat provider, which
+  /// runs in the bootstrap before any widget is built.
+  ///
+  /// The purchase listener and the initial customer-info read stay here,
+  /// because the rest of this service still depends on them. Also dropped: the
+  /// unconditional debug logging and the `print` of the API key.
   Future<void> ConfigureRevenueCatSDK() async {
     try {
-      await Purchases.setDebugLogsEnabled(true);
-
-      PurchasesConfiguration? configuration;
-
-      const revenue_cat_api_key_android = const String.fromEnvironment(
-        "revenue_cat_api_key_android",
-      );
-      print(
-        'String.fromEnvironment("revenue_cat_api_key_android") ${revenue_cat_api_key_android}',
-      );
-      if (Platform.isAndroid) {
-        configuration = PurchasesConfiguration(revenue_cat_api_key_android);
-      } else if (Platform.isIOS) {
-        // configuration = PurchasesConfiguration('<revenuecat_project_apple_api_key>');
-      }
-
-      print('revenue cat configuration ${configuration}');
-
-      if (configuration != null) {
-        await Purchases.configure(configuration);
-
-        // PresentRevenueCatPayWallIfNeeded();
-
-        // Set up purchase listener to track purchases automatically
-        _setupPurchaseListener();
-
-        // Get initial customer info
-        _customerInfo = await Purchases.getCustomerInfo();
-      }
+      _setupPurchaseListener();
+      _customerInfo = await Purchases.getCustomerInfo();
     } catch (e) {
-      print("Error initializing Purchases: $e");
+      print("Error reading RevenueCat customer info: $e");
     }
   }
 
