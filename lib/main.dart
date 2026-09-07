@@ -65,11 +65,24 @@ void main() {
     // layers down inside AnalyticsService.init(), which deleted any existing
     // app first and swallowed every failure, so a Firebase fault silently
     // disabled analytics, remote config and crash reporting together.
+    //
+    // Both platforms ship a native configuration file, so the `[DEFAULT]` app
+    // already exists by the time Dart runs: google-services.json on Android,
+    // GoogleService-Info.plist on iOS. Re-initializing it with the generated
+    // options throws `duplicate-app` whenever the two disagree, and here they
+    // do: `firebase_options.dart` still carries the pre-rename
+    // `com.example.story_saver` application ID. The native file is correct and
+    // is what every native SDK already started against, so it wins.
+    // `DefaultFirebaseOptions` stays as the fallback for a host that ships no
+    // native configuration at all.
+    //
     // Bounded so a stalled platform call fails loudly instead of leaving the
     // application parked on the launch screen with nothing in the log.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 20));
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ).timeout(const Duration(seconds: 20));
+    }
 
     final runtime = await bootstrapApp(env, crash: crash);
     // Installed after the coordinator has started, so a captured error has a
