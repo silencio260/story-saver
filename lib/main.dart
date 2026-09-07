@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,9 +65,11 @@ void main() {
     // layers down inside AnalyticsService.init(), which deleted any existing
     // app first and swallowed every failure, so a Firebase fault silently
     // disabled analytics, remote config and crash reporting together.
+    // Bounded so a stalled platform call fails loudly instead of leaving the
+    // application parked on the launch screen with nothing in the log.
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    );
+    ).timeout(const Duration(seconds: 20));
 
     final runtime = await bootstrapApp(env, crash: crash);
     // Installed after the coordinator has started, so a captured error has a
@@ -78,16 +82,54 @@ void main() {
     // App-owned initialization the kit does not yet cover. AdConfig and
     // UserTargetingManager stay until the remote-config and engagement modules
     // are enabled by their feature migrations.
-    await MediaStore.ensureInitialized();
-    await Workmanager().initialize(callbackDispatcher);
-    await AdConfig.ensureInitialized();
-    await UserTargetingManager.startTracking();
-    await AutoSaveService.checkAndResumeDevMode();
-
-    // Feature initialization that has not migrated yet.
-    await sl<InitializeAnalyticsUseCase>()(NoParams.instance);
-    await AdvancedAppRatingService.initialize();
+    //
+    // These ran inside `AppServicesRepo.initialize()`'s single try/catch before
+    // this migration, which swallowed the first throw and silently skipped
+    // every step after it. Each one is isolated here instead, so one failing
+    // step neither hides the rest nor stops the application from starting.
+    await _startupStep('media_store', MediaStore.ensureInitialized);
+    await _startupStep(
+      'workmanager',
+      () => Workmanager().initialize(callbackDispatcher),
+    );
+    await _startupStep('ad_config', AdConfig.ensureInitialized);
+    await _startupStep('user_targeting', UserTargetingManager.startTracking);
+    await _startupStep('auto_save', AutoSaveService.checkAndResumeDevMode);
+    await _startupStep(
+      'analytics_usecase',
+      () => sl<InitializeAnalyticsUseCase>()(NoParams.instance),
+    );
+    await _startupStep('app_rating', AdvancedAppRatingService.initialize);
 
     runApp(const MyApp());
   }, crash);
+}
+
+/// Runs one app-owned startup step without letting it stop the application.
+///
+/// A step that throws is reported and skipped; a step that never settles is
+/// abandoned after [timeout]. Nothing here may hold the first frame: a launch
+/// that hangs looks identical to a crash from the outside, and leaves nothing
+/// to read afterwards.
+Future<void> _startupStep(
+  String name,
+  Future<void> Function() step, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  try {
+    await step().timeout(timeout);
+  } on TimeoutException {
+    debugPrint('[genrevibes] startup step "$name" timed out after '
+        '${timeout.inSeconds}s; continuing.');
+  } on Object catch (error, stackTrace) {
+    debugPrint('[genrevibes] startup step "$name" failed: $error');
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'story saver bootstrap',
+        context: ErrorDescription('running startup step "$name"'),
+      ),
+    );
+  }
 }

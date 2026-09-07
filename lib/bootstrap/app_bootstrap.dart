@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
@@ -80,6 +81,7 @@ Future<AppRuntime> bootstrapApp(
   AppEnv env, {
   required CrashCoordinator crash,
   BootstrapDependencies dependencies = const BootstrapDependencies(),
+  Duration moduleTimeout = const Duration(seconds: 10),
 }) async {
   final store = MigratingKeyValueStore(
     delegate: dependencies.store ?? SharedPreferencesKeyValueStore(),
@@ -123,7 +125,13 @@ Future<AppRuntime> bootstrapApp(
   final feedback = dependencies.feedback ??
       FeedbackNestFeedbackProvider(configuration: env.feedbackNest);
 
+  final logger = const BootstrapLogger();
+
   final kit = GenRevibesStarterKit(
+    logger: logger,
+    // No vendor callback may hold the first frame hostage. Anything slower
+    // than this is a fault, not slowness, and is reported as one.
+    moduleTimeout: moduleTimeout,
     modules: <StarterModuleRegistration>[
       // Order is dependency order. Crash first so a later failure is reported;
       // identity next so it can name the user; consent before anything that
@@ -190,12 +198,38 @@ Future<AppRuntime> bootstrapApp(
     );
   }
 
-  applyConsent(await consent.ready);
+  // Bounded for the same reason module initialization is: a UMP form that
+  // never calls back would otherwise suspend startup here, after the kit has
+  // already reported itself healthy.
+  applyConsent(
+    await consent.ready.timeout(
+      moduleTimeout,
+      onTimeout: () {
+        logger.log(
+          KitLogLevel.warning,
+          'Consent did not resolve in time; starting without personalization.',
+          moduleId: AppModules.consent,
+        );
+        return ConsentSnapshot(
+          state: ConsentState.unknown,
+          observedAt: DateTime.now(),
+        );
+      },
+    ),
+  );
   consentProvider.snapshotChanges.listen(applyConsent);
 
   // Name the user on crash reports. Tracking is deliberately not prompted here:
   // an out-of-context ATT prompt at launch is an App Store rejection.
-  final resolved = await identity.resolve();
+  final resolved = await identity.resolve().timeout(
+        moduleTimeout,
+        onTimeout: () => const KitFailure<DeviceIdentity>(
+          KitError(
+            code: KitErrorCode.timeout,
+            message: 'Device identity did not resolve in time.',
+          ),
+        ),
+      );
   await resolved.fold(
     onSuccess: (value) => crash.identify(value.installId),
     onFailure: (_) async => const KitSuccess<void>(null),
@@ -271,4 +305,29 @@ final class BootstrapDependencies {
 
   /// Feedback provider.
   final FeedbackProvider? feedback;
+}
+
+/// Routes starter-kit lifecycle logs to the console during development.
+///
+/// The kit defaults to a no-op logger, and crash collection is off in debug, so
+/// without this a module that fails or times out at startup leaves no trace
+/// anywhere. Release builds stay silent: the crash reporter is the sink there.
+final class BootstrapLogger implements KitLogger {
+  /// Creates a logger.
+  const BootstrapLogger();
+
+  @override
+  void log(
+    KitLogLevel level,
+    String message, {
+    String? moduleId,
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, Object?> fields = const <String, Object?>{},
+  }) {
+    if (!kDebugMode) return;
+    final where = moduleId == null ? '' : ' [$moduleId]';
+    debugPrint('[genrevibes:${level.name}]$where $message'
+        '${error == null ? '' : ' error=$error'}');
+  }
 }
