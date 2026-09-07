@@ -13,7 +13,6 @@ import 'bloc_observer.dart';
 import 'bootstrap/app_bootstrap.dart';
 import 'bootstrap/app_env.dart';
 import 'bootstrap/runtime_registrar.dart';
-import 'config/firebase_options.dart';
 import 'container_injector.dart';
 import 'core/usecase/base_usecase.dart';
 import 'features/analytics/data/services/user_targeting_manager.dart';
@@ -66,23 +65,22 @@ void main() {
     // app first and swallowed every failure, so a Firebase fault silently
     // disabled analytics, remote config and crash reporting together.
     //
-    // Both platforms ship a native configuration file, so the `[DEFAULT]` app
-    // already exists by the time Dart runs: google-services.json on Android,
-    // GoogleService-Info.plist on iOS. Re-initializing it with the generated
-    // options throws `duplicate-app` whenever the two disagree, and here they
-    // do: `firebase_options.dart` still carries the pre-rename
-    // `com.example.story_saver` application ID. The native file is correct and
-    // is what every native SDK already started against, so it wins.
-    // `DefaultFirebaseOptions` stays as the fallback for a host that ships no
-    // native configuration at all.
+    // Deliberately without options. Both platforms ship a native configuration
+    // file — google-services.json on Android, GoogleService-Info.plist on iOS —
+    // so the `[DEFAULT]` app already exists before Dart runs, and passing
+    // options makes firebase_core compare them against it and throw
+    // `duplicate-app` on any difference. The generated options differ twice
+    // over: their API key comes from a dart-define that does not match the one
+    // in google-services.json, and their application ID is still the pre-rename
+    // `com.example.story_saver` one. With no options the native app is adopted
+    // as-is, which is the configuration every native SDK already started
+    // against. That is also what `Firebase.app().delete()` in the old code was
+    // working around, by discarding the native app and rebuilding it from the
+    // generated values.
     //
     // Bounded so a stalled platform call fails loudly instead of leaving the
     // application parked on the launch screen with nothing in the log.
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      ).timeout(const Duration(seconds: 20));
-    }
+    await Firebase.initializeApp().timeout(const Duration(seconds: 20));
 
     final runtime = await bootstrapApp(env, crash: crash);
     // Installed after the coordinator has started, so a captured error has a
