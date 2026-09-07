@@ -26,49 +26,49 @@ dependencies:
 
   # --- GenRevibes starter kit (Stage 2: initialization only) ---
   genrevibes_ads:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_ads
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
   genrevibes_ads_admob:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_ads_admob
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob
   genrevibes_analytics:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics_firebase
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_firebase
   genrevibes_analytics_posthog:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics_posthog
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_posthog
   genrevibes_consent:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_consent
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent
   genrevibes_consent_ump:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_consent_ump
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_ump
   genrevibes_core:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_core
+    path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_core
   genrevibes_crash:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_crash
+    path: packages/genrevibes_starter_kit/modules/crash/genrevibes_crash
   genrevibes_crash_crashlytics:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_crash_crashlytics
+    path: packages/genrevibes_starter_kit/modules/crash/genrevibes_crash_crashlytics
   genrevibes_device_identity:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_device_identity
+    path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_device_identity_platform:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_device_identity_platform
+    path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity_platform
   genrevibes_feedback:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_feedback
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedback
   genrevibes_feedbacknest:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_feedbacknest
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedbacknest
   genrevibes_iap:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap
   genrevibes_iap_revenuecat:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap_revenuecat
   genrevibes_iap_revenuecat_ui:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat_ui
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap_revenuecat_ui
   genrevibes_notifications:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_notifications
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications
   genrevibes_notifications_onesignal:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_notifications_onesignal
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_onesignal
   genrevibes_starter_kit:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_starter_kit
+    path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_starter_kit
   genrevibes_storage:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_storage
+    path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage
   genrevibes_storage_shared_preferences:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_storage_shared_preferences
+    path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
 
 
   # Clean Architecture foundations
@@ -168,51 +168,51 @@ dependency_overrides:
   # app consuming them by path must resolve those siblings by path too.
   # genrevibes_app_rating is transitive, via genrevibes_feedbacknest.
   genrevibes_ads:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_ads
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
   genrevibes_ads_admob:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_ads_admob
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob
   genrevibes_analytics:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics_firebase
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_firebase
   genrevibes_analytics_posthog:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_analytics_posthog
+    path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_posthog
   genrevibes_app_rating:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_app_rating
+    path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating
   genrevibes_consent:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_consent
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent
   genrevibes_consent_ump:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_consent_ump
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_ump
   genrevibes_core:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_core
+    path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_core
   genrevibes_crash:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_crash
+    path: packages/genrevibes_starter_kit/modules/crash/genrevibes_crash
   genrevibes_crash_crashlytics:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_crash_crashlytics
+    path: packages/genrevibes_starter_kit/modules/crash/genrevibes_crash_crashlytics
   genrevibes_device_identity:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_device_identity
+    path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_device_identity_platform:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_device_identity_platform
+    path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity_platform
   genrevibes_feedback:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_feedback
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedback
   genrevibes_feedbacknest:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_feedbacknest
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedbacknest
   genrevibes_iap:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap
   genrevibes_iap_revenuecat:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap_revenuecat
   genrevibes_iap_revenuecat_ui:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_iap_revenuecat_ui
+    path: packages/genrevibes_starter_kit/modules/iap/genrevibes_iap_revenuecat_ui
   genrevibes_notifications:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_notifications
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications
   genrevibes_notifications_onesignal:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_notifications_onesignal
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_onesignal
   genrevibes_starter_kit:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_starter_kit
+    path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_starter_kit
   genrevibes_storage:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_storage
+    path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage
   genrevibes_storage_shared_preferences:
-    path: packages/genrevibes_starter_kit/packages/genrevibes_storage_shared_preferences
+    path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
   device_info_plus: ^11.3.0
 #  image_gallery_saver:
 #    git:
