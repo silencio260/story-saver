@@ -98,13 +98,22 @@ final class AppEnv {
         )
       : const ConsentDebugConfig();
 
-  /// AdMob configuration for the placements this app declares.
+  /// The banner unit, for `AdMobBannerView`.
+  ///
+  /// Deliberately not part of [adMob]. `AdMobAdProvider` serves the
+  /// full-screen formats only — interstitial, rewarded and app-open — and
+  /// rejects a banner unit at initialization, which took the whole ads module
+  /// down with it. Inline formats are rendered by the widget in
+  /// `genrevibes_ads_admob_ui`, which holds its own unit. The ads migration
+  /// consumes this; nothing reads it yet.
+  AdMobAdUnit get bannerAdUnit => AdMobAdUnit(
+        placement: AppPlacements.banner,
+        adUnitId: bannerAdUnitId,
+      );
+
+  /// AdMob configuration for the full-screen placements this app declares.
   GenRevibesAdMobConfiguration get adMob => GenRevibesAdMobConfiguration(
         adUnits: <AdMobAdUnit>[
-          AdMobAdUnit(
-            placement: AppPlacements.banner,
-            adUnitId: bannerAdUnitId,
-          ),
           AdMobAdUnit(
             placement: AppPlacements.interstitial,
             adUnitId: interstitialAdUnitId,

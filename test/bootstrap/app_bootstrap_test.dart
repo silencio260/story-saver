@@ -158,10 +158,21 @@ void main() {
           contains('5e2d630f-0073-4c73-b2b8-f05738eb5b6f'));
     });
 
-    test('maps both declared placements to their units', () {
-      expect(env.adMob.unitFor(AppPlacements.banner)?.adUnitId, 'banner-unit');
+    test('gives the full-screen adapter only full-screen units', () {
+      // AdMobAdProvider serves interstitial, rewarded and app-open. Handing it
+      // a banner made it fail initialization outright, which took the entire
+      // ads module down on device while every unit test passed.
       expect(env.adMob.unitFor(AppPlacements.interstitial)?.adUnitId,
           'interstitial-unit');
+      expect(env.adMob.unitFor(AppPlacements.banner), isNull);
+      for (final unit in env.adMob.adUnits.values) {
+        expect(unit.placement.format, isNot(AdFormat.banner));
+      }
+    });
+
+    test('carries the banner unit separately, for the inline ad view', () {
+      expect(env.bannerAdUnit.adUnitId, 'banner-unit');
+      expect(env.bannerAdUnit.placement.format, AdFormat.banner);
     });
 
     test('reproduces the app PostHog settings rather than kit defaults', () {
