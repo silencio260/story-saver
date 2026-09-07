@@ -17,6 +17,7 @@ class SettingsStrings {
   static const String rateUs = 'Rate Us';
   static const String share = 'Share';
   static const String developerOptions = 'Developer Options';
+  static const String moduleHealth = 'Starter Kit Module Health';
   static const String resetOnboarding = 'Reset Onboarding';
   static const String resetRatingCount = 'Reset count to first review popup';
   static const String ratingCountReset = 'Download count reset to 0';
