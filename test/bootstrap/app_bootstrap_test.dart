@@ -10,6 +10,7 @@ import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:storysaver/bootstrap/app_bootstrap.dart';
 import 'package:storysaver/bootstrap/app_env.dart';
@@ -58,14 +59,23 @@ void main() {
     });
 
     test('the modules whose features have not migrated stay disabled', () {
-      // Guards the Stage 2 scope rule. Enabling one of these while the old code
-      // still writes its keys gives two writers and divergent user state.
+      // Enabling one of these while the old code still writes its keys gives
+      // two writers and divergent user state, so each waits for its feature.
       expect(AppModules.disabled, containsAll(<String>[
-        'remote_config',
-        'engagement',
         'app_rating',
         'onboarding',
+        'permissions',
+        'app_links',
+        'notifications.local',
       ]));
+    });
+
+    test('remote config and engagement are enabled, not disabled', () {
+      // Their features migrated: AdConfig, FirebaseRemoteConfigService,
+      // RetentionTracker and UserTargetingManager are gone from lib/, so
+      // nothing else writes the keys they now own.
+      expect(AppModules.disabled, isNot(contains(AppModules.remoteConfig)));
+      expect(AppModules.disabled, isNot(contains(AppModules.engagement)));
     });
 
     test('a required module failing yields a failed report, not a half app',
@@ -215,6 +225,7 @@ final class _Harness {
   final _FakeIap iap = _FakeIap();
   final _FakePush push = _FakePush();
   final _FakeFeedback feedback = _FakeFeedback();
+  final _FakeRemoteConfig remoteConfig = _FakeRemoteConfig();
 
   Future<dynamic> boot(AppEnv env) {
     return bootstrapApp(
@@ -230,9 +241,34 @@ final class _Harness {
         iap: iap,
         push: push,
         feedback: feedback,
+        remoteConfig: remoteConfig,
       ),
     );
   }
+}
+
+/// Stands in for the Firebase provider.
+///
+/// The real one reads `FirebaseRemoteConfig.instance` in its constructor, so
+/// merely composing it needs an initialized Firebase app.
+final class _FakeRemoteConfig with _FakeModule implements RemoteConfigProvider {
+  @override
+  String get providerId => 'fake';
+  @override
+  String get moduleId => 'remote_config.fake';
+  @override
+  Future<KitResult<void>> initialize() => start();
+  @override
+  Future<KitResult<void>> dispose() => stop();
+  @override
+  RemoteConfigProviderSnapshot get current => RemoteConfigProviderSnapshot(
+        values: const <String, Object?>{},
+        origin: RemoteConfigValueOrigin.defaultValue,
+        observedAt: DateTime.utc(2026),
+      );
+  @override
+  Future<KitResult<RemoteConfigProviderSnapshot>> refresh() async =>
+      KitSuccess<RemoteConfigProviderSnapshot>(current);
 }
 
 mixin _FakeModule on Object {

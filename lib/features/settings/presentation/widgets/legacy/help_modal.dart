@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../analytics/data/services/firebase_analytics_service.dart';
+import '../../../../analytics/data/services/analytics_service.dart';
 
 class HelpModal {
   void showHelpDialog(BuildContext context) {

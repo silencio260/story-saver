@@ -12,6 +12,7 @@ import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
+import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_feedbacknest/genrevibes_feedbacknest.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
@@ -19,6 +20,9 @@ import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_iap_revenuecat_ui/genrevibes_iap_revenuecat_ui.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
+import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
+import 'package:genrevibes_remote_config_firebase/genrevibes_remote_config_firebase.dart';
+import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:genrevibes_storage_shared_preferences/genrevibes_storage_shared_preferences.dart';
@@ -52,10 +56,14 @@ abstract final class AppModules {
   /// Feedback submission.
   static const feedback = 'feedback';
 
+  /// Typed remote configuration.
+  static const remoteConfig = 'remote_config';
+
+  /// Retention and targeting.
+  static const engagement = 'engagement';
+
   /// Registered but disabled until their feature migrates.
   static const disabled = <String>[
-    'remote_config',
-    'engagement',
     'permissions',
     'app_rating',
     'onboarding',
@@ -83,12 +91,17 @@ Future<AppRuntime> bootstrapApp(
   BootstrapDependencies dependencies = const BootstrapDependencies(),
   Duration moduleTimeout = const Duration(seconds: 10),
 }) async {
+  final logger = const BootstrapLogger();
+
   final store = MigratingKeyValueStore(
     delegate: dependencies.store ?? SharedPreferencesKeyValueStore(),
     // Only the enabled modules' legacy keys. Rating, onboarding and engagement
     // keys are adopted when those modules are enabled, because adopting a key
     // while the old code still writes it gives two writers and divergent state.
-    legacyKeys: DeviceIdentityKeys.legacyKeys,
+    legacyKeys: <String, String>{
+      ...DeviceIdentityKeys.legacyKeys,
+      ...EngagementKeys.legacyKeys,
+    },
     removeLegacyOnRead: false,
   );
 
@@ -101,12 +114,30 @@ Future<AppRuntime> bootstrapApp(
   final consentProvider = dependencies.consent ??
       UmpConsentProvider(debugConfig: env.consentDebug);
   final consent = ConsentGate(provider: consentProvider);
+  // Remote configuration is built before analytics, because the pipeline
+  // resolves event names through it: a name overridden remotely then reaches
+  // every sink and every kit emitter without those packages knowing that
+  // remote config exists.
+  final remoteConfigSchema = PortfolioRemoteConfigSchema.build();
+  final remoteConfig = RemoteConfigCoordinator(
+    schema: remoteConfigSchema,
+    provider: dependencies.remoteConfig ??
+        GenRevibesFirebaseRemoteConfigProvider(schema: remoteConfigSchema),
+    logger: logger,
+  );
   final analytics = AnalyticsPipeline(
     sinks: dependencies.analyticsSinks ??
         <AnalyticsSink>[
           FirebaseAnalyticsSink(),
           PostHogAnalyticsSink(configuration: env.postHog),
         ],
+    names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
+  );
+  // Retention milestones are analytics events, so the tracker reports through
+  // the pipeline rather than reaching for a sink of its own.
+  final retention = RetentionTracker(
+    store: store,
+    observer: AnalyticsEngagementObserver(analytics),
   );
   final adPolicy = AdPolicyController(
     placements: <String, AdPlacementPolicy>{
@@ -124,8 +155,6 @@ Future<AppRuntime> bootstrapApp(
       OneSignalPushProvider(configuration: env.oneSignal);
   final feedback = dependencies.feedback ??
       FeedbackNestFeedbackProvider(configuration: env.feedbackNest);
-
-  final logger = const BootstrapLogger();
 
   final kit = GenRevibesStarterKit(
     logger: logger,
@@ -174,6 +203,18 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.feedback,
         create: () => feedback,
+        isRequired: false,
+      ),
+      // Both optional: a fetch failure falls back to schema defaults, and lost
+      // retention history is not worth failing a launch over.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.remoteConfig,
+        create: () => remoteConfig,
+        isRequired: false,
+      ),
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.engagement,
+        create: () => retention,
         isRequired: false,
       ),
       for (final moduleId in AppModules.disabled)
@@ -235,6 +276,22 @@ Future<AppRuntime> bootstrapApp(
     onFailure: (_) async => const KitSuccess<void>(null),
   );
 
+  // Remote values retune ad pacing without a release. The binder applies the
+  // current snapshot immediately and then follows every change.
+  final adPolicyBinder = AdsRemotePolicyBinder(
+    current: () => remoteConfig.current,
+    changes: remoteConfig.changes,
+    policy: adPolicy,
+    placements: AppPlacements.all,
+    logger: logger,
+  );
+  await adPolicyBinder.initialize();
+
+  // One app open per launch, which is what emits the D1/D3/D7/D30 milestones.
+  // Not awaited for its result: a storage failure degrades the module and must
+  // not delay the first frame.
+  unawaited(retention.recordAppOpen());
+
   // The single premium source of truth for the kit's ad policy. The two
   // existing bridges (my_app.dart's BlocListener and
   // BannerAdWidget._syncSubscription) stay until the ads migration, because
@@ -258,6 +315,8 @@ Future<AppRuntime> bootstrapApp(
     iap: iap,
     push: push,
     feedback: feedback,
+    remoteConfig: remoteConfig,
+    retention: retention,
   );
 }
 
@@ -277,6 +336,7 @@ final class BootstrapDependencies {
     this.iap,
     this.push,
     this.feedback,
+    this.remoteConfig,
   });
 
   /// Backing key-value store.
@@ -305,6 +365,9 @@ final class BootstrapDependencies {
 
   /// Feedback provider.
   final FeedbackProvider? feedback;
+
+  /// Remote configuration provider.
+  final RemoteConfigProvider? remoteConfig;
 }
 
 /// Routes starter-kit lifecycle logs to the console during development.

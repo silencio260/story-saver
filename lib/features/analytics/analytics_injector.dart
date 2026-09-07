@@ -1,24 +1,14 @@
+import 'package:genrevibes_analytics/genrevibes_analytics.dart';
+
 import '../../container_injector.dart';
-import 'data/datasources/analytics_remote_data_source.dart';
-import 'data/repositories/analytics_repository_impl.dart';
-import 'domain/repositories/analytics_repository.dart';
-import 'domain/usecases/initialize_analytics_usecase.dart';
-import 'domain/usecases/log_analytics_event_usecase.dart';
 import 'presentation/bloc/analytics_bloc/analytics_bloc.dart';
 
+/// Registers the analytics presentation layer.
+///
+/// The data source, repository and use cases are gone: the starter kit's
+/// pipeline is the analytics implementation now, and it is composed and
+/// started by `bootstrapApp` before this runs. `registerRuntime` publishes it,
+/// so the bloc resolves it here like any other dependency.
 void initAnalytics() {
-  sl.registerLazySingleton<AnalyticsBaseRemoteDataSource>(
-    FirebaseAnalyticsRemoteDataSource.new,
-  );
-  sl.registerLazySingleton<AnalyticsBaseRepo>(
-    () => AnalyticsRepo(remoteDataSource: sl()),
-  );
-  sl.registerLazySingleton(() => InitializeAnalyticsUseCase(repo: sl()));
-  sl.registerLazySingleton(() => LogAnalyticsEventUseCase(repo: sl()));
-  sl.registerFactory(
-    () => AnalyticsBloc(
-      initializeAnalyticsUseCase: sl(),
-      logAnalyticsEventUseCase: sl(),
-    ),
-  );
+  sl.registerFactory(() => AnalyticsBloc(pipeline: sl<AnalyticsPipeline>()));
 }

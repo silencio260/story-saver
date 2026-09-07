@@ -3,7 +3,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/utils/legacy_app_constants.dart';
-import '../../../../analytics/data/services/firebase_analytics_service.dart';
+import '../../../../analytics/data/services/analytics_service.dart';
 
 void shareAppLink(BuildContext context) {
   AnalyticsService.logShareApp();

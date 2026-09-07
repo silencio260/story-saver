@@ -14,10 +14,6 @@ import 'bootstrap/app_bootstrap.dart';
 import 'bootstrap/app_env.dart';
 import 'bootstrap/runtime_registrar.dart';
 import 'container_injector.dart';
-import 'core/usecase/base_usecase.dart';
-import 'features/analytics/data/services/user_targeting_manager.dart';
-import 'features/analytics/domain/usecases/initialize_analytics_usecase.dart';
-import 'features/monetization/data/services/ads/ad_config.dart';
 import 'features/saved_media/data/services/auto_save_service.dart';
 import 'features/settings/presentation/services/legacy/app_rating_service.dart';
 import 'my_app.dart';
@@ -51,7 +47,7 @@ void main() {
   // body keeps running inside it.
   CrashHooks.runGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    Bloc.observer = const AppBlocObserver();
+    Bloc.observer = AppBlocObserver(crash);
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -90,9 +86,7 @@ void main() {
     registerRuntime(runtime);
     initAppDependencies();
 
-    // App-owned initialization the kit does not yet cover. AdConfig and
-    // UserTargetingManager stay until the remote-config and engagement modules
-    // are enabled by their feature migrations.
+    // App-owned initialization the kit does not yet cover.
     //
     // These ran inside `AppServicesRepo.initialize()`'s single try/catch before
     // this migration, which swallowed the first throw and silently skipped
@@ -103,13 +97,7 @@ void main() {
       'workmanager',
       () => Workmanager().initialize(callbackDispatcher),
     );
-    await _startupStep('ad_config', AdConfig.ensureInitialized);
-    await _startupStep('user_targeting', UserTargetingManager.startTracking);
     await _startupStep('auto_save', AutoSaveService.checkAndResumeDevMode);
-    await _startupStep(
-      'analytics_usecase',
-      () => sl<InitializeAnalyticsUseCase>()(NoParams.instance),
-    );
     await _startupStep('app_rating', AdvancedAppRatingService.initialize);
 
     runApp(const MyApp());

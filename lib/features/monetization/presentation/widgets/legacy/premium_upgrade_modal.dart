@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/legacy_custom_colors.dart';
-import '../../../../analytics/data/services/firebase_analytics_service.dart';
+import '../../../../analytics/data/services/analytics_service.dart';
 
 /// Shows a premium upgrade modal dialog with app-consistent green branding
 ///

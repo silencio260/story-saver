@@ -5,7 +5,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:media_scanner/media_scanner.dart';
 
-import '../../../../analytics/data/services/firebase_analytics_service.dart';
+import '../../../../analytics/data/services/analytics_service.dart';
 import '../../../../permissions/data/datasources/app_storage_permission.dart';
 import '../../../data/datasources/local/device_directory.dart';
 import '../../bloc/saved_media_bloc/saved_media_bloc.dart';
@@ -36,7 +36,7 @@ Future<void> saveStatus(BuildContext context, String filePath) async {
       ).showSnackBar(SnackBar(content: Text(successMessage)));
 
       // Optional: Log event to Firebase
-      await AnalyticsService().logSaveStatus();
+      await AnalyticsService.logSaveStatus();
     }
   } catch (e) {
     // Handle errors
@@ -249,7 +249,7 @@ Future<void> deleteSaveStatusFromDevice(
     }
 
     // Optional: Log event to Firebase
-    // await AnalyticsService().logSaveStatus();
+    // await AnalyticsService.logSaveStatus();
   } catch (e) {
     // Handle errors
     if (showSnackBar) {

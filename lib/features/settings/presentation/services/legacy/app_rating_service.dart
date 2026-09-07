@@ -4,7 +4,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/utils/legacy_app_constants.dart';
-import '../../../../analytics/data/services/firebase_analytics_service.dart';
+import '../../../../analytics/data/services/analytics_service.dart';
 import '../../../../monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import '../../../presentation/widgets/legacy/rating_dialog.dart';
 import 'feedback_helper.dart';

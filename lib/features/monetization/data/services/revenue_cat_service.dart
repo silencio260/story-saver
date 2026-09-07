@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
-import 'package:storysaver/features/analytics/data/services/firebase_analytics_service.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 class RevenueCatService {
   static CustomerInfo? _customerInfo;

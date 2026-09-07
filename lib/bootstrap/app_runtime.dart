@@ -6,7 +6,9 @@ import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
+import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 
@@ -30,6 +32,8 @@ final class AppRuntime {
     required this.iap,
     required this.push,
     required this.feedback,
+    required this.remoteConfig,
+    required this.retention,
   });
 
   /// The module coordinator.
@@ -75,6 +79,12 @@ final class AppRuntime {
 
   /// User feedback submission.
   final FeedbackProvider feedback;
+
+  /// Typed remote configuration.
+  final RemoteConfigCoordinator remoteConfig;
+
+  /// Retention history, milestones and targeting.
+  final RetentionTracker retention;
 
   /// Whether every required module started.
   bool get isHealthy => initialization.isSuccess;

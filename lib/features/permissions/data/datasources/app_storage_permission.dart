@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/core/utils/legacy_app_constants.dart';
-import 'package:storysaver/features/analytics/data/services/firebase_analytics_service.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 import '../services/push_notification_service.dart';
 // import 'package:saf/saf.dart';
 

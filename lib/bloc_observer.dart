@@ -1,12 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genrevibes_crash/genrevibes_crash.dart';
 
+/// Forwards bloc failures to the crash reporter.
+///
+/// The previous observer printed the error and stopped there, so every failure
+/// inside a bloc was invisible in production. A bloc error does not reach
+/// `FlutterError.onError` or the guarded zone — bloc catches it and routes it
+/// here — so without this the reporter never learns about it at all.
+///
+/// Reported as non-fatal: a bloc error is handled, the widget tree survives it,
+/// and treating it as a crash would misstate the crash-free rate.
 class AppBlocObserver extends BlocObserver {
-  const AppBlocObserver();
+  /// Creates an observer that reports through [crash].
+  const AppBlocObserver(this._crash);
+
+  final CrashCoordinator _crash;
 
   @override
   void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
-    debugPrint('${bloc.runtimeType}: $error');
+    if (kDebugMode) debugPrint('${bloc.runtimeType}: $error');
+    unawaited(
+      _crash.report(
+        CrashReport(
+          error: error,
+          stackTrace: stackTrace,
+          reason: '${bloc.runtimeType} failed',
+          fatal: false,
+          source: CrashSource.bloc,
+        ),
+      ),
+    );
     super.onError(bloc, error, stackTrace);
   }
 }

@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../../analytics/domain/entities/analytics_event.dart';
-import '../../../analytics/domain/repositories/analytics_repository.dart';
-import '../services/ads/ad_config.dart';
+import 'package:genrevibes_analytics/genrevibes_analytics.dart';
+import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
+import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
+
+import '../../../../container_injector.dart';
 import '../../../../config/ad_unit_ids.dart';
 import '../services/subscription_service.dart';
 import 'ads_base_remote_data_source.dart';
@@ -12,12 +14,19 @@ import 'ads_base_remote_data_source.dart';
 class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
   GoogleMobileAdsRemoteDataSource({
     required SubscriptionManager subscriptionManager,
-    required AnalyticsBaseRepo analyticsRepo,
+    required AnalyticsPipeline analyticsRepo,
   }) : _subscriptionManager = subscriptionManager,
        _analyticsRepo = analyticsRepo;
 
   final SubscriptionManager _subscriptionManager;
-  final AnalyticsBaseRepo _analyticsRepo;
+  final AnalyticsPipeline _analyticsRepo;
+
+  /// Ad pacing, from remote configuration with schema defaults as the floor.
+  ///
+  /// Read per use rather than cached, so a remote change takes effect without
+  /// a restart. This replaces AdConfig, which snapshotted three values once at
+  /// startup and never looked again.
+  RemoteConfigSnapshot get _config => sl<RemoteConfigCoordinator>().current;
 
   InterstitialAd? _interstitialAd;
   bool _isLoading = false;
@@ -40,7 +49,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     if (!_initialDelayApplied) {
       _initialDelayApplied = true;
       await Future<void>.delayed(
-        Duration(seconds: AdConfig.timeBeforeFirstInterstitialAd),
+        Duration(seconds: _config.read(AdsPolicyKeys.timeBeforeFirstInterstitial)),
       );
     }
     if (_adsDisabled || _subscriptionManager.isPremium) {
@@ -108,7 +117,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
 
   Future<void> _reloadAfterInterval() async {
     await Future<void>.delayed(
-      Duration(seconds: AdConfig.minInterstitialAdInterval),
+      Duration(seconds: _config.read(AdsPolicyKeys.minInterstitialInterval)),
     );
     try {
       await loadInterstitial();
@@ -124,10 +133,10 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     String currencyCode,
   ) {
     unawaited(
-      _analyticsRepo.log(
-        AnalyticsEventEntity(
+      _analyticsRepo.track(
+        AnalyticsEvent(
           name: 'ad_impression',
-          parameters: <String, Object>{
+          properties: <String, Object>{
             'ad_unit_id': ad.adUnitId,
             'ad_format': 'interstitial',
             'value_micros': valueMicros,
