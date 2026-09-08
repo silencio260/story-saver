@@ -8,6 +8,9 @@ class SettingsStrings {
   static const String support = 'Support';
   static const String feedback = 'Feedback';
   static const String privacyPolicy = 'Privacy Policy';
+  static const String privacyOptions = 'Privacy Options';
+  static const String privacyOptionsFailed =
+      'Could not open the privacy options form.';
   static const String privacyPolicyTapped = 'Privacy Policy tapped';
   static const String subscriptionManagement = 'Subscription Management';
   static const String autoSave = 'Auto Save Statuses';

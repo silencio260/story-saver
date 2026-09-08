@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/routes_manager.dart';
 import '../../../../bootstrap/app_runtime.dart';
+import 'package:genrevibes_consent/genrevibes_consent.dart';
+
 import '../../../../container_injector.dart';
 import '../../../../core/utils/development_mode_utils.dart';
 import '../../../analytics/domain/entities/analytics_event.dart';
@@ -134,6 +136,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     context,
                                   ),
                             ),
+                            // UMP requires a persistent entry point wherever
+                            // it reports privacy options as required, so this
+                            // appears only for users it actually applies to.
+                            if (sl<ConsentGate>()
+                                .snapshot
+                                .privacyOptionsRequired) ...<Widget>[
+                              const SizedBox(height: 12),
+                              _settingsItem(
+                                icon: Icons.tune,
+                                label: SettingsStrings.privacyOptions,
+                                onTap: _showPrivacyOptions,
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             _settingsItem(
                               icon: Icons.privacy_tip_outlined,
@@ -209,6 +224,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     ),
   );
+
+  /// Reopens the UMP consent form so a user can change their ad choices.
+  Future<void> _showPrivacyOptions() async {
+    final result = await sl<ConsentGate>().showPrivacyOptions();
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) {},
+      onFailure: (_) => _showMessage(SettingsStrings.privacyOptionsFailed),
+    );
+  }
 
   List<Widget> _developerOptions(IapState iapState) => <Widget>[
     const Divider(),

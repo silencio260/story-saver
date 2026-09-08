@@ -43,6 +43,7 @@ final class AppEnv {
     required this.interstitialAdUnitId,
     this.forceSessionReplay = false,
     this.forceConsentDebugEea = false,
+    this.consentTestDeviceIds = '',
   });
 
   /// Reads the environment from compile-time defines.
@@ -62,6 +63,8 @@ final class AppEnv {
       interstitialAdUnitId: String.fromEnvironment('interstitial_ad_id'),
       forceSessionReplay: bool.fromEnvironment('posthog_session_replay'),
       forceConsentDebugEea: bool.fromEnvironment('consent_debug_eea'),
+      consentTestDeviceIds:
+          String.fromEnvironment('consent_debug_device_ids'),
     );
   }
 
@@ -103,6 +106,22 @@ final class AppEnv {
   /// the form deliberately.
   final bool forceConsentDebugEea;
 
+  /// Hashed device identifiers UMP should treat as test devices.
+  ///
+  /// Comma separated. Required for [forceConsentDebugEea] to do anything at
+  /// all: UMP applies a debug geography only to devices registered here, and
+  /// silently ignores it everywhere else. The hash is printed to logcat on
+  /// every run — look for "UserMessagingPlatform: Use new
+  /// ConsentDebugSettings.Builder().addTestDeviceHashedId(...)".
+  final String consentTestDeviceIds;
+
+  /// [consentTestDeviceIds] split into a list.
+  List<String> get consentTestDeviceIdList => consentTestDeviceIds
+      .split(',')
+      .map((id) => id.trim())
+      .where((id) => id.isNotEmpty)
+      .toList(growable: false);
+
   /// Crash collection is off in development so local runs do not pollute
   /// production crash-free rates.
   CrashReportingConfig get crash =>
@@ -115,8 +134,9 @@ final class AppEnv {
   /// should never have seen it.
   ConsentDebugConfig get consentDebug =>
       isDevelopment && forceConsentDebugEea
-          ? const ConsentDebugConfig(
+          ? ConsentDebugConfig(
               geography: ConsentDebugGeography.europeanEconomicArea,
+              testDeviceIds: consentTestDeviceIdList,
             )
           : const ConsentDebugConfig();
 
