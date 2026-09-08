@@ -41,6 +41,8 @@ final class AppEnv {
     required this.feedbackNestApiKey,
     required this.bannerAdUnitId,
     required this.interstitialAdUnitId,
+    this.forceSessionReplay = false,
+    this.forceConsentDebugEea = false,
   });
 
   /// Reads the environment from compile-time defines.
@@ -58,6 +60,8 @@ final class AppEnv {
       feedbackNestApiKey: String.fromEnvironment('feed_back_nest_api_key'),
       bannerAdUnitId: String.fromEnvironment('banner_ad_id'),
       interstitialAdUnitId: String.fromEnvironment('interstitial_ad_id'),
+      forceSessionReplay: bool.fromEnvironment('posthog_session_replay'),
+      forceConsentDebugEea: bool.fromEnvironment('consent_debug_eea'),
     );
   }
 
@@ -82,6 +86,23 @@ final class AppEnv {
   /// AdMob interstitial unit.
   final String interstitialAdUnitId;
 
+  /// Turns PostHog session replay on even in a development build.
+  ///
+  /// Replay is normally release-only, which makes it impossible to check that
+  /// it records anything, or that masking behaves, without shipping. Pass
+  /// `--dart-define=posthog_session_replay=true` to exercise it locally.
+  final bool forceSessionReplay;
+
+  /// Forces UMP into European geography for testing the consent form.
+  ///
+  /// Off by default. It used to be on in every development build, which meant
+  /// UMP reported `consentRequired` on every local run, and because consent
+  /// gates the analytics pipeline, **no event reached any sink until the form
+  /// was completed**. Analytics appeared to be broken when it was working
+  /// exactly as designed. Pass `--dart-define=consent_debug_eea=true` to test
+  /// the form deliberately.
+  final bool forceConsentDebugEea;
+
   /// Crash collection is off in development so local runs do not pollute
   /// production crash-free rates.
   CrashReportingConfig get crash =>
@@ -92,11 +113,12 @@ final class AppEnv {
   /// Inactive outside development. The previous implementation hardcoded an
   /// EEA geography in every build, which forced the consent form on users who
   /// should never have seen it.
-  ConsentDebugConfig get consentDebug => isDevelopment
-      ? const ConsentDebugConfig(
-          geography: ConsentDebugGeography.europeanEconomicArea,
-        )
-      : const ConsentDebugConfig();
+  ConsentDebugConfig get consentDebug =>
+      isDevelopment && forceConsentDebugEea
+          ? const ConsentDebugConfig(
+              geography: ConsentDebugGeography.europeanEconomicArea,
+            )
+          : const ConsentDebugConfig();
 
   /// The banner unit, for `AdMobBannerView`.
   ///
@@ -155,7 +177,7 @@ final class AppEnv {
   GenRevibesPostHogConfiguration get postHog => GenRevibesPostHogConfiguration(
         apiKey: postHogApiKey,
         debug: true,
-        sessionReplayEnabled: !isDevelopment,
+        sessionReplayEnabled: forceSessionReplay || !isDevelopment,
         maskAllTexts: false,
         maskAllImages: false,
       );

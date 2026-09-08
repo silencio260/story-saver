@@ -46,6 +46,8 @@ DevToolsHost _host() {
     permissions: sl<PermissionProvider>(),
     remoteConfig: sl<RemoteConfigCoordinator>(),
     remoteConfigSchema: PortfolioRemoteConfigSchema.build(),
+    // Analytics-name overrides are left out: this app does not rename events
+    // remotely, and their forty-two keys buried the three it does configure.
     identity: sl<DeviceIdentityResolver>(),
     retention: sl<RetentionTracker>(),
     crash: sl<CrashCoordinator>(),

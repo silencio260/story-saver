@@ -197,8 +197,29 @@ void main() {
       expect(env.crash.collectionEnabled, isFalse);
     });
 
-    test('only activates consent debug geography in development', () {
-      expect(env.consentDebug.isActive, isTrue);
+    test('does not force a consent geography just because it is a debug build',
+        () {
+      // This used to force European geography in every development build, so
+      // UMP reported consentRequired locally, and because consent gates the
+      // analytics pipeline no event reached any sink until the form was
+      // completed. Analytics looked broken while working exactly as designed.
+      expect(env.consentDebug.isActive, isFalse);
+    });
+
+    test('forces European geography only when explicitly asked', () {
+      const testingTheForm = AppEnv(
+        isDevelopment: true,
+        revenueCatAndroidKey: '',
+        oneSignalAppId: '',
+        postHogApiKey: '',
+        feedbackNestApiKey: '',
+        bannerAdUnitId: '',
+        interstitialAdUnitId: '',
+        forceConsentDebugEea: true,
+      );
+      expect(testingTheForm.consentDebug.isActive, isTrue);
+
+      // Never in a release build, whatever the flag says.
       const production = AppEnv(
         isDevelopment: false,
         revenueCatAndroidKey: '',
@@ -207,9 +228,28 @@ void main() {
         feedbackNestApiKey: '',
         bannerAdUnitId: '',
         interstitialAdUnitId: '',
+        forceConsentDebugEea: true,
       );
       expect(production.consentDebug.isActive, isFalse);
       expect(production.crash.collectionEnabled, isTrue);
+    });
+
+    test('session replay can be turned on in a development build', () {
+      // Release-only replay cannot be verified without shipping, so masking
+      // behaviour and whether it records at all were untestable.
+      expect(env.postHog.sessionReplayEnabled, isFalse);
+
+      const forced = AppEnv(
+        isDevelopment: true,
+        revenueCatAndroidKey: '',
+        oneSignalAppId: '',
+        postHogApiKey: '',
+        feedbackNestApiKey: '',
+        bannerAdUnitId: '',
+        interstitialAdUnitId: '',
+        forceSessionReplay: true,
+      );
+      expect(forced.postHog.sessionReplayEnabled, isTrue);
     });
   });
 }
