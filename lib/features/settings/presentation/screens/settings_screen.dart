@@ -17,8 +17,9 @@ import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../bloc/settings_bloc/settings_bloc.dart';
 import '../l10n/settings_strings.dart';
 import '../services/legacy/app_rating_service.dart';
+import '../../../developer/dev_tools_entry.dart';
 import 'module_health_screen.dart';
-import 'starter_kit_lab_screen.dart';
+
 import '../services/legacy/developer_options_service.dart';
 import '../services/legacy/feedback_helper.dart';
 import '../widgets/legacy/help_modal.dart';
@@ -236,10 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // way to find the failures a test cannot reach.
     _settingsItem(
       icon: Icons.science_outlined,
-      label: SettingsStrings.starterKitLab,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const StarterKitLabScreen()),
-      ),
+      label: SettingsStrings.analyticsBench,
+      onTap: () => openAnalyticsBench(context),
     ),
     const SizedBox(height: 12),
     _settingsItem(

@@ -49,6 +49,8 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_engagement:
     path: packages/genrevibes_starter_kit/modules/engagement/genrevibes_engagement
+  genrevibes_devtools:
+    path: packages/genrevibes_starter_kit/modules/devtools/genrevibes_devtools
   genrevibes_permissions:
     path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions
   genrevibes_permissions_handler:
@@ -213,6 +215,8 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_engagement:
     path: packages/genrevibes_starter_kit/modules/engagement/genrevibes_engagement
+  genrevibes_devtools:
+    path: packages/genrevibes_starter_kit/modules/devtools/genrevibes_devtools
   genrevibes_permissions:
     path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions
   genrevibes_permissions_handler:

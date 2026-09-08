@@ -18,7 +18,7 @@ class SettingsStrings {
   static const String share = 'Share';
   static const String developerOptions = 'Developer Options';
   static const String moduleHealth = 'Starter Kit Module Health';
-  static const String starterKitLab = 'Starter Kit Lab (test everything)';
+  static const String analyticsBench = 'Analytics — fire every event';
   static const String resetOnboarding = 'Reset Onboarding';
   static const String resetRatingCount = 'Reset count to first review popup';
   static const String ratingCountReset = 'Download count reset to 0';

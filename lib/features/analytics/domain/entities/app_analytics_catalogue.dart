@@ -1,0 +1,281 @@
+import 'dart:io' show Platform;
+
+import 'package:genrevibes_devtools/genrevibes_devtools.dart';
+
+/// Every analytics event this application emits.
+///
+/// Verified against the emitters rather than written from memory. The previous
+/// diagnostics screen kept its own list, which had drifted badly: five names in
+/// it are emitted nowhere in `lib/`, and three more were `..._whatsapp_...`
+/// spellings of events the app actually sends as `..._wa_...`. It was filling
+/// dashboards with events production never sends while never exercising the
+/// real ones.
+///
+/// When an event is added, it goes here and the emitter reads it from here.
+abstract final class AppAnalyticsCatalogue {
+  /// Attached to every event by `AnalyticsService`.
+  ///
+  /// Events sent through `AnalyticsBloc` do not currently carry this, which is
+  /// a real inconsistency between the two paths rather than something the
+  /// bench should paper over.
+  static Map<String, Object?> get alwaysAttached => <String, Object?>{
+        'platform': Platform.operatingSystem,
+      };
+
+  /// The catalogue, grouped for navigation.
+  static DevAnalyticsCatalogue get catalogue => DevAnalyticsCatalogue(
+        alwaysAttached: alwaysAttached,
+        events: const <DevEventSpec>[
+          // ----------------------------------------------------- lifecycle
+          DevEventSpec(
+            name: 'app_open',
+            group: 'Lifecycle',
+            description: 'Emitted by AnalyticsBloc on AnalyticsStarted.',
+          ),
+          DevEventSpec(
+            name: 'goto_splash_screen',
+            group: 'Lifecycle',
+            description: 'Splash screen shown.',
+          ),
+          DevEventSpec(
+            name: 'goto_home_page',
+            group: 'Lifecycle',
+            description: 'Home reached from splash.',
+          ),
+          DevEventSpec(
+            name: 'onboarding_complete',
+            group: 'Lifecycle',
+            description: 'Final onboarding page dismissed.',
+          ),
+
+          // -------------------------------------------------------- media
+          DevEventSpec(
+            name: 'save_status',
+            group: 'Media',
+            description: 'A single status was saved.',
+          ),
+          DevEventSpec(
+            name: 'download_all',
+            group: 'Media',
+            description: 'Bulk download started.',
+          ),
+          DevEventSpec(
+            name: 'auto_save_enabled',
+            group: 'Media',
+            description: 'Auto-save switched on in settings.',
+          ),
+          DevEventSpec(
+            name: 'auto_save_disabled',
+            group: 'Media',
+            description: 'Auto-save switched off in settings.',
+          ),
+          DevEventSpec(
+            name: 'switch_to_business_mode',
+            group: 'Media',
+            description: 'Source switched to WhatsApp Business.',
+          ),
+          DevEventSpec(
+            name: 'switch_to_normal_mode',
+            group: 'Media',
+            description:
+                'Source switched back to WhatsApp, or premium was lost.',
+          ),
+
+          // -------------------------------------------------- permissions
+          // These are the real spellings. The old bench fired
+          // `request_whatsapp_folder_permission` and friends, which no emitter
+          // uses.
+          DevEventSpec(
+            name: 'request_folder_permission',
+            group: 'Permissions',
+            description: 'Status folder permission screen shown.',
+          ),
+          DevEventSpec(
+            name: 'grant_wa_folder_permission',
+            group: 'Permissions',
+            description: 'WhatsApp status folder granted.',
+          ),
+          DevEventSpec(
+            name: 'denied_wa_folder_permission',
+            group: 'Permissions',
+            description: 'WhatsApp status folder refused.',
+          ),
+          DevEventSpec(
+            name: 'grant_business_folder_permission',
+            group: 'Permissions',
+            description: 'Business status folder granted.',
+          ),
+          DevEventSpec(
+            name: 'denied_business_folder_permission',
+            group: 'Permissions',
+            description: 'Business status folder refused.',
+          ),
+          DevEventSpec(
+            name: 'grant_Android/Media_folder_permission',
+            group: 'Permissions',
+            description: 'Android media permission granted. The mixed case and '
+                'slash are deliberate — renaming splits the metric.',
+          ),
+
+          // ------------------------------------------------- monetisation
+          DevEventSpec(
+            name: 'view_paywall',
+            group: 'Monetisation',
+            description: 'RevenueCat paywall presented.',
+          ),
+          DevEventSpec(
+            name: 'view_paywall_modal',
+            group: 'Monetisation',
+            description: 'In-app premium modal shown.',
+          ),
+          DevEventSpec(
+            name: 'remove_ads_clicked',
+            group: 'Monetisation',
+            description: 'Remove-ads entry tapped in settings.',
+          ),
+          DevEventSpec(
+            name: 'custom_purchase',
+            group: 'Monetisation',
+            description: 'A purchase completed.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'currency',
+                kind: DevParamKind.text,
+                example: 'USD',
+              ),
+              DevParamSpec(
+                name: 'value',
+                kind: DevParamKind.number,
+                example: 4.99,
+                description: 'Price paid.',
+              ),
+              DevParamSpec(
+                name: 'item_id',
+                kind: DevParamKind.text,
+                example: 'premium_yearly',
+                description: 'Product identifier.',
+              ),
+              DevParamSpec(
+                name: 'item_name',
+                kind: DevParamKind.text,
+                example: 'Pro',
+                description: 'Entitlement identifier.',
+              ),
+              DevParamSpec(
+                name: 'quantity',
+                kind: DevParamKind.integer,
+                example: 1,
+              ),
+            ],
+          ),
+          DevEventSpec(
+            name: 'custom_paywall_cancelled',
+            group: 'Monetisation',
+            description: 'Paywall dismissed without purchasing.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'entitlement_id',
+                kind: DevParamKind.text,
+                example: 'Pro',
+              ),
+            ],
+          ),
+          DevEventSpec(
+            name: 'custom_purchases_restored',
+            group: 'Monetisation',
+            description: 'Purchases restored.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'entitlement_id',
+                kind: DevParamKind.text,
+                example: 'Pro',
+              ),
+            ],
+          ),
+          DevEventSpec(
+            name: 'custom_customer_center_viewed',
+            group: 'Monetisation',
+            description: 'RevenueCat customer centre opened.',
+          ),
+          DevEventSpec(
+            name: 'ad_impression',
+            group: 'Monetisation',
+            description: 'AdMob paid event, from the banner and interstitial '
+                'paths.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'ad_unit_id',
+                kind: DevParamKind.text,
+                example: 'ca-app-pub-3940256099942544/6300978111',
+              ),
+              DevParamSpec(
+                name: 'ad_format',
+                kind: DevParamKind.text,
+                example: 'banner',
+              ),
+              DevParamSpec(
+                name: 'value_micros',
+                kind: DevParamKind.number,
+                example: 1500,
+              ),
+              DevParamSpec(
+                name: 'currency',
+                kind: DevParamKind.text,
+                example: 'USD',
+              ),
+            ],
+          ),
+
+          // ------------------------------------------------------ support
+          DevEventSpec(
+            name: 'share_app',
+            group: 'Support',
+            description: 'App shared.',
+          ),
+          DevEventSpec(
+            name: 'goto_app_store_page',
+            group: 'Support',
+            description: 'Store listing opened.',
+          ),
+          DevEventSpec(
+            name: 'show_help',
+            group: 'Support',
+            description: 'Help modal opened.',
+          ),
+
+          // ------------------------------------------------------- rating
+          DevEventSpec(
+            name: 'rating_submitted',
+            group: 'Rating',
+            description: 'A rating was submitted.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'star_count',
+                kind: DevParamKind.integer,
+                example: 5,
+              ),
+            ],
+          ),
+          DevEventSpec(
+            name: 'rating_4_stars',
+            group: 'Rating',
+            description: 'Four stars given.',
+          ),
+          DevEventSpec(
+            name: 'rating_5_stars',
+            group: 'Rating',
+            description: 'Five stars given.',
+          ),
+          DevEventSpec(
+            name: 'rating_maybe_later',
+            group: 'Rating',
+            description: 'Rating prompt postponed.',
+          ),
+          DevEventSpec(
+            name: 'rating_never',
+            group: 'Rating',
+            description: 'Rating prompt declined permanently.',
+          ),
+        ],
+      );
+}

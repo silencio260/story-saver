@@ -615,6 +615,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_devtools:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/devtools/genrevibes_devtools"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_engagement:
     dependency: "direct main"
     description:
