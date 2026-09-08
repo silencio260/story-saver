@@ -20,6 +20,8 @@ import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_iap_revenuecat_ui/genrevibes_iap_revenuecat_ui.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
+import 'package:genrevibes_permissions/genrevibes_permissions.dart';
+import 'package:genrevibes_permissions_handler/genrevibes_permissions_handler.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_config_firebase/genrevibes_remote_config_firebase.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
@@ -62,9 +64,11 @@ abstract final class AppModules {
   /// Retention and targeting.
   static const engagement = 'engagement';
 
+  /// Runtime permissions.
+  static const permissions = 'permissions';
+
   /// Registered but disabled until their feature migrates.
   static const disabled = <String>[
-    'permissions',
     'app_rating',
     'onboarding',
     'app_links',
@@ -135,6 +139,7 @@ Future<AppRuntime> bootstrapApp(
   );
   // Retention milestones are analytics events, so the tracker reports through
   // the pipeline rather than reaching for a sink of its own.
+  final permissions = dependencies.permissions ?? PermissionHandlerProvider();
   final retention = RetentionTracker(
     store: store,
     observer: AnalyticsEngagementObserver(analytics),
@@ -215,6 +220,11 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.engagement,
         create: () => retention,
+        isRequired: false,
+      ),
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.permissions,
+        create: () => permissions,
         isRequired: false,
       ),
       for (final moduleId in AppModules.disabled)
@@ -317,6 +327,7 @@ Future<AppRuntime> bootstrapApp(
     feedback: feedback,
     remoteConfig: remoteConfig,
     retention: retention,
+    permissions: permissions,
   );
 }
 
@@ -337,6 +348,7 @@ final class BootstrapDependencies {
     this.push,
     this.feedback,
     this.remoteConfig,
+    this.permissions,
   });
 
   /// Backing key-value store.
@@ -368,6 +380,9 @@ final class BootstrapDependencies {
 
   /// Remote configuration provider.
   final RemoteConfigProvider? remoteConfig;
+
+  /// Runtime permission provider.
+  final PermissionProvider? permissions;
 }
 
 /// Routes starter-kit lifecycle logs to the console during development.

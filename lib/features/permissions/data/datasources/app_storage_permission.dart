@@ -1,14 +1,16 @@
 import 'dart:io';
 
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:docman/docman.dart';
 // import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:genrevibes_permissions/genrevibes_permissions.dart' as kit;
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/core/utils/legacy_app_constants.dart';
 import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
-import '../services/push_notification_service.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
+import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+
+import '../../../../container_injector.dart';
 // import 'package:saf/saf.dart';
 
 class AppStoragePermission {
@@ -20,12 +22,14 @@ class AppStoragePermission {
     if (status) {
       return true;
     } else {
-      final storagePermission =
-          await Permission.manageExternalStorage.request();
-      if (storagePermission.isGranted) {
+      final storagePermission = await _permissions.request(
+        kit.PermissionKind.manageExternalStorage,
+      );
+      if (_granted(storagePermission)) {
         return true;
       } else {
-        openAppSettings(); // Optionally prompt user to open settings for manual permission
+        // Prompt the user to grant it manually.
+        await _permissions.openSettings();
         return false;
       }
     }
@@ -38,13 +42,10 @@ class AppStoragePermission {
     if (status) {
       return true;
     } else {
-      final storagePermission =
-          await Permission.manageExternalStorage.request();
-      if (storagePermission.isGranted) {
-        return true;
-      } else {
-        return false;
-      }
+      final storagePermission = await _permissions.request(
+        kit.PermissionKind.manageExternalStorage,
+      );
+      return _granted(storagePermission);
     }
 
     return false;
@@ -61,37 +62,28 @@ class AppStoragePermission {
     }
   }
 
+  kit.PermissionProvider get _permissions => sl<kit.PermissionProvider>();
+
+  bool _granted(KitResult<kit.PermissionState> result) {
+    return result.fold(
+      onSuccess: (state) =>
+          state == kit.PermissionState.granted || state == kit.PermissionState.limited,
+      onFailure: (_) => false,
+    );
+  }
+
   Future<bool> forceRequestAllPermissions() async {
     if (Platform.isAndroid) {
-      Map<Permission, PermissionStatus> statuses;
+      // The Android 13 split between photos/videos/audio and the older single
+      // storage permission is the adapter's job now. This used to read the SDK
+      // level itself and pick the permission list, which every application in
+      // the portfolio then copied.
+      await _permissions.request(kit.PermissionKind.storage);
 
-      // Get Android version
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      int sdkInt = androidInfo.version.sdkInt;
+      await sl<PushNotificationProvider>().requestPermission();
 
-      if (sdkInt >= 33) {
-        // Android 13+
-        statuses =
-            await [
-              Permission.photos,
-              Permission.videos,
-              Permission.audio,
-            ].request();
-      } else {
-        // Android 12 and below
-        statuses = await [Permission.storage].request();
-      }
-
-      // Print all results
-      statuses.forEach((permission, status) async {
-        // print('perm_status $permission: $status');
-      });
-
-      await PushNotification().initializeAndPrompt();
-
-      // Now try PhotoManager
+      // App-specific: the gallery library keeps its own permission handshake.
       final ps = await PhotoManager.requestPermissionExtend();
-      // print("PhotoManager permission after direct request: ${ps.isAuth}");
       return ps.isAuth;
     }
     return false;

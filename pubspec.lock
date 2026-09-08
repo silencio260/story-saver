@@ -510,6 +510,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_ads_admob_ui:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_analytics:
     dependency: "direct main"
     description:
@@ -531,10 +538,31 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_app_links:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_app_links_launcher:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links_launcher"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_app_rating:
     dependency: "direct overridden"
     description:
       path: "packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_app_rating_in_app_review:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating_in_app_review"
       relative: true
     source: path
     version: "0.1.0-dev.1"
@@ -636,10 +664,38 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_notifications_local:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_local"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_notifications_onesignal:
     dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_onesignal"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_onboarding:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/onboarding/genrevibes_onboarding"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_permissions:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_permissions_handler:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions_handler"
       relative: true
     source: path
     version: "0.1.0-dev.1"
@@ -661,6 +717,13 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_policy"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_settings:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/settings/genrevibes_settings"
       relative: true
     source: path
     version: "0.1.0-dev.1"

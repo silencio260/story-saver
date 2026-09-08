@@ -7,6 +7,7 @@ import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
@@ -36,5 +37,6 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<PushNotificationProvider>(runtime.push)
     ..registerSingleton<FeedbackProvider>(runtime.feedback)
     ..registerSingleton<RemoteConfigCoordinator>(runtime.remoteConfig)
-    ..registerSingleton<RetentionTracker>(runtime.retention);
+    ..registerSingleton<RetentionTracker>(runtime.retention)
+    ..registerSingleton<PermissionProvider>(runtime.permissions);
 }

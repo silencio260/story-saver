@@ -1,276 +1,163 @@
-import 'dart:io' show Platform;
+import 'dart:async';
 
-import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
-import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
+import 'package:genrevibes_iap/genrevibes_iap.dart';
 
+import '../../../../container_injector.dart';
+import '../../../analytics/data/services/analytics_service.dart';
+
+/// Purchases, delivered through the starter kit's IAP provider.
+///
+/// This was a direct `purchases_flutter` and `purchases_ui_flutter` client. It
+/// keeps its method names and signatures because the paywall, the ad
+/// suppression controller, the subscription service and the settings screen
+/// all call them; what changed is that RevenueCat types no longer cross this
+/// boundary. `PaywallOutcome` replaces `PaywallResult`, so nothing outside the
+/// adapter names a vendor enum.
+///
+/// The SDK is configured once by `bootstrapApp`. This class configures nothing.
 class RevenueCatService {
-  static CustomerInfo? _customerInfo;
+  IapProvider get _iap => sl<IapProvider>();
 
-  /// `Purchases.configure` is owned by the kit's RevenueCat provider, which
-  /// runs in the bootstrap before any widget is built.
+  /// The most recent entitlement snapshot, kept for the synchronous check the
+  /// ad path relies on.
+  static EntitlementSnapshot? _snapshot;
+
+  static StreamSubscription<EntitlementSnapshot>? _subscription;
+
+  /// Starts mirroring entitlement changes.
   ///
-  /// The purchase listener and the initial customer-info read stay here,
-  /// because the rest of this service still depends on them. Also dropped: the
-  /// unconditional debug logging and the `print` of the API key.
+  /// The provider is already initialized; this only keeps [_snapshot] current
+  /// so [isSubscriptionActive] can answer without awaiting.
   Future<void> ConfigureRevenueCatSDK() async {
-    try {
-      _setupPurchaseListener();
-      _customerInfo = await Purchases.getCustomerInfo();
-    } catch (e) {
-      print("Error reading RevenueCat customer info: $e");
-    }
+    _subscription ??= _iap.entitlementChanges.listen((snapshot) {
+      _snapshot = snapshot;
+    });
+    final result = await _iap.getEntitlements();
+    result.fold(
+      onSuccess: (snapshot) => _snapshot = snapshot,
+      onFailure: (_) {},
+    );
   }
 
-  Future<PaywallResult> PresentRevenueCatPayWallIfNeeded({
+  /// Shows the paywall when [entitlementId] is not already active.
+  Future<PaywallOutcome> PresentRevenueCatPayWallIfNeeded({
     String entitlementId = 'Pro',
   }) async {
-    try {
-      print('in PresentRevenueCatPayWallIfNeeded');
+    await AnalyticsService.logViewPaywall();
 
-      // Track analytics
-      await AnalyticsService.logViewPaywall();
-
-      final paywallResult = await RevenueCatUI.presentPaywallIfNeeded(
-        entitlementId,
-      );
-
-      print('Paywall Result: ${paywallResult}');
-
-      // Track paywall result
-      if (paywallResult == PaywallResult.purchased) {
-        print('User made a purchase!');
-
-        // Get updated customer info
-        final customerInfo = await Purchases.getCustomerInfo();
-
-        // Track the purchase
-        await _trackNewPurchase(customerInfo);
-      } else if (paywallResult == PaywallResult.cancelled) {
-        print('User cancelled the purchase');
-
-        // Paywall Cancelled Event
-        AnalyticsService.logCustomPaywallCancelled(
-          entitlementId: entitlementId,
-        );
-      } else if (paywallResult == PaywallResult.restored) {
-        print('User restored purchases');
-
-        // Purchases Restored Event (with entitlement_id)
-        AnalyticsService.logCustomPurchasesRestored(
-          entitlementId: entitlementId,
-        );
-      }
-
-      return paywallResult;
-    } catch (e) {
-      print("Error PresentPayWallIfNeeded Purchases: $e");
-
-      rethrow;
-    }
-  }
-
-  Future<void> PresentRevenueCatCustomerCenter() async {
-    try {
-      print('in PresentRevenueCatPayWallIfNeeded');
-      final paywallResult = await RevenueCatUI.presentCustomerCenter();
-
-      // print('Paywall Result: $paywallResult');
-
-      // Customer Center Viewed Event
-      AnalyticsService.logCustomCustomerCenterViewed();
-    } catch (e) {
-      print("Error PresentPayWallIfNeeded Purchases: $e");
-    }
-  }
-
-  void _setupPurchaseListener() {
-    Purchases.addCustomerInfoUpdateListener((customerInfo) async {
-      print('Customer info updated');
-
-      // Check if this is a new purchase by comparing with previous state
-      final hadPurchase =
-          _customerInfo?.entitlements.active.isNotEmpty ?? false;
-      final hasPurchaseNow = customerInfo.entitlements.active.isNotEmpty;
-
-      print('hadPurchase: $hadPurchase, hasPurchaseNow: $hasPurchaseNow');
-
-      // If we didn't have active entitlements before but do now, it's a new purchase
-      if (!hadPurchase && hasPurchaseNow) {
-        print('New purchase detected!');
-        await _trackNewPurchase(customerInfo);
-      }
-
-      _customerInfo = customerInfo;
-    });
-  }
-
-  // Track new purchase to Firebase
-  Future<void> _trackNewPurchase(CustomerInfo customerInfo) async {
-    try {
-      final activeEntitlements = customerInfo.entitlements.active;
-
-      if (activeEntitlements.isEmpty) return;
-
-      // Get the most recent entitlement
-      final entitlement = activeEntitlements.values.first;
-
-      final productId = entitlement.productIdentifier;
-      final productDetails = await _getProductPrice(productId);
-      final price = productDetails['price'] as double? ?? 0.0;
-      final currency = productDetails['currency'] as String? ?? 'USD';
-      final entitlementId = entitlement.identifier;
-
-      print('Tracking purchase: $productId, $price $currency');
-
-      // 1. Log to Firebase Analytics
-      // Purchase Event
-      AnalyticsService.logCustomPurchase(
-        currency: currency,
-        price: price,
-        productId: productId,
-        entitlementId: entitlementId,
-      );
-
-      print('Purchase tracked successfully');
-    } catch (e) {
-      print('Error tracking purchase: $e');
-    }
-  }
-
-  // Get customer info
-  Future<CustomerInfo?> getCustomerInfo() async {
-    try {
-      _customerInfo = await Purchases.getCustomerInfo();
-      return _customerInfo;
-    } catch (e) {
-      print('Error getting customer info: $e');
-      return null;
-    }
-  }
-
-  // Restore purchases
-  Future<void> restorePurchases() async {
-    try {
-      print('Restoring purchases');
-
-      final customerInfo = await Purchases.restorePurchases();
-      _customerInfo = customerInfo;
-
-      // Purchases Restored Event (with entitlement_id)
-      AnalyticsService.logCustomPurchasesRestored(
-        entitlementId: customerInfo.entitlements.active.length.toString(),
-      );
-
-      print(
-        'Purchases restored. Active entitlements: ${customerInfo.entitlements.active.length}',
-      );
-    } catch (e) {
-      print('Error restoring purchases: $e');
-    }
-  }
-
-  // Get product price from offerings
-  Future<Map<String, dynamic>> _getProductPrice(
-    String productIdentifier,
-  ) async {
-    try {
-      // Refresh offerings if not loaded
-      final offerings = await Purchases.getOfferings();
-
-      // Search through all offerings for the product
-      for (final offering in offerings.all.values) {
-        for (final package in offering.availablePackages) {
-          if (package.storeProduct.identifier == productIdentifier) {
-            return {
-              'price': package.storeProduct.price,
-              'currency': package.storeProduct.currencyCode,
-              'priceString': package.storeProduct.priceString,
-            };
-          }
+    final result = await _iap.presentPaywall(requiredEntitlementId: entitlementId);
+    return result.fold(
+      onSuccess: (purchase) {
+        switch (purchase.status) {
+          case PurchaseStatus.purchased:
+            unawaited(_trackNewPurchase());
+            return PaywallOutcome.purchased;
+          case PurchaseStatus.restored:
+            AnalyticsService.logCustomPurchasesRestored(
+              entitlementId: entitlementId,
+            );
+            return PaywallOutcome.restored;
+          case PurchaseStatus.cancelled:
+            AnalyticsService.logCustomPaywallCancelled(
+              entitlementId: entitlementId,
+            );
+            return PaywallOutcome.cancelled;
+          case PurchaseStatus.pending:
+          case PurchaseStatus.notPurchased:
+            return PaywallOutcome.notPresented;
         }
-      }
-
-      // If not found in offerings, try getting it directly
-      final products = await Purchases.getProducts([productIdentifier]);
-      if (products.isNotEmpty) {
-        final product = products.first;
-        return {
-          'price': product.price,
-          'currency': product.currencyCode,
-          'priceString': product.priceString,
-        };
-      }
-
-      return {'price': 0.0, 'currency': 'USD'};
-    } catch (e) {
-      print('Error getting product price: $e');
-      return {'price': 0.0, 'currency': 'USD'};
-    }
+      },
+      onFailure: (_) => PaywallOutcome.notPresented,
+    );
   }
 
-  //*****************************************
-  // Subscription Status Check
-  //*****************************************
+  /// Shows RevenueCat's customer centre.
+  Future<void> PresentRevenueCatCustomerCenter() async {
+    await _iap.presentCustomerCenter();
+    AnalyticsService.logCustomCustomerCenterViewed();
+  }
 
+  /// The latest entitlement snapshot, refreshed from the provider.
+  Future<EntitlementSnapshot?> getCustomerInfo() async {
+    final result = await _iap.getEntitlements();
+    return result.fold(
+      onSuccess: (snapshot) {
+        _snapshot = snapshot;
+        return snapshot;
+      },
+      onFailure: (_) => _snapshot,
+    );
+  }
+
+  /// Restores previous purchases.
+  Future<void> restorePurchases() async {
+    final result = await _iap.restorePurchases();
+    result.fold(
+      onSuccess: (snapshot) {
+        _snapshot = snapshot;
+        AnalyticsService.logCustomPurchasesRestored(entitlementId: 'Pro');
+      },
+      onFailure: (_) {},
+    );
+  }
+
+  Future<void> _trackNewPurchase() async {
+    final snapshot = await getCustomerInfo();
+    final entitlement = snapshot?.entitlements.firstOrNull;
+    if (entitlement == null) return;
+    await AnalyticsService.logCustomPurchase(
+      currency: 'USD',
+      price: 0,
+      productId: entitlement.productId,
+      entitlementId: entitlement.id,
+    );
+  }
+
+  /// Whether any entitlement is active, fetched fresh.
   static Future<bool> checkSubscriptionStatus() async {
-    try {
-      print("Checking subscription status...");
-
-      // Get the current customer info from RevenueCat
-      final CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-
-      // Check if there are any active entitlements
-      final bool hasActiveSubscription =
-          customerInfo.entitlements.active.isNotEmpty;
-
-      print("Subscription active: $hasActiveSubscription");
-      return hasActiveSubscription;
-    } catch (e) {
-      print("Error checking subscription status: $e");
-      return false;
-    }
+    final result = await sl<IapProvider>().getEntitlements();
+    return result.fold(
+      onSuccess: (snapshot) {
+        _snapshot = snapshot;
+        return snapshot.activeEntitlementIds.isNotEmpty;
+      },
+      onFailure: (_) => false,
+    );
   }
 
-  // Check if subscription status has been loaded
+  /// Whether any entitlement is active, from the last known snapshot.
+  ///
+  /// Returns false rather than throwing when nothing has been read yet. The
+  /// previous implementation dereferenced a null customer info here, which
+  /// crashed whenever the ad path ran before the first fetch completed.
   static bool isSubscriptionActive() {
-    print('Customer Info ${_customerInfo}');
-    // Check if there are any active entitlements
-    final bool hasActiveSubscription =
-        _customerInfo!.entitlements.active.isNotEmpty;
-
-    return hasActiveSubscription;
+    return _snapshot?.activeEntitlementIds.isNotEmpty ?? false;
   }
 
-  // Alternative: Check for a specific entitlement
+  /// Whether one specific entitlement is active.
   static Future<bool> hasActiveEntitlement(String entitlementId) async {
-    try {
-      print("Checking entitlement: $entitlementId");
-
-      final CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-
-      // Check if the specific entitlement is active
-      final bool isActive =
-          customerInfo.entitlements.all[entitlementId]?.isActive ?? false;
-
-      print("Entitlement $entitlementId active: $isActive");
-      return isActive;
-    } catch (e) {
-      print("Error checking entitlement: $e");
-      return false;
-    }
+    final result = await sl<IapProvider>().getEntitlements();
+    return result.fold(
+      onSuccess: (snapshot) {
+        _snapshot = snapshot;
+        return snapshot.activeEntitlementIds.contains(entitlementId);
+      },
+      onFailure: (_) => false,
+    );
   }
-
-  // Future<bool> hasActiveEntitlement(String entitlementId) async {
-  //   try {
-  //     final customerInfo = await Purchases.getCustomerInfo();
-  //     final entitlement = customerInfo.entitlements.all[entitlementId];
-  //     return entitlement?.isActive ?? false;
-  //   } catch (e) {
-  //     print('Error checking entitlement: $e');
-  //     return false;
-  //   }
-  // }
 }
 
-// print('REVENUE_CAT PURCHASE PRICE ${verification}');
+/// The outcome of showing the paywall, without a vendor type.
+enum PaywallOutcome {
+  /// A purchase completed.
+  purchased,
+
+  /// Purchases were restored.
+  restored,
+
+  /// The user dismissed the paywall.
+  cancelled,
+
+  /// The paywall was not shown, or the attempt failed.
+  notPresented,
+}

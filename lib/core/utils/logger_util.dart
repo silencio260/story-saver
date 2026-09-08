@@ -1,4 +1,3 @@
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:logger/logger.dart';
 
 var logger = Logger(
@@ -18,7 +17,7 @@ void printLogAdImpression({
   required String ad,
   required double valueMicros,
   required String currencyCode,
-  PrecisionType? precision,
+  Object? precision,
 }) {
   final double value = valueMicros / 1000000.0;
 

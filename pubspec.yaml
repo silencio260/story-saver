@@ -49,6 +49,24 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_engagement:
     path: packages/genrevibes_starter_kit/modules/engagement/genrevibes_engagement
+  genrevibes_permissions:
+    path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions
+  genrevibes_permissions_handler:
+    path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions_handler
+  genrevibes_app_links:
+    path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links
+  genrevibes_app_links_launcher:
+    path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links_launcher
+  genrevibes_app_rating_in_app_review:
+    path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating_in_app_review
+  genrevibes_onboarding:
+    path: packages/genrevibes_starter_kit/modules/onboarding/genrevibes_onboarding
+  genrevibes_notifications_local:
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_local
+  genrevibes_settings:
+    path: packages/genrevibes_starter_kit/modules/settings/genrevibes_settings
+  genrevibes_ads_admob_ui:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui
   genrevibes_remote_config:
     path: packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_config
   genrevibes_remote_config_firebase:
@@ -195,6 +213,24 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity
   genrevibes_engagement:
     path: packages/genrevibes_starter_kit/modules/engagement/genrevibes_engagement
+  genrevibes_permissions:
+    path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions
+  genrevibes_permissions_handler:
+    path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions_handler
+  genrevibes_app_links:
+    path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links
+  genrevibes_app_links_launcher:
+    path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links_launcher
+  genrevibes_app_rating_in_app_review:
+    path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating_in_app_review
+  genrevibes_onboarding:
+    path: packages/genrevibes_starter_kit/modules/onboarding/genrevibes_onboarding
+  genrevibes_notifications_local:
+    path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_local
+  genrevibes_settings:
+    path: packages/genrevibes_starter_kit/modules/settings/genrevibes_settings
+  genrevibes_ads_admob_ui:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui
   genrevibes_remote_config:
     path: packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_config
   genrevibes_remote_config_firebase:

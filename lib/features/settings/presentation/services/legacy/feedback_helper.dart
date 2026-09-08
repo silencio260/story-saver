@@ -1,5 +1,9 @@
 import 'package:fancy_rating_bar/fancy_rating_bar.dart';
-import 'package:feedbacknest_core/feedbacknest.dart';
+import 'dart:io';
+
+import 'package:genrevibes_feedback/genrevibes_feedback.dart';
+
+import '../../../../../container_injector.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_feedback_dialog/flutter_feedback_dialog.dart';
 import 'package:flutter_feedback_dialog/models/communication_type.dart';
@@ -14,13 +18,14 @@ class FeedBackHelper {
       context,
       type: CommunicationViewType.feedback,
       theme: CommunicationTheme.light,
-      onSubmit: (response) {
-        // Send to FeedbackNest for AI analysis
-        Feedbacknest.submitCommunication(
-          message: response.message,
-          type: CommunicationViewType.feedback.name,
-          email: response.email,
-          files: response.screenshots,
+      onSubmit: (response) async {
+        sl<FeedbackProvider>().submit(
+          FeedbackSubmission(
+            message: response.message,
+            kind: FeedbackKind.feedback,
+            email: response.email,
+            attachments: await _attachmentsFrom(response.screenshots),
+          ),
         );
       },
     );
@@ -31,16 +36,42 @@ class FeedBackHelper {
       context,
       type: CommunicationViewType.contact,
       theme: CommunicationTheme.light,
-      onSubmit: (response) {
-        // Send to FeedbackNest for AI analysis
-        Feedbacknest.submitCommunication(
-          message: response.message,
-          type: CommunicationViewType.contact.name,
-          email: response.email,
-          files: response.screenshots,
+      onSubmit: (response) async {
+        sl<FeedbackProvider>().submit(
+          FeedbackSubmission(
+            message: response.message,
+            kind: FeedbackKind.contact,
+            email: response.email,
+            attachments: await _attachmentsFrom(response.screenshots),
+          ),
         );
       },
     );
+  }
+
+  /// Reads screenshot files into the neutral attachment type.
+  ///
+  /// The dialog hands back files; the contract takes bytes, so a provider that
+  /// is not FeedbackNest does not have to know about the filesystem.
+  static Future<List<FeedbackAttachment>> _attachmentsFrom(
+    List<dynamic>? screenshots,
+  ) async {
+    if (screenshots == null || screenshots.isEmpty) {
+      return const <FeedbackAttachment>[];
+    }
+    final attachments = <FeedbackAttachment>[];
+    for (final screenshot in screenshots) {
+      final file = screenshot is File ? screenshot : File('$screenshot');
+      if (!file.existsSync()) continue;
+      attachments.add(
+        FeedbackAttachment(
+          filename: file.uri.pathSegments.last,
+          bytes: await file.readAsBytes(),
+          mimeType: 'image/png',
+        ),
+      );
+    }
+    return attachments;
   }
 
   void showFancyRatings(BuildContext context) {
@@ -59,7 +90,7 @@ class FeedBackHelper {
       params: params,
       onSubmit: (response) {
         // Option 1: Use FeedbackNest for automatic analytics
-        Feedbacknest.submitRatingAndReview(
+        sl<FeedbackProvider>().submitRatingAndReview(
           rating: response.rating,
           review: response.message ?? response.type.name,
         );
