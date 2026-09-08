@@ -184,14 +184,23 @@ Future<AppRuntime> bootstrapApp(
         create: () => identity,
         isRequired: false,
       ),
-      StarterModuleRegistration.enabled(
+      // Consent and ads are deferred: they start after the first frame, in
+      // this order, and nothing waits for them.
+      //
+      // Consent may present a form and sit there until someone dismisses it.
+      // On the startup chain that held back the eight modules behind it and
+      // the first frame with them — measured at two to four seconds on device
+      // even when no form appeared. It touches nothing else in this
+      // application: its result goes to the ad network and stays there.
+      //
+      // Ads follow it rather than running alongside, because Google requires
+      // consent to be gathered before an ad is requested, and
+      // AdMobAdProvider.initialize() owns MobileAds.initialize().
+      StarterModuleRegistration.deferred(
         moduleId: AppModules.consent,
         create: () => consent,
-        isRequired: false,
       ),
-      // Owns MobileAds.initialize(), which the deleted consent service used to
-      // call. Required: without it no ad ever loads.
-      StarterModuleRegistration.enabled(
+      StarterModuleRegistration.deferred(
         moduleId: AppModules.ads,
         create: () => ads,
       ),

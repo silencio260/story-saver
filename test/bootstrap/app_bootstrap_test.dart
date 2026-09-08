@@ -35,8 +35,6 @@ void main() {
       expect(runtime.isHealthy, isTrue);
       expect(runtime.kit.modules.keys, containsAll(<String>[
         AppModules.deviceIdentity,
-        AppModules.consent,
-        AppModules.ads,
         AppModules.analytics,
         AppModules.iap,
         AppModules.push,
@@ -80,7 +78,7 @@ void main() {
 
     test('a required module failing yields a failed report, not a half app',
         () async {
-      final harness = _Harness()..ads.failOnInitialize = true;
+      final harness = _Harness()..iap.failOnInitialize = true;
 
       final runtime = await harness.boot(env);
 
@@ -134,6 +132,48 @@ void main() {
       await runtime.analytics.track(const AnalyticsEvent(name: 'probe'));
 
       expect(harness.analyticsSink.tracked, isNotEmpty);
+    });
+  });
+
+  group('consent does not sit on the startup path', () {
+    test('boot returns without waiting for consent or ads', () async {
+      // Consent may present a form and wait for a person to dismiss it. On the
+      // startup chain that held back eight modules and the first frame with
+      // them, measured at two to four seconds on device even with no form.
+      final harness = _Harness();
+
+      final runtime = await harness.boot(env);
+
+      expect(runtime.kit.modules.containsKey(AppModules.consent), isFalse);
+      expect(runtime.kit.modules.containsKey(AppModules.ads), isFalse);
+      expect(runtime.isHealthy, isTrue);
+    });
+
+    test('they start afterwards, consent before ads', () async {
+      final harness = _Harness();
+
+      final runtime = await harness.boot(env);
+      // Let the deferred chain run.
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(runtime.kit.modules.containsKey(AppModules.consent), isTrue);
+      expect(runtime.kit.modules.containsKey(AppModules.ads), isTrue);
+      expect(harness.consent.initializedAt, isNotNull);
+      expect(harness.ads.initializedAt, isNotNull);
+      expect(
+        harness.consent.initializedAt!.isAfter(harness.ads.initializedAt!),
+        isFalse,
+        reason: 'Google requires consent gathered before an ad is requested',
+      );
+    });
+
+    test('a consent failure cannot fail the application', () async {
+      final harness = _Harness()..consent.failOnInitialize = true;
+
+      final runtime = await harness.boot(env);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(runtime.isHealthy, isTrue);
     });
   });
 
@@ -347,6 +387,9 @@ mixin _FakeModule on Object {
   bool failOnInitialize = false;
   ModuleState state = ModuleState.idle;
 
+  /// When start() ran, so a test can assert deferred ordering.
+  DateTime? initializedAt;
+
   String get moduleId;
 
   ModuleHealth get health => ModuleHealth(
@@ -358,6 +401,7 @@ mixin _FakeModule on Object {
   Stream<ModuleHealth> get healthChanges => const Stream<ModuleHealth>.empty();
 
   Future<KitResult<void>> start() async {
+    initializedAt = DateTime.now();
     if (failOnInitialize) {
       state = ModuleState.failed;
       return const KitFailure<void>(
