@@ -5,6 +5,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
+import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
 import '../../../../container_injector.dart';
 import '../../../../config/ad_unit_ids.dart';
@@ -41,6 +42,11 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
         AdUnitIds.interstitial.isEmpty) {
       return;
     }
+
+    // Consent and MobileAds.initialize() run after the first frame. An ad may
+    // not be requested before consent has been gathered, so this waits for
+    // them rather than the application waiting at launch.
+    await sl<GenRevibesStarterKit>().deferredStartupComplete;
 
     await _subscriptionManager.initialize();
     if (_subscriptionManager.isPremium) return;

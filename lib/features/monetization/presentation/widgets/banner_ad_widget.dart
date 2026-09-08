@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+import '../../../../container_injector.dart';
 
 import '../../../analytics/domain/entities/analytics_event.dart';
 import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
@@ -25,17 +28,27 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncSubscription());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(_syncSubscription()),
+    );
   }
 
-  void _syncSubscription() {
+  Future<void> _syncSubscription() async {
     if (!mounted) return;
     final iap = context.read<IapBloc>().state;
     if (iap.isPremium) {
       _disposeAd();
-    } else if (iap.status == IapViewStatus.ready) {
-      _loadAd();
+      return;
     }
+    if (iap.status != IapViewStatus.ready) return;
+
+    // Consent and MobileAds.initialize() start after the first frame, and this
+    // widget builds on it. Requesting an ad before consent has been gathered is
+    // exactly what UMP exists to prevent, so the ad waits — the application
+    // does not.
+    await sl<GenRevibesStarterKit>().deferredStartupComplete;
+    if (!mounted) return;
+    _loadAd();
   }
 
   void _loadAd() {
