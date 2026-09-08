@@ -237,8 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // way to find the failures a test cannot reach.
     _settingsItem(
       icon: Icons.science_outlined,
-      label: SettingsStrings.analyticsBench,
-      onTap: () => openAnalyticsBench(context),
+      label: SettingsStrings.starterKitLab,
+      onTap: () => openStarterKitLab(context),
     ),
     const SizedBox(height: 12),
     _settingsItem(
