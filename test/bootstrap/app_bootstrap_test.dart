@@ -105,6 +105,38 @@ void main() {
     });
   });
 
+  group('analytics is not gated on ad consent', () {
+    test('events reach the sinks even when UMP has not resolved', () async {
+      // UMP governs ad personalization. Product analytics is a core function of
+      // the application and is not an ad-network decision.
+      //
+      // This used to be wired the other way: the consent snapshot set the
+      // pipeline's consent, so an unresolved decision meant no product
+      // analytics at all. It was wrong in both directions, because
+      // ConsentStatus.obtained only reports that the flow completed — Google
+      // leaves personalized versus non-personalized undefined at that level —
+      // so the boolean said "allowed" for a user who had declined and "denied"
+      // for one who had merely not been asked.
+      final harness = _Harness()
+        ..consent.consentState = ConsentState.consentRequired;
+
+      final runtime = await harness.boot(env);
+      await runtime.analytics.track(const AnalyticsEvent(name: 'probe'));
+
+      expect(harness.analyticsSink.tracked.map((event) => event.name),
+          contains('probe'));
+    });
+
+    test('a refused decision does not silence analytics either', () async {
+      final harness = _Harness()..consent.consentState = ConsentState.unknown;
+
+      final runtime = await harness.boot(env);
+      await runtime.analytics.track(const AnalyticsEvent(name: 'probe'));
+
+      expect(harness.analyticsSink.tracked, isNotEmpty);
+    });
+  });
+
   group('identity and crash', () {
     test('names the crash reporter with the stable install id', () async {
       final harness = _Harness();
@@ -390,13 +422,17 @@ final class _FakeAdvertising implements AdvertisingIdSource {
 }
 
 final class _FakeConsent with _FakeModule implements ConsentProvider {
+  /// What UMP would report. Settable so a test can stand in an unresolved or
+  /// refused consent decision. Named apart from the module's own `state`.
+  ConsentState consentState = ConsentState.notRequired;
+
   @override
   String get providerId => 'fake';
   @override
   String get moduleId => 'consent.fake';
   @override
   ConsentSnapshot get snapshot => ConsentSnapshot(
-        state: ConsentState.notRequired,
+        state: consentState,
         observedAt: DateTime.utc(2026),
       );
   @override
@@ -417,6 +453,9 @@ final class _FakeConsent with _FakeModule implements ConsentProvider {
 }
 
 final class _FakeSink with _FakeModule implements AnalyticsSink {
+  /// Events that actually reached this sink.
+  final List<AnalyticsEvent> tracked = <AnalyticsEvent>[];
+
   @override
   String get sinkId => 'fake';
   @override
@@ -426,8 +465,10 @@ final class _FakeSink with _FakeModule implements AnalyticsSink {
   @override
   Future<KitResult<void>> dispose() => stop();
   @override
-  Future<KitResult<void>> track(AnalyticsEvent event) async =>
-      const KitSuccess<void>(null);
+  Future<KitResult<void>> track(AnalyticsEvent event) async {
+    tracked.add(event);
+    return const KitSuccess<void>(null);
+  }
   @override
   Future<KitResult<void>> identify(AnalyticsUser user) async =>
       const KitSuccess<void>(null);

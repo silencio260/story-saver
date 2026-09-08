@@ -130,6 +130,10 @@ Future<AppRuntime> bootstrapApp(
     logger: logger,
   );
   final analytics = AnalyticsPipeline(
+    // Granted at construction. Product analytics is a core function of this
+    // application, not something an ad-consent dialog decides. See the note
+    // further down for why it used to be wired to UMP and why that was wrong.
+    initialConsent: AnalyticsConsent.granted,
     sinks: dependencies.analyticsSinks ??
         <AnalyticsSink>[
           FirebaseAnalyticsSink(),
@@ -234,41 +238,26 @@ Future<AppRuntime> bootstrapApp(
 
   final initialization = await kit.initialize();
 
-  // Consent gates analytics. The pipeline starts disabled and its sinks are
-  // never initialized until consent is granted, so without this wiring
-  // analytics silently collects nothing. Subscribing as well as reading once
-  // means a later change through the privacy-options form takes effect
-  // immediately.
-  void applyConsent(ConsentSnapshot snapshot) {
-    unawaited(
-      analytics.setConsent(
-        snapshot.allowsPersonalizedWork
-            ? AnalyticsConsent.granted
-            : AnalyticsConsent.denied,
-      ),
-    );
-  }
-
-  // Bounded for the same reason module initialization is: a UMP form that
-  // never calls back would otherwise suspend startup here, after the kit has
-  // already reported itself healthy.
-  applyConsent(
-    await consent.ready.timeout(
-      moduleTimeout,
-      onTimeout: () {
-        logger.log(
-          KitLogLevel.warning,
-          'Consent did not resolve in time; starting without personalization.',
-          moduleId: AppModules.consent,
-        );
-        return ConsentSnapshot(
-          state: ConsentState.unknown,
-          observedAt: DateTime.now(),
-        );
-      },
-    ),
-  );
-  consentProvider.snapshotChanges.listen(applyConsent);
+  // UMP consent is not wired to analytics, deliberately.
+  //
+  // It used to be: the snapshot was mapped to the pipeline's consent, so a
+  // user UMP had not resolved produced no product analytics at all. That was
+  // wrong twice over. UMP governs ad personalization — it is the ad network's
+  // consent framework, and its outcome is the ad SDK's business. And
+  // `ConsentStatus.obtained` only means the flow completed; Google leaves the
+  // personalized/non-personalized distinction undefined at that level, so the
+  // boolean it produced said "allowed" for a user who had declined and
+  // "denied" for one who simply had not been asked.
+  //
+  // Product analytics is a core function of this application, not something
+  // gated on an ad-consent dialog. The pipeline is constructed already
+  // granted, above.
+  //
+  // Nothing waits on the consent outcome. The flow runs so UMP can store its
+  // decision, and the AdMob SDK reads that itself when deciding whether to
+  // serve personalized or limited ads — which is exactly what the pre-kit
+  // implementation did: run the flow, then initialize ads regardless, "proceed
+  // even on error, SDK handles limited ads".
 
   // Name the user on crash reports. Tracking is deliberately not prompted here:
   // an out-of-context ATT prompt at launch is an App Store rejection.
