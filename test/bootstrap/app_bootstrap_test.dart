@@ -64,7 +64,6 @@ void main() {
       expect(AppModules.disabled, containsAll(<String>[
         'app_rating',
         'onboarding',
-        'permissions',
         'app_links',
         'notifications.local',
       ]));
@@ -76,6 +75,7 @@ void main() {
       // nothing else writes the keys they now own.
       expect(AppModules.disabled, isNot(contains(AppModules.remoteConfig)));
       expect(AppModules.disabled, isNot(contains(AppModules.engagement)));
+      expect(AppModules.disabled, isNot(contains(AppModules.permissions)));
     });
 
     test('a required module failing yields a failed report, not a half app',

@@ -18,6 +18,7 @@ import '../bloc/settings_bloc/settings_bloc.dart';
 import '../l10n/settings_strings.dart';
 import '../services/legacy/app_rating_service.dart';
 import 'module_health_screen.dart';
+import 'starter_kit_lab_screen.dart';
 import '../services/legacy/developer_options_service.dart';
 import '../services/legacy/feedback_helper.dart';
 import '../widgets/legacy/help_modal.dart';
@@ -228,6 +229,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         MaterialPageRoute<void>(
           builder: (_) => ModuleHealthScreen(runtime: sl<AppRuntime>()),
         ),
+      ),
+    ),
+    const SizedBox(height: 12),
+    // Exercises every kit capability against live services, which is the only
+    // way to find the failures a test cannot reach.
+    _settingsItem(
+      icon: Icons.science_outlined,
+      label: SettingsStrings.starterKitLab,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const StarterKitLabScreen()),
       ),
     ),
     const SizedBox(height: 12),
