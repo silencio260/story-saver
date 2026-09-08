@@ -1,1 +1,21 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"whatsapp-status-saver-fl-6c420","appId":"1:213655052172:android:12c2a49a24bb5eca48c0a9","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"whatsapp-status-saver-fl-6c420","appId":"1:213655052172:ios:debca4eacac328aa48c0a9","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"whatsapp-status-saver-fl-6c420","configurations":{"android":"1:213655052172:android:12c2a49a24bb5eca48c0a9","ios":"1:213655052172:ios:debca4eacac328aa48c0a9"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "whatsapp-status-saver-fl-6c420",
+          "appId": "1:213655052172:android:2deed6cfa4b0e99a48c0a9",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "whatsapp-status-saver-fl-6c420",
+          "appId": "1:213655052172:ios:2dc3b38c840e8b9648c0a9",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      }
+    }
+  }
+}

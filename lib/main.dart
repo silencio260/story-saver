@@ -63,16 +63,12 @@ void main() {
     //
     // Deliberately without options. Both platforms ship a native configuration
     // file — google-services.json on Android, GoogleService-Info.plist on iOS —
-    // so the `[DEFAULT]` app already exists before Dart runs, and passing
-    // options makes firebase_core compare them against it and throw
-    // `duplicate-app` on any difference. The generated options differ twice
-    // over: their API key comes from a dart-define that does not match the one
-    // in google-services.json, and their application ID is still the pre-rename
-    // `com.example.story_saver` one. With no options the native app is adopted
-    // as-is, which is the configuration every native SDK already started
-    // against. That is also what `Firebase.app().delete()` in the old code was
-    // working around, by discarding the native app and rebuilding it from the
-    // generated values.
+    // so the `[DEFAULT]` app already exists before Dart runs. Passing options
+    // makes firebase_core compare them against it and throw `duplicate-app` on
+    // any difference, which is what the old `Firebase.app().delete()` call was
+    // working around: it discarded the correct native app and rebuilt it from
+    // a generated file. There is no generated file now, and the native
+    // configuration is the single source of truth per platform.
     //
     // Bounded so a stalled platform call fails loudly instead of leaving the
     // application parked on the launch screen with nothing in the log.
