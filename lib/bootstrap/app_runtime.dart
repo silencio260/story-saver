@@ -12,6 +12,7 @@ import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
@@ -47,6 +48,7 @@ final class AppRuntime {
     required this.rating,
     required this.storeReview,
     required this.localNotifications,
+    required this.onboarding,
     required this.bannerAdUnit,
     required this.env,
     this.eventLog,
@@ -129,6 +131,9 @@ final class AppRuntime {
 
   /// Device-local notifications.
   final LocalNotificationScheduler localNotifications;
+
+  /// Onboarding completion state.
+  final OnboardingController onboarding;
 
   /// The inline banner unit.
   ///

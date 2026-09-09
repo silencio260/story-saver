@@ -28,6 +28,7 @@ import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_iap_revenuecat_ui/genrevibes_iap_revenuecat_ui.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
+import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_permissions_handler/genrevibes_permissions_handler.dart';
@@ -85,10 +86,11 @@ abstract final class AppModules {
   /// Device-local notifications.
   static const localNotifications = 'notifications.local';
 
+  /// Whether the user has finished onboarding.
+  static const onboarding = 'onboarding';
+
   /// Registered but disabled until their feature migrates.
-  static const disabled = <String>[
-    'onboarding',
-  ];
+  static const disabled = <String>[];
 }
 
 /// Builds and starts every kit module this app has adopted.
@@ -134,6 +136,9 @@ Future<AppRuntime> bootstrapApp(
       // milestone counter and has no equivalent in RatingKeys.legacyKeys.
       ...RatingKeys.legacyKeys,
       RatingKeys.trigger(_downloadTrigger): 'download_count',
+      // Without this every user who already finished onboarding is shown it
+      // again on the release that adopts the module.
+      ...OnboardingKeys.legacyKeys,
     },
     removeLegacyOnRead: false,
   );
@@ -247,6 +252,8 @@ Future<AppRuntime> bootstrapApp(
         ),
       );
 
+  final onboarding = OnboardingController(store: store);
+
   final rating = RatingCoordinator(
     store: store,
     observer: _AnalyticsRatingObserver(analytics),
@@ -348,6 +355,14 @@ Future<AppRuntime> bootstrapApp(
         moduleId: AppModules.localNotifications,
         create: () => localNotifications,
         isRequired: false,
+      ),
+      // Required. The splash screen routes on this, and an unreadable flag
+      // resolves to "not onboarded" inside the module rather than here: showing
+      // onboarding twice is a far better failure than skipping it for a genuinely
+      // new user.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.onboarding,
+        create: () => onboarding,
       ),
       // Namespaced under app_rating: the store adapter is the provider half of
       // that capability, not a capability of its own.
@@ -466,6 +481,7 @@ Future<AppRuntime> bootstrapApp(
     rating: rating,
     storeReview: storeReview,
     localNotifications: localNotifications,
+    onboarding: onboarding,
     bannerAdUnit: env.bannerAdUnit,
     env: env,
     eventLog: eventLog,

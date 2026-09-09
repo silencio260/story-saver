@@ -103,12 +103,42 @@ const _storageKeys = <DevStorageGroup>[
     ],
   ),
   DevStorageGroup(
+    title: 'Onboarding',
+    entries: <DevStorageEntry>[
+      DevStorageEntry(
+        key: 'genrevibes.onboarding.completed.v1',
+        legacyKey: 'has_seen_onboarding',
+      ),
+    ],
+  ),
+  DevStorageGroup(
+    title: 'Rating',
+    entries: <DevStorageEntry>[
+      DevStorageEntry(
+        key: 'genrevibes.app_rating.app_opens.v1',
+        legacyKey: 'app_opens_count',
+      ),
+      DevStorageEntry(
+        key: 'genrevibes.app_rating.installed_at.v1',
+        legacyKey: 'app_install_date',
+      ),
+      DevStorageEntry(
+        key: 'genrevibes.app_rating.last_prompted_at.v1',
+        legacyKey: 'last_rating_shown_date',
+      ),
+      DevStorageEntry(
+        key: 'genrevibes.app_rating.opted_out.v1',
+        legacyKey: 'never_show_rating',
+      ),
+      DevStorageEntry(
+        key: 'genrevibes.app_rating.trigger.download.v1',
+        legacyKey: 'download_count',
+      ),
+    ],
+  ),
+  DevStorageGroup(
     title: 'Not yet migrated',
     entries: <DevStorageEntry>[
-      DevStorageEntry(key: 'has_seen_onboarding', label: 'Onboarding'),
-      DevStorageEntry(key: 'app_opens_count', label: 'Rating'),
-      DevStorageEntry(key: 'app_install_date', label: 'Rating'),
-      DevStorageEntry(key: 'last_rating_shown_date', label: 'Rating'),
       DevStorageEntry(key: 'debug_premium_override', label: 'Dev override'),
     ],
   ),

@@ -1,3 +1,5 @@
+import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
+
 import '../../container_injector.dart';
 import '../splash/presentation/bloc/splash_bloc/splash_bloc.dart';
 import 'data/datasources/onboarding_local_data_source.dart';
@@ -10,7 +12,7 @@ import 'presentation/bloc/onboarding_bloc/onboarding_bloc.dart';
 
 void initOnboarding() {
   sl.registerLazySingleton<OnboardingBaseLocalDataSource>(
-    OnboardingLocalDataSource.new,
+    () => OnboardingLocalDataSource(controller: sl<OnboardingController>()),
   );
   sl.registerLazySingleton<OnboardingBaseRepo>(
     () => OnboardingRepo(localDataSource: sl()),

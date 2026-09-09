@@ -58,32 +58,39 @@ void main() {
       }
     });
 
-    test('the modules whose features have not migrated stay disabled', () {
-      // Enabling one of these while the old code still writes its keys gives
-      // two writers and divergent user state, so each waits for its feature.
-      expect(AppModules.disabled, contains('onboarding'));
+    test('every capability has migrated, so nothing stays disabled', () {
+      // A module was disabled while a hand-rolled service still owned its
+      // storage keys, because two writers on one key diverge. Each entry left
+      // here as the migration ran; the list is now empty, and adding one back
+      // means a legacy writer came back with it.
+      expect(AppModules.disabled, isEmpty);
     });
 
-    test('the migrated capabilities are enabled, not disabled', () async {
-      // Each of these replaced a hand-rolled service that owned the same
-      // storage keys or SDK. They are enabled only because the old writer is
-      // gone; re-adding one alongside would give two writers again.
-      expect(
-        AppModules.disabled,
-        isNot(anyElement(isIn(<String>[
-          AppModules.appLinks,
-          AppModules.appRating,
-          AppModules.localNotifications,
-        ]))),
-      );
-
+    test('the migrated capabilities are constructed and started', () async {
       final runtime = await _Harness().boot(env);
 
       expect(runtime.kit.modules.keys, containsAll(<String>[
         AppModules.appLinks,
         AppModules.appRating,
         AppModules.localNotifications,
+        AppModules.onboarding,
       ]));
+      expect(
+        runtime.kit.modules[AppModules.onboarding]?.health.state,
+        ModuleState.ready,
+      );
+    });
+
+    test('onboarding adopts the key the old service wrote', () async {
+      // Without the legacy mapping every user who already finished onboarding
+      // is shown it again on the release that adopts the module.
+      final harness = _Harness();
+      await harness.store.setBool('has_seen_onboarding', true);
+
+      final runtime = await harness.boot(env);
+
+      expect(runtime.onboarding.isCompleted, isTrue,
+          reason: 'a returning user must not be onboarded twice');
     });
 
     test('remote config and engagement are enabled, not disabled', () {
