@@ -43,6 +43,7 @@ final class AppEnv {
     required this.interstitialAdUnitId,
     this.forceSessionReplay = false,
     this.forceConsentDebugEea = false,
+    this.disableFirebaseAnalyticsInDebug = false,
     this.consentTestDeviceIds = '',
   });
 
@@ -63,6 +64,8 @@ final class AppEnv {
       interstitialAdUnitId: String.fromEnvironment('interstitial_ad_id'),
       forceSessionReplay: bool.fromEnvironment('posthog_session_replay'),
       forceConsentDebugEea: bool.fromEnvironment('consent_debug_eea'),
+      disableFirebaseAnalyticsInDebug:
+          bool.fromEnvironment('disabled_firebase_analytics_in_debug_mode'),
       consentTestDeviceIds:
           String.fromEnvironment('consent_debug_device_ids'),
     );
@@ -105,6 +108,25 @@ final class AppEnv {
   /// exactly as designed. Pass `--dart-define=consent_debug_eea=true` to test
   /// the form deliberately.
   final bool forceConsentDebugEea;
+
+  /// Keeps development traffic out of the Firebase Analytics project.
+  ///
+  /// Opt-in and development-only: analytics is a core function of the
+  /// application, not something to be switched off by accident, so it collects
+  /// unless this is explicitly set and the build is a development one. A
+  /// release build ignores it entirely.
+  ///
+  /// Defined as `disabled_firebase_analytics_in_debug_mode` in `env/*.json`.
+  final bool disableFirebaseAnalyticsInDebug;
+
+  /// Whether the Firebase sink may collect at all.
+  ///
+  /// Firebase persists its collection flag on the device, so this has to be
+  /// stated on every launch rather than assumed: a build that once turned
+  /// collection off leaves it off for every build after it until something
+  /// says otherwise.
+  bool get firebaseAnalyticsCollectionEnabled =>
+      !(isDevelopment && disableFirebaseAnalyticsInDebug);
 
   /// Hashed device identifiers UMP should treat as test devices.
   ///

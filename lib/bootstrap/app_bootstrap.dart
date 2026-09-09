@@ -146,7 +146,9 @@ Future<AppRuntime> bootstrapApp(
     initialConsent: AnalyticsConsent.granted,
     sinks: dependencies.analyticsSinks ??
         <AnalyticsSink>[
-          FirebaseAnalyticsSink(),
+          FirebaseAnalyticsSink(
+            collectionEnabled: env.firebaseAnalyticsCollectionEnabled,
+          ),
           PostHogAnalyticsSink(configuration: env.postHog),
         ],
     names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
@@ -291,8 +293,27 @@ Future<AppRuntime> bootstrapApp(
         ),
       );
   await resolved.fold(
-    onSuccess: (value) => crash.identify(value.installId),
+    onSuccess: (value) async {
+      await crash.identify(value.installId);
+      // The same identity on analytics, so a crash and the events around it
+      // describe one device. The old service sent this as a `unique_device_id`
+      // parameter on app_open only; as a user property it applies to every
+      // event and can be filtered on.
+      await analytics.identify(AnalyticsUser(id: value.installId));
+    },
     onFailure: (_) async => const KitSuccess<void>(null),
+  );
+
+  // Lets a test device be found in reporting.
+  //
+  // Firebase excludes debug-enabled devices from standard reports, so a device
+  // streaming to DebugView is invisible in the numbers. Turning debug mode off
+  // puts it back in the reports, and this property is how it is then picked
+  // out or filtered away.
+  unawaited(
+    analytics.setUserProperties(<String, Object?>{
+      'build_type': env.isDevelopment ? 'development' : 'release',
+    }),
   );
 
   // Remote values retune ad pacing without a release. The binder applies the
