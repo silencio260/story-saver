@@ -16,6 +16,7 @@ import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 
 import '../../bootstrap/app_env.dart';
+import '../../bootstrap/app_runtime.dart';
 import '../../container_injector.dart';
 import '../analytics/domain/entities/app_analytics_catalogue.dart';
 
@@ -35,6 +36,8 @@ void openStarterKitLab(BuildContext context) {
 DevToolsHost _host() {
   return DevToolsHost(
     kit: sl<GenRevibesStarterKit>(),
+    eventLog: sl<AppRuntime>().eventLog,
+    logger: sl<AppRuntime>().kitLog,
     catalogue: AppAnalyticsCatalogue.catalogue,
     analytics: sl<AnalyticsPipeline>(),
     ads: sl<AdProvider>(),

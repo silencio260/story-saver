@@ -12,6 +12,7 @@ import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
+import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_feedbacknest/genrevibes_feedbacknest.dart';
@@ -97,6 +98,15 @@ Future<AppRuntime> bootstrapApp(
 }) async {
   final logger = const BootstrapLogger();
 
+  // Development-only recorders. Firebase's DebugView cannot be enabled from
+  // application code — on Android it reads a system property only a shell can
+  // set — so an application that wants to watch its own events during
+  // development has to keep that record itself. Null in release, so nothing is
+  // retained and no history exists to leak.
+  final eventLog =
+      env.isDevelopment ? RecordingDeliveryObserver() : null;
+  final kitLog = env.isDevelopment ? RecordingKitLogger() : null;
+
   final store = MigratingKeyValueStore(
     delegate: dependencies.store ?? SharedPreferencesKeyValueStore(),
     // Only the enabled modules' legacy keys. Rating, onboarding and engagement
@@ -140,6 +150,7 @@ Future<AppRuntime> bootstrapApp(
           PostHogAnalyticsSink(configuration: env.postHog),
         ],
     names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
+    observer: eventLog,
   );
   // Retention milestones are analytics events, so the tracker reports through
   // the pipeline rather than reaching for a sink of its own.
@@ -326,6 +337,8 @@ Future<AppRuntime> bootstrapApp(
     remoteConfig: remoteConfig,
     retention: retention,
     permissions: permissions,
+    eventLog: eventLog,
+    kitLog: kitLog,
   );
 }
 

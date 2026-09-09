@@ -6,6 +6,7 @@ import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
+import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
@@ -36,6 +37,8 @@ final class AppRuntime {
     required this.remoteConfig,
     required this.retention,
     required this.permissions,
+    this.eventLog,
+    this.kitLog,
   });
 
   /// The module coordinator.
@@ -90,6 +93,12 @@ final class AppRuntime {
 
   /// Runtime permissions.
   final PermissionProvider permissions;
+
+  /// Analytics deliveries captured in development, for the Lab's event log.
+  final RecordingDeliveryObserver? eventLog;
+
+  /// Kit module logs captured in development.
+  final RecordingKitLogger? kitLog;
 
   /// Whether every required module started.
   bool get isHealthy => initialization.isSuccess;
