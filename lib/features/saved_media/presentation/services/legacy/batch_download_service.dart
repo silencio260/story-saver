@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../analytics/data/services/analytics_service.dart';
-import '../../../../settings/presentation/services/legacy/app_rating_service.dart';
+import '../../../../settings/presentation/services/rating_prompt.dart';
 import '../../../data/datasources/local/saved_media_cache.dart';
 import 'media_file_operations_legacy.dart';
 
@@ -90,7 +90,7 @@ class BatchDownloadService {
 
     // Trigger rating if eligible
     if (successCount > 0) {
-      AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+      RatingPrompt.recordDownload(context);
     }
   }
 }

@@ -12,7 +12,7 @@ import '../../../monetization/presentation/controllers/legacy/ad_suppression_man
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
 import '../../../permissions/presentation/bloc/permissions_bloc/permissions_bloc.dart';
 import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc.dart';
-import '../../../settings/presentation/services/legacy/app_rating_service.dart';
+import '../../../settings/presentation/services/rating_prompt.dart';
 import '../../domain/entities/status_media.dart';
 import '../bloc/status_bloc/status_bloc.dart';
 import '../l10n/status_strings.dart';
@@ -275,7 +275,7 @@ class _StatusTileState extends State<_StatusTile> {
 
     setState(() => _isSaving = true);
     context.read<SavedMediaBloc>().add(StatusSaveRequested(widget.item.path));
-    await AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+    await RatingPrompt.recordDownload(context);
   }
 
   void _openViewer() {

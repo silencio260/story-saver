@@ -44,6 +44,8 @@ final class AppEnv {
     this.forceSessionReplay = false,
     this.forceConsentDebugEea = false,
     this.disableFirebaseAnalyticsInDebug = false,
+    this.privacyPolicyUrl = '',
+    this.termsUrl = '',
     this.consentTestDeviceIds = '',
   });
 
@@ -66,6 +68,8 @@ final class AppEnv {
       forceConsentDebugEea: bool.fromEnvironment('consent_debug_eea'),
       disableFirebaseAnalyticsInDebug:
           bool.fromEnvironment('disabled_firebase_analytics_in_debug_mode'),
+      privacyPolicyUrl: String.fromEnvironment('privacy_policy_url'),
+      termsUrl: String.fromEnvironment('terms_url'),
       consentTestDeviceIds:
           String.fromEnvironment('consent_debug_device_ids'),
     );
@@ -118,6 +122,16 @@ final class AppEnv {
   ///
   /// Defined as `disabled_firebase_analytics_in_debug_mode` in `env/*.json`.
   final bool disableFirebaseAnalyticsInDebug;
+
+  /// Privacy policy page, required by both stores.
+  ///
+  /// Empty until configured. `AppLinksConfig.validate()` reports that at
+  /// composition, so the gap is visible in module health rather than surfacing
+  /// as a dead button in a shipped build.
+  final String privacyPolicyUrl;
+
+  /// Terms page, when the app has one. Optional.
+  final String termsUrl;
 
   /// Whether the Firebase sink may collect at all.
   ///

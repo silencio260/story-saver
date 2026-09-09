@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 
-import '../../../../../core/utils/legacy_app_constants.dart';
-import '../../../../analytics/data/services/analytics_service.dart';
+import '../../../../../container_injector.dart';
 
-void shareAppLink(BuildContext context) {
-  AnalyticsService.logShareApp();
-
-  Share.share(
-    'Shared From WhatsApp Status Saver App @ ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
-  ).then((value) {
-    // ScaffoldMessenger.of(context)
-    //     .showSnackBar(const SnackBar(content: Text("Image Sent")));
-  });
-}
-
-void shareToWhatsApp(
+/// Opens WhatsApp with [message] prefilled, falling back to the share sheet.
+///
+/// The deep link goes through the kit's [LinkOpener] rather than `url_launcher`
+/// directly, so this file no longer knows which package launches a URI. The
+/// fallback is deliberate and unchanged: `whatsapp://` fails on a device without
+/// WhatsApp installed, and a status-saver user without WhatsApp still has
+/// somewhere useful to send the file.
+Future<void> shareToWhatsApp(
   String message, {
   String? filePath,
   required BuildContext context,
 }) async {
-  final whatsappUrl = Uri.parse(
-    "whatsapp://send?text=${Uri.encodeComponent(message)}",
+  final opener = sl<LinkOpener>();
+  final whatsapp = Uri.parse(
+    'whatsapp://send?text=${Uri.encodeComponent(message)}',
   );
 
-  if (await canLaunchUrl(whatsappUrl)) {
-    print('Launching WhatsApp');
-    await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+  final launched = await opener.openUrl(whatsapp);
+  final ok = launched.fold(onSuccess: (_) => true, onFailure: (_) => false);
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Shared to WhatsApp")));
-  } else {
-    print('WhatsApp not found, using Share Plus');
-    Share.share(message);
+  if (ok) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Shared to WhatsApp')));
+    }
+    return;
   }
+
+  await opener.share(text: message);
 }

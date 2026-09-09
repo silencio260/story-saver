@@ -15,7 +15,6 @@ import 'bootstrap/app_env.dart';
 import 'bootstrap/runtime_registrar.dart';
 import 'container_injector.dart';
 import 'features/saved_media/data/services/auto_save_service.dart';
-import 'features/settings/presentation/services/legacy/app_rating_service.dart';
 import 'my_app.dart';
 
 /// WorkManager background entry point.
@@ -94,7 +93,6 @@ void main() {
       () => Workmanager().initialize(callbackDispatcher),
     );
     await _startupStep('auto_save', AutoSaveService.checkAndResumeDevMode);
-    await _startupStep('app_rating', AdvancedAppRatingService.initialize);
 
     runApp(const MyApp());
   }, crash);

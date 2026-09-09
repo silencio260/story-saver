@@ -2,17 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
+import 'package:genrevibes_ads_admob_ui/genrevibes_ads_admob_ui.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../container_injector.dart';
-
 import '../../../analytics/domain/entities/analytics_event.dart';
 import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
-import '../../../../config/ad_unit_ids.dart';
 import '../bloc/ads_bloc/ads_bloc.dart';
 import '../bloc/iap_bloc/iap_bloc.dart';
 
+/// The inline banner.
+///
+/// Loading, retrying, sizing and disposal are the kit widget's job now. This
+/// file owns only the question the kit cannot answer: whether this app wants a
+/// banner on screen at this moment. Previously it hand-rolled a `BannerAd`, its
+/// listener, and the disposal races between "loaded" and "user just went
+/// premium" — about a hundred lines that every app in the portfolio repeated.
 class BannerAdWidget extends StatefulWidget {
   const BannerAdWidget({super.key});
 
@@ -21,137 +28,75 @@ class BannerAdWidget extends StatefulWidget {
 }
 
 class _BannerAdWidgetState extends State<BannerAdWidget> {
-  BannerAd? _bannerAd;
-  bool _isLoaded = false;
-  bool _isLoading = false;
+  /// Whether the deferred startup work that ads depend on has finished.
+  bool _startupComplete = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => unawaited(_syncSubscription()),
+    unawaited(_awaitStartup());
+  }
+
+  /// Consent and `MobileAds.initialize()` run after the first frame, and this
+  /// widget builds on it. Requesting an ad before consent has been gathered is
+  /// exactly what UMP exists to prevent, so the ad waits — the app does not.
+  Future<void> _awaitStartup() async {
+    await sl<GenRevibesStarterKit>().deferredStartupComplete;
+    if (mounted) setState(() => _startupComplete = true);
+  }
+
+  void _onAdEvent(AdEvent event) {
+    final revenue = event.revenue;
+    if (event.type != AdEventType.paid || revenue == null) return;
+    if (!mounted) return;
+    context.read<AnalyticsBloc>().add(
+      AnalyticsEventLogged(
+        AnalyticsEventEntity(
+          name: 'ad_impression',
+          parameters: <String, Object>{
+            'ad_unit_id': sl<AdMobAdUnit>().adUnitId,
+            'ad_format': event.placement.format.name,
+            'value_micros': revenue.valueMicros,
+            'currency': revenue.currencyCode,
+          },
+        ),
+      ),
     );
   }
 
-  Future<void> _syncSubscription() async {
-    if (!mounted) return;
-    final iap = context.read<IapBloc>().state;
-    if (iap.isPremium) {
-      _disposeAd();
-      return;
-    }
-    if (iap.status != IapViewStatus.ready) return;
+  @override
+  Widget build(BuildContext context) {
+    final unit = sl<AdMobAdUnit>();
 
-    // Consent and MobileAds.initialize() start after the first frame, and this
-    // widget builds on it. Requesting an ad before consent has been gathered is
-    // exactly what UMP exists to prevent, so the ad waits — the application
-    // does not.
-    await sl<GenRevibesStarterKit>().deferredStartupComplete;
-    if (!mounted) return;
-    _loadAd();
-  }
+    return BlocBuilder<IapBloc, IapState>(
+      buildWhen: (previous, current) =>
+          previous.isPremium != current.isPremium ||
+          previous.status != current.status,
+      builder: (context, iap) => BlocBuilder<AdsBloc, AdsState>(
+        buildWhen: (previous, current) => previous.status != current.status,
+        builder: (context, ads) {
+          // Every reason this app has for not showing a banner, in one
+          // expression. The kit widget loads when this turns true and tears the
+          // creative down when it turns false, so premium purchase mid-session
+          // removes the ad without this file managing the race.
+          final enabled = _startupComplete &&
+              unit.adUnitId.isNotEmpty &&
+              !iap.isPremium &&
+              iap.status == IapViewStatus.ready &&
+              ads.status != AdsViewStatus.disabled;
 
-  void _loadAd() {
-    if (_bannerAd != null || _isLoading || AdUnitIds.banner.isEmpty) return;
-    _isLoading = true;
-    final ad = BannerAd(
-      adUnitId: AdUnitIds.banner,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (loadedAd) {
-          if (!mounted ||
-              context.read<IapBloc>().state.isPremium ||
-              _bannerAd != loadedAd) {
-            unawaited(loadedAd.dispose());
-            return;
-          }
-          setState(() {
-            _isLoading = false;
-            _isLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (failedAd, error) {
-          unawaited(failedAd.dispose());
-          if (!mounted) return;
-          setState(() {
-            _bannerAd = null;
-            _isLoading = false;
-            _isLoaded = false;
-          });
-        },
-        onPaidEvent: (ad, valueMicros, precision, currencyCode) {
-          if (!mounted) return;
-          context.read<AnalyticsBloc>().add(
-            AnalyticsEventLogged(
-              AnalyticsEventEntity(
-                name: 'ad_impression',
-                parameters: <String, Object>{
-                  'ad_unit_id': ad.adUnitId,
-                  'ad_format': 'banner',
-                  'value_micros': valueMicros,
-                  'currency': currencyCode,
-                },
-              ),
+          if (!enabled) return const SizedBox.shrink();
+
+          return SafeArea(
+            top: false,
+            child: AdMobBannerView(
+              request: AdMobBannerRequest(unit: unit),
+              enabled: enabled,
+              onEvent: _onAdEvent,
             ),
           );
         },
       ),
     );
-    _bannerAd = ad;
-    unawaited(ad.load());
   }
-
-  void _disposeAd() {
-    final ad = _bannerAd;
-    if (ad != null) unawaited(ad.dispose());
-    _bannerAd = null;
-    _isLoading = false;
-    if (_isLoaded && mounted) {
-      setState(() => _isLoaded = false);
-    } else {
-      _isLoaded = false;
-    }
-  }
-
-  @override
-  void dispose() {
-    final ad = _bannerAd;
-    if (ad != null) unawaited(ad.dispose());
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => MultiBlocListener(
-    listeners: [
-      BlocListener<IapBloc, IapState>(
-        listenWhen:
-            (previous, current) =>
-                previous.isPremium != current.isPremium ||
-                previous.status != current.status,
-        listener: (context, state) => _syncSubscription(),
-      ),
-      BlocListener<AdsBloc, AdsState>(
-        listenWhen: (previous, current) => previous.status != current.status,
-        listener: (context, state) {
-          if (state.status == AdsViewStatus.disabled) {
-            _disposeAd();
-          } else if (state.status == AdsViewStatus.ready) {
-            _syncSubscription();
-          }
-        },
-      ),
-    ],
-    child:
-        !_isLoaded || _bannerAd == null
-            ? const SizedBox.shrink()
-            : SafeArea(
-              top: false,
-              child: SizedBox(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            ),
-  );
 }

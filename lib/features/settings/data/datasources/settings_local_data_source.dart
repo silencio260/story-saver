@@ -1,7 +1,9 @@
-import 'package:in_app_review/in_app_review.dart';
-import 'package:share_plus/share_plus.dart';
+import 'dart:async';
+
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/utils/legacy_app_constants.dart';
 import '../../../saved_media/data/services/auto_save_service.dart';
@@ -10,7 +12,22 @@ import 'settings_base_local_data_source.dart';
 export 'settings_base_local_data_source.dart';
 
 class SettingsLocalDataSource implements SettingsBaseLocalDataSource {
-  const SettingsLocalDataSource();
+  /// Creates the data source over the kit's link and review capabilities.
+  ///
+  /// Sharing, the store listing and the support mailbox were three separate
+  /// hand-built launches here — a `Share.share` with an inline string, an
+  /// `InAppReview` availability dance, and a `mailto:` Uri assembled by hand.
+  /// All three are policy that belongs in one place, so they now go through
+  /// [AppLinkActions] and [StoreReviewProvider], which know which store this
+  /// platform uses and what the share text says.
+  const SettingsLocalDataSource({
+    required AppLinkActions links,
+    required StoreReviewProvider storeReview,
+  })  : _links = links,
+        _storeReview = storeReview;
+
+  final AppLinkActions _links;
+  final StoreReviewProvider _storeReview;
 
   @override
   Future<bool> loadAutoSave() async =>
@@ -32,31 +49,36 @@ class SettingsLocalDataSource implements SettingsBaseLocalDataSource {
   }
 
   @override
-  Future<void> shareApp() async {
-    await Share.share(
-      'Shared from Story Saver: ${AppConstants().GOOGLE_PLAY_STORE_LINK}',
-    );
-  }
+  Future<void> shareApp() => _unwrap(_links.shareApp());
 
   @override
   Future<void> rateApp() async {
-    final review = InAppReview.instance;
-    if (await review.isAvailable()) {
-      await review.requestReview();
-    } else {
-      await review.openStoreListing();
-    }
+    final available = (await _storeReview.isAvailable()).fold(
+      onSuccess: (value) => value,
+      onFailure: (_) => false,
+    );
+    // The native flow is quota-limited and declines silently once a user has
+    // seen it recently, so the listing is the only reliable fallback.
+    await _unwrap(
+      available
+          ? await _storeReview.requestReview()
+          : await _storeReview.openStoreListing(),
+    );
   }
 
   @override
-  Future<void> contactSupport() async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'support@genrevibes.com',
-      queryParameters: <String, String>{'subject': 'Story Saver support'},
+  Future<void> contactSupport() => _unwrap(_links.contactSupport());
+
+  /// Keeps the `Future<void>`-that-throws contract this layer is built on.
+  ///
+  /// The repository above still expects a throw, so a `KitFailure` is turned
+  /// back into one here rather than leaking the result type through a layer
+  /// that has no way to render it.
+  Future<void> _unwrap(FutureOr<KitResult<void>> result) async {
+    final resolved = await result;
+    resolved.fold(
+      onSuccess: (_) {},
+      onFailure: (error) => throw StateError(error.message),
     );
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw StateError('Unable to open the support email app.');
-    }
   }
 }

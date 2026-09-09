@@ -2,27 +2,50 @@ import 'dart:async';
 import 'dart:io';
 import 'package:docman/docman.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/core/utils/legacy_app_constants.dart';
 import 'package:storysaver/features/saved_media/data/datasources/local/saved_media_cache.dart';
 import 'package:storysaver/features/saved_media/data/datasources/local/media_file_operations.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'package:storysaver/container_injector.dart';
+
 class AutoSaveService {
   static const String taskName = "autoSaveTask";
   static const String devTaskName = "devAutoSaveTask";
-  static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  /// This isolate's notification scheduler.
+  ///
+  /// Deliberately not taken from the service locator. `executeBackgroundTask`
+  /// runs in the WorkManager background isolate, where `bootstrapApp` never
+  /// ran and GetIt is empty. The scheduler is built here for the same reason
+  /// the raw plugin used to be: this isolate needs its own.
+  static LocalNotificationScheduler? _notifications;
 
   // Initialize WorkManager and Notifications
   static Future<void> initialize() async {
-    // Notification setup
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    if (_notifications != null) return;
+    // In the main isolate the composition root already built and started one;
+    // reuse it rather than initializing the platform plugin a second time.
+    if (sl.isRegistered<LocalNotificationScheduler>()) {
+      _notifications = sl<LocalNotificationScheduler>();
+      return;
+    }
+    // Only `show` is used from here, so the zone does not affect delivery; it
+    // is resolved properly anyway because the adapter refuses an empty one.
+    final timeZone = await FlutterTimezone.getLocalTimezone()
+        .timeout(const Duration(seconds: 2))
+        .catchError((Object _) => 'UTC');
+    final scheduler = PersistentLocalNotificationScheduler(
+      configuration: GenRevibesLocalNotificationsConfiguration(
+        androidDefaultIcon: 'ic_stat_download',
+        timeZoneName: timeZone,
+      ),
+    );
+    await scheduler.initialize();
+    _notifications = scheduler;
 
     // WorkManager setup is done in main.dart via callbackDispatcher
   }
@@ -239,38 +262,19 @@ class AutoSaveService {
   }
 
   static Future<void> _showNotification(int count) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-          'auto_save_channel',
-          'Auto Save Notifications',
-          channelDescription: 'Notifications for auto-saved statuses',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-          icon: 'ic_stat_download', // Custom icon
-        );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-    );
-
-    // Ensure channel exists (critical for Android 8+)
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(
-          const AndroidNotificationChannel(
-            'auto_save_channel',
-            'Auto Save Notifications',
-            description: 'Notifications for auto-saved statuses',
-            importance: Importance.defaultImportance,
-          ),
-        );
-
-    await flutterLocalNotificationsPlugin.show(
+    // The channel is declared as part of the content rather than created
+    // separately: the adapter registers it before showing, which is what the
+    // hand-rolled `createNotificationChannel` call here was for.
+    await initialize();
+    await _notifications?.show(
       0,
-      'Auto Save Complete',
-      'Saved $count new statuses to your gallery.',
-      platformChannelSpecifics,
+      LocalNotificationContent(
+        title: 'Auto Save Complete',
+        body: 'Saved $count new statuses to your gallery.',
+        channelId: 'auto_save_channel',
+        channelName: 'Auto Save Notifications',
+        channelDescription: 'Notifications for auto-saved statuses',
+      ),
     );
   }
 

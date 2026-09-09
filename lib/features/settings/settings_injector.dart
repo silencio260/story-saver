@@ -1,3 +1,6 @@
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
+
 import '../../container_injector.dart';
 import 'data/datasources/settings_local_data_source.dart';
 import 'data/repositories/settings_repository_impl.dart';
@@ -11,7 +14,10 @@ import 'presentation/bloc/settings_bloc/settings_bloc.dart';
 
 void initSettings() {
   sl.registerLazySingleton<SettingsBaseLocalDataSource>(
-    SettingsLocalDataSource.new,
+    () => SettingsLocalDataSource(
+      links: sl<AppLinkActions>(),
+      storeReview: sl<StoreReviewProvider>(),
+    ),
   );
   sl.registerLazySingleton<SettingsBaseRepo>(
     () => SettingsRepo(localDataSource: sl()),

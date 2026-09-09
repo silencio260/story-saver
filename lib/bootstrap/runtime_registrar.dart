@@ -1,5 +1,10 @@
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+
+import 'app_env.dart';
+import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
@@ -38,5 +43,14 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<FeedbackProvider>(runtime.feedback)
     ..registerSingleton<RemoteConfigCoordinator>(runtime.remoteConfig)
     ..registerSingleton<RetentionTracker>(runtime.retention)
-    ..registerSingleton<PermissionProvider>(runtime.permissions);
+    ..registerSingleton<PermissionProvider>(runtime.permissions)
+    ..registerSingleton<AppLinkActions>(runtime.links)
+    ..registerSingleton<LinkOpener>(runtime.linkOpener)
+    ..registerSingleton<RatingCoordinator>(runtime.rating)
+    ..registerSingleton<StoreReviewProvider>(runtime.storeReview)
+    ..registerSingleton<LocalNotificationScheduler>(
+      runtime.localNotifications,
+    )
+    ..registerSingleton<AdMobAdUnit>(runtime.bannerAdUnit)
+    ..registerSingleton<AppEnv>(runtime.env);
 }

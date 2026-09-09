@@ -15,7 +15,7 @@ import '../../../permissions/presentation/bloc/permissions_bloc/permissions_bloc
 import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc.dart';
 import '../../../saved_media/presentation/screens/saved_media_screen.dart';
 import '../../../saved_media/presentation/services/legacy/batch_download_service.dart';
-import '../../../settings/presentation/services/legacy/app_rating_service.dart';
+import '../../../settings/presentation/services/rating_prompt.dart';
 import '../../../statuses/domain/entities/status_media.dart';
 import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../../../statuses/presentation/widgets/status_grid.dart';
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        AdvancedAppRatingService.showReviewDialogIfEligible(context);
+        RatingPrompt.showIfEligible(context);
       }
     });
   }

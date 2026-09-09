@@ -491,6 +491,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_timezone:
+    dependency: "direct main"
+    description:
+      name: flutter_timezone
+      sha256: "13b2109ad75651faced4831bf262e32559e44aa549426eab8a597610d385d934"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -553,7 +561,7 @@ packages:
     source: path
     version: "0.1.0-dev.1"
   genrevibes_app_rating:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating"
       relative: true

@@ -17,7 +17,7 @@ import '../../../monetization/presentation/widgets/banner_ad_widget.dart';
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
 import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc.dart';
 import '../../../saved_media/presentation/services/legacy/share_to_app.dart';
-import '../../../settings/presentation/services/legacy/app_rating_service.dart';
+import '../../../settings/presentation/services/rating_prompt.dart';
 import '../l10n/status_strings.dart';
 import 'media_viewer_arguments.dart';
 
@@ -108,7 +108,7 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
   void _save() {
     if (!widget.arguments.allowSave) return;
     context.read<SavedMediaBloc>().add(StatusSaveRequested(_currentPath));
-    AdvancedAppRatingService.trackDownloadAndShowRatingIfNeeded(context);
+    RatingPrompt.recordDownload(context);
   }
 
   void _share() {

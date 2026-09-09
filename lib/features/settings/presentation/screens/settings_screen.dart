@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/routes_manager.dart';
 import '../../../../bootstrap/app_runtime.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 
 import '../../../../container_injector.dart';
 import '../../../../core/utils/development_mode_utils.dart';
@@ -14,11 +16,9 @@ import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
 import '../../../onboarding/presentation/bloc/onboarding_bloc/onboarding_bloc.dart';
 import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc.dart';
-import '../../../saved_media/presentation/services/legacy/share_to_app.dart';
 import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../bloc/settings_bloc/settings_bloc.dart';
 import '../l10n/settings_strings.dart';
-import '../services/legacy/app_rating_service.dart';
 import '../../../developer/dev_tools_entry.dart';
 import 'module_health_screen.dart';
 
@@ -153,10 +153,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _settingsItem(
                               icon: Icons.privacy_tip_outlined,
                               label: SettingsStrings.privacyPolicy,
-                              onTap:
-                                  () => debugPrint(
-                                    SettingsStrings.privacyPolicyTapped,
-                                  ),
+                              onTap: () =>
+                                  sl<AppLinkActions>().openPrivacyPolicy(),
                             ),
                             const SizedBox(height: 12),
                             _settingsItem(
@@ -212,7 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _settingsItem(
                               icon: Icons.share,
                               label: SettingsStrings.share,
-                              onTap: () => shareAppLink(context),
+                              onTap: () => sl<AppLinkActions>().shareApp(),
                             ),
                             const SizedBox(height: 24),
                             if (DevelopmentModeUtils.checkDevelopmentMode())
@@ -276,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: Icons.restore,
       label: SettingsStrings.resetRatingCount,
       onTap: () async {
-        await AdvancedAppRatingService.resetDownloadCount();
+        await sl<RatingCoordinator>().reset();
         _showMessage(SettingsStrings.ratingCountReset);
       },
     ),

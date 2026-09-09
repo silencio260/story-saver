@@ -1,11 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+
+import '../features/monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_firebase/genrevibes_analytics_firebase.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_app_links_launcher/genrevibes_app_links_launcher.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
+import 'package:genrevibes_app_rating_in_app_review/genrevibes_app_rating_in_app_review.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_consent_ump/genrevibes_consent_ump.dart';
 import 'package:genrevibes_core/genrevibes_core.dart';
@@ -20,6 +27,7 @@ import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_iap_revenuecat_ui/genrevibes_iap_revenuecat_ui.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_permissions_handler/genrevibes_permissions_handler.dart';
@@ -68,12 +76,18 @@ abstract final class AppModules {
   /// Runtime permissions.
   static const permissions = 'permissions';
 
+  /// Share, store, support, privacy and terms links.
+  static const appLinks = 'app_links';
+
+  /// Rating eligibility and the store review flow.
+  static const appRating = 'app_rating';
+
+  /// Device-local notifications.
+  static const localNotifications = 'notifications.local';
+
   /// Registered but disabled until their feature migrates.
   static const disabled = <String>[
-    'app_rating',
     'onboarding',
-    'app_links',
-    'notifications.local',
   ];
 }
 
@@ -115,6 +129,11 @@ Future<AppRuntime> bootstrapApp(
     legacyKeys: <String, String>{
       ...DeviceIdentityKeys.legacyKeys,
       ...EngagementKeys.legacyKeys,
+      // Adopted now that RatingCoordinator owns this state and the legacy
+      // service no longer writes it. `download_count` was this app's own
+      // milestone counter and has no equivalent in RatingKeys.legacyKeys.
+      ...RatingKeys.legacyKeys,
+      RatingKeys.trigger(_downloadTrigger): 'download_count',
     },
     removeLegacyOnRead: false,
   );
@@ -177,6 +196,65 @@ Future<AppRuntime> bootstrapApp(
       OneSignalPushProvider(configuration: env.oneSignal);
   final feedback = dependencies.feedback ??
       FeedbackNestFeedbackProvider(configuration: env.feedbackNest);
+  final linkOpener = dependencies.linkOpener ?? UrlLauncherLinkOpener();
+
+  // Where this app lives and how to reach us.
+  //
+  // One value object rather than constants spread through the UI, so a missing
+  // store URL or an unset privacy policy is a validation failure here instead
+  // of a button that does nothing in a shipped build.
+  final appLinksConfig = AppLinksConfig(
+    appName: 'Story Saver',
+    playStoreUrl: 'https://play.google.com/store/apps/details'
+        '?id=com.genrevibes.whatsappstorysaver',
+    supportEmail: 'support@genrevibes.com',
+    privacyPolicyUrl: env.privacyPolicyUrl,
+    termsUrl: env.termsUrl.trim().isEmpty ? null : env.termsUrl,
+  );
+  final links = AppLinkActions(
+    config: appLinksConfig,
+    opener: linkOpener,
+    isIos: defaultTargetPlatform == TargetPlatform.iOS,
+    observer: _AnalyticsAppLinkObserver(analytics),
+  );
+
+  final storeReview = dependencies.storeReview ??
+      InAppReviewStoreProvider(
+        configuration: InAppReviewConfiguration(
+          androidStoreUrl: appLinksConfig.playStoreUrl,
+          iosStoreUrl: appLinksConfig.appStoreUrl,
+        ),
+      );
+
+  // Rating policy. The coordinator decides whether to prompt; it never presents
+  // UI and never talks to a store, so the rules stay testable against a clock.
+  //
+  // The suppression hook is wired here rather than inside the module because a
+  // rating package must not depend on an ads package. This is the one place
+  // that legitimately knows about both.
+  // Resolved from the device rather than assumed. The adapter refuses an empty
+  // zone on purpose: scheduling against the wrong one shifts every delivery
+  // after travel or a DST change, and UTC is wrong for most users.
+  final timeZone = await FlutterTimezone.getLocalTimezone()
+      .timeout(const Duration(seconds: 2))
+      .catchError((Object _) => 'UTC');
+  final localNotifications = dependencies.localNotifications ??
+      PersistentLocalNotificationScheduler(
+        configuration: GenRevibesLocalNotificationsConfiguration(
+          // The drawable the auto-save notification already used.
+          androidDefaultIcon: 'ic_stat_download',
+          timeZoneName: timeZone,
+        ),
+      );
+
+  final rating = RatingCoordinator(
+    store: store,
+    observer: _AnalyticsRatingObserver(analytics),
+    suppressionHook: (action) => AdSuppressionManager().withAdsSuppressed<void>(
+      reason: 'rating_dialog',
+      action: action,
+    ),
+  );
 
   final kit = GenRevibesStarterKit(
     logger: logger,
@@ -251,6 +329,31 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.permissions,
         create: () => permissions,
+        isRequired: false,
+      ),
+      // Optional: a share sheet that fails is not a reason to refuse to start.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.appLinks,
+        create: () => linkOpener,
+        isRequired: false,
+      ),
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.appRating,
+        create: () => rating,
+        isRequired: false,
+      ),
+      // Optional: a missed "auto-save finished" notice is not worth a failed
+      // launch, and the save itself already happened.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.localNotifications,
+        create: () => localNotifications,
+        isRequired: false,
+      ),
+      // Namespaced under app_rating: the store adapter is the provider half of
+      // that capability, not a capability of its own.
+      StarterModuleRegistration.enabled(
+        moduleId: '${AppModules.appRating}.store',
+        create: () => storeReview,
         isRequired: false,
       ),
       for (final moduleId in AppModules.disabled)
@@ -358,9 +461,84 @@ Future<AppRuntime> bootstrapApp(
     remoteConfig: remoteConfig,
     retention: retention,
     permissions: permissions,
+    links: links,
+    linkOpener: linkOpener,
+    rating: rating,
+    storeReview: storeReview,
+    localNotifications: localNotifications,
+    bannerAdUnit: env.bannerAdUnit,
+    env: env,
     eventLog: eventLog,
     kitLog: kitLog,
   );
+}
+
+/// The app's own rating milestone: a completed download.
+const _downloadTrigger = 'download';
+
+/// Sends rating lifecycle events to analytics under the app's own names.
+///
+/// The kit reports neutral outcomes; this maps them onto the events the
+/// dashboards already use, including the separate 4- and 5-star events the old
+/// service emitted alongside `rating_submitted`.
+final class _AnalyticsRatingObserver implements RatingObserver {
+  const _AnalyticsRatingObserver(this._analytics);
+
+  final AnalyticsPipeline _analytics;
+
+  @override
+  void onEvaluated(RatingDecision decision) {}
+
+  @override
+  void onPrompted() {}
+
+  @override
+  void onOutcome(RatingOutcome outcome, {int? rating}) {
+    switch (outcome) {
+      case RatingOutcome.maybeLater:
+        _fire('rating_maybe_later');
+      case RatingOutcome.never:
+        _fire('rating_never');
+      case RatingOutcome.submitted:
+        _fire(
+          'rating_submitted',
+          <String, Object?>{if (rating != null) 'star_count': rating},
+        );
+        if (rating == 4) _fire('rating_4_stars');
+        if (rating == 5) _fire('rating_5_stars');
+    }
+  }
+
+  void _fire(String name, [Map<String, Object?> properties = const {}]) {
+    unawaited(
+      _analytics.track(AnalyticsEvent(name: name, properties: properties)),
+    );
+  }
+}
+
+/// Sends link actions to analytics under the app's own event names.
+///
+/// The kit reports a neutral action — `share`, `store`, `support`, `privacy`,
+/// `terms` — and this maps the two the app already measures onto the names its
+/// dashboards are built on. Unmapped actions are not invented as new events;
+/// an event nobody defined is noise.
+final class _AnalyticsAppLinkObserver implements AppLinkObserver {
+  const _AnalyticsAppLinkObserver(this._analytics);
+
+  final AnalyticsPipeline _analytics;
+
+  static const _events = <String, String>{
+    'share': 'share_app',
+    'store': 'goto_app_store_page',
+  };
+
+  @override
+  void onAction(String action, {required bool succeeded}) {
+    if (!succeeded) return;
+    final name = _events[action];
+    if (name == null) return;
+    unawaited(_analytics.track(AnalyticsEvent(name: name)));
+  }
 }
 
 /// Vendor boundaries a test can replace.
@@ -381,10 +559,22 @@ final class BootstrapDependencies {
     this.feedback,
     this.remoteConfig,
     this.permissions,
+    this.linkOpener,
+    this.storeReview,
+    this.localNotifications,
   });
 
   /// Backing key-value store.
   final KeyValueStore? store;
+
+  /// URL, email and share opener.
+  final LinkOpener? linkOpener;
+
+  /// Store review provider.
+  final StoreReviewProvider? storeReview;
+
+  /// Device-local notification scheduler.
+  final LocalNotificationScheduler? localNotifications;
 
   /// Advertising identifier source.
   final AdvertisingIdSource? advertising;

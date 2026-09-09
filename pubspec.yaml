@@ -55,10 +55,16 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions
   genrevibes_permissions_handler:
     path: packages/genrevibes_starter_kit/modules/permissions/genrevibes_permissions_handler
+  # Resolves the device's IANA zone for the local notifications adapter,
+  # which refuses to silently assume UTC: a wrong zone shifts every
+  # scheduled notification after travel or a DST change.
+  flutter_timezone: ^4.1.1
   genrevibes_app_links:
     path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links
   genrevibes_app_links_launcher:
     path: packages/genrevibes_starter_kit/modules/app_links/genrevibes_app_links_launcher
+  genrevibes_app_rating:
+    path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating
   genrevibes_app_rating_in_app_review:
     path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating_in_app_review
   genrevibes_onboarding:
@@ -188,7 +194,6 @@ dependency_overrides:
   # Local development against the unpublished kit. Every GenRevibes package
   # declares hosted constraints on its siblings; until they are on pub.dev an
   # app consuming them by path must resolve those siblings by path too.
-  # genrevibes_app_rating is transitive, via genrevibes_feedbacknest.
   genrevibes_ads:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
   genrevibes_ads_admob:

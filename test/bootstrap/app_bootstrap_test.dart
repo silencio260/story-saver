@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_core/genrevibes_core.dart';
@@ -59,11 +61,28 @@ void main() {
     test('the modules whose features have not migrated stay disabled', () {
       // Enabling one of these while the old code still writes its keys gives
       // two writers and divergent user state, so each waits for its feature.
-      expect(AppModules.disabled, containsAll(<String>[
-        'app_rating',
-        'onboarding',
-        'app_links',
-        'notifications.local',
+      expect(AppModules.disabled, contains('onboarding'));
+    });
+
+    test('the migrated capabilities are enabled, not disabled', () async {
+      // Each of these replaced a hand-rolled service that owned the same
+      // storage keys or SDK. They are enabled only because the old writer is
+      // gone; re-adding one alongside would give two writers again.
+      expect(
+        AppModules.disabled,
+        isNot(anyElement(isIn(<String>[
+          AppModules.appLinks,
+          AppModules.appRating,
+          AppModules.localNotifications,
+        ]))),
+      );
+
+      final runtime = await _Harness().boot(env);
+
+      expect(runtime.kit.modules.keys, containsAll(<String>[
+        AppModules.appLinks,
+        AppModules.appRating,
+        AppModules.localNotifications,
       ]));
     });
 
@@ -140,13 +159,31 @@ void main() {
       // Consent may present a form and wait for a person to dismiss it. On the
       // startup chain that held back eight modules and the first frame with
       // them, measured at two to four seconds on device even with no form.
-      final harness = _Harness();
+      //
+      // Asserted by holding consent open forever rather than by inspecting
+      // which modules have appeared yet: `_startDeferred` registers a module
+      // synchronously before awaiting it, so a "not registered yet" check
+      // passes or fails on how many microtasks happened to elapse, and any
+      // unrelated `await` added to bootstrap silently flips it.
+      final harness = _Harness()..consent.blockInitialization = Completer<void>();
 
-      final runtime = await harness.boot(env);
+      final runtime = await harness.boot(env).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw StateError('boot waited for consent'),
+      );
 
-      expect(runtime.kit.modules.containsKey(AppModules.consent), isFalse);
-      expect(runtime.kit.modules.containsKey(AppModules.ads), isFalse);
       expect(runtime.isHealthy, isTrue);
+      expect(
+        runtime.kit.modules[AppModules.ads]?.health.state,
+        isNot(ModuleState.ready),
+        reason: 'ads must not be ready before consent resolves',
+      );
+
+      harness.consent.blockInitialization!.complete();
+      await runtime.kit.deferredStartupComplete;
+
+      expect(runtime.kit.modules[AppModules.consent], isNotNull);
+      expect(runtime.kit.modules[AppModules.ads], isNotNull);
     });
 
     test('they start afterwards, consent before ads', () async {
@@ -338,6 +375,9 @@ final class _Harness {
   final _FakePush push = _FakePush();
   final _FakeFeedback feedback = _FakeFeedback();
   final _FakeRemoteConfig remoteConfig = _FakeRemoteConfig();
+  final _FakeLinkOpener linkOpener = _FakeLinkOpener();
+  final _FakeStoreReview storeReview = _FakeStoreReview();
+  final _FakeLocalNotifications localNotifications = _FakeLocalNotifications();
 
   Future<dynamic> boot(AppEnv env) {
     return bootstrapApp(
@@ -354,6 +394,9 @@ final class _Harness {
         push: push,
         feedback: feedback,
         remoteConfig: remoteConfig,
+        linkOpener: linkOpener,
+        storeReview: storeReview,
+        localNotifications: localNotifications,
       ),
     );
   }
@@ -470,6 +513,10 @@ final class _FakeConsent with _FakeModule implements ConsentProvider {
   /// refused consent decision. Named apart from the module's own `state`.
   ConsentState consentState = ConsentState.notRequired;
 
+  /// Completes `initialize` only when a test says so, standing in for a consent
+  /// form sitting open in front of a person.
+  Completer<void>? blockInitialization;
+
   @override
   String get providerId => 'fake';
   @override
@@ -483,7 +530,10 @@ final class _FakeConsent with _FakeModule implements ConsentProvider {
   Stream<ConsentSnapshot> get snapshotChanges =>
       const Stream<ConsentSnapshot>.empty();
   @override
-  Future<KitResult<void>> initialize() => start();
+  Future<KitResult<void>> initialize() async {
+    await blockInitialization?.future;
+    return start();
+  }
   @override
   Future<KitResult<void>> dispose() => stop();
   @override
@@ -715,4 +765,81 @@ final class _FakeFeedback with _FakeModule implements FeedbackProvider {
     String? review,
   }) async =>
       const KitSuccess<void>(null);
+}
+
+final class _FakeLinkOpener with _FakeModule implements LinkOpener {
+  @override
+  String get providerId => 'fake';
+  @override
+  String get moduleId => 'app_links.fake';
+  @override
+  Future<KitResult<void>> initialize() => start();
+  @override
+  Future<KitResult<void>> dispose() => stop();
+  @override
+  Future<KitResult<void>> openUrl(Uri uri, {bool external = true}) async =>
+      const KitSuccess<void>(null);
+  @override
+  Future<KitResult<void>> openEmail({
+    required String to,
+    String? subject,
+    String? body,
+  }) async =>
+      const KitSuccess<void>(null);
+  @override
+  Future<KitResult<void>> share({
+    required String text,
+    String? subject,
+  }) async =>
+      const KitSuccess<void>(null);
+}
+
+final class _FakeStoreReview with _FakeModule implements StoreReviewProvider {
+  @override
+  String get providerId => 'fake';
+  @override
+  String get moduleId => 'app_rating.store';
+  @override
+  Future<KitResult<void>> initialize() => start();
+  @override
+  Future<KitResult<void>> dispose() => stop();
+  @override
+  Future<KitResult<bool>> isAvailable() async => const KitSuccess<bool>(true);
+  @override
+  Future<KitResult<void>> requestReview() async => const KitSuccess<void>(null);
+  @override
+  Future<KitResult<void>> openStoreListing() async =>
+      const KitSuccess<void>(null);
+}
+
+final class _FakeLocalNotifications
+    with _FakeModule
+    implements LocalNotificationScheduler {
+  @override
+  String get moduleId => 'notifications.local';
+  @override
+  Future<KitResult<void>> initialize() => start();
+  @override
+  Future<KitResult<void>> dispose() => stop();
+  @override
+  Stream<LocalNotificationInteraction> get interactions =>
+      const Stream<LocalNotificationInteraction>.empty();
+  @override
+  Future<KitResult<bool>> requestPermission() async =>
+      const KitSuccess<bool>(true);
+  @override
+  Future<KitResult<void>> show(int id, LocalNotificationContent content) async =>
+      const KitSuccess<void>(null);
+  @override
+  Future<KitResult<void>> schedule(LocalNotificationRequest request) async =>
+      const KitSuccess<void>(null);
+  @override
+  Future<KitResult<List<PendingLocalNotification>>> pending() async =>
+      const KitSuccess<List<PendingLocalNotification>>(
+        <PendingLocalNotification>[],
+      );
+  @override
+  Future<KitResult<void>> cancel(int id) async => const KitSuccess<void>(null);
+  @override
+  Future<KitResult<void>> cancelAll() async => const KitSuccess<void>(null);
 }
