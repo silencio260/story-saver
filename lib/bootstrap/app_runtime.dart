@@ -6,6 +6,7 @@ import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
@@ -33,6 +34,7 @@ final class AppRuntime {
     required this.store,
     required this.crash,
     required this.identity,
+    required this.developerAccess,
     required this.consent,
     required this.analytics,
     required this.adPolicy,
@@ -79,6 +81,9 @@ final class AppRuntime {
 
   /// Stable install identity.
   final DeviceIdentityResolver identity;
+
+  /// Whether this install gets the developer tools and test ads, and why.
+  final DeveloperAccessController developerAccess;
 
   /// Privacy consent gate.
   final ConsentGate consent;

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
+import 'package:storysaver/container_injector.dart';
 import 'package:storysaver/features/monetization/data/services/revenue_cat_service.dart';
-import 'package:storysaver/core/utils/development_mode_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionManager extends ChangeNotifier {
@@ -13,13 +14,19 @@ class SubscriptionManager extends ChangeNotifier {
   bool _isInitialized = false;
   DateTime? _lastChecked;
 
-  // Debug override - set to true to simulate premium user in development mode
-  // This only works when DevelopmentModeUtils.checkDevelopmentMode() returns true
+  // Debug override - simulates a premium user. Honoured only while this device
+  // has developer access: every development build, a listed developer device,
+  // or the passcode this session. The switch stays saved, so a store build
+  // whose passcode session ended is not left premium.
   bool debugOverridePremium = false;
 
-  /// Returns true if user is premium OR if debug override is enabled in development mode
+  bool get _hasDeveloperAccess =>
+      sl.isRegistered<DeveloperAccessController>() &&
+      sl<DeveloperAccessController>().current.isGranted;
+
+  /// Returns true if user is premium OR if the debug override applies
   bool get isPremium {
-    if (debugOverridePremium && DevelopmentModeUtils.checkDevelopmentMode()) {
+    if (debugOverridePremium && _hasDeveloperAccess) {
       print(
         'SubscriptionManager: Debug override active - granting premium access',
       );

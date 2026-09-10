@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
@@ -121,12 +122,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
           AnalyticsEvent(
             name: 'ad_impression',
             properties: <String, Object>{
-              // The unit that served, which is a sample unit in development.
-              'ad_unit_id': sl<AppEnv>()
-                      .adMob
-                      .unitFor(AppPlacements.interstitial)
-                      ?.adUnitId ??
-                  '',
+              'ad_unit_id': _servedInterstitialUnitId(),
               'ad_format': event.placement.format.name,
               'value_micros': revenue.valueMicros,
               'currency': revenue.currencyCode,
@@ -135,6 +131,16 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
         ),
       );
     });
+  }
+
+  /// The unit that served: Google's sample unit on a device with developer
+  /// access, which is every development build.
+  String _servedInterstitialUnitId() {
+    final configuration = sl<AppEnv>().adMob;
+    final served = sl<DeveloperAccessController>().current.servesTestAds
+        ? configuration.withTestAdUnits()
+        : configuration;
+    return served.unitFor(AppPlacements.interstitial)?.adUnitId ?? '';
   }
 
   Future<void> _reloadAfterInterval() async {

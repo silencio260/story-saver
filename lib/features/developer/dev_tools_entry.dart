@@ -3,6 +3,7 @@ import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
@@ -53,6 +54,7 @@ DevToolsHost _host() {
     // Analytics-name overrides are left out: this app does not rename events
     // remotely, and their forty-two keys buried the three it does configure.
     identity: sl<DeviceIdentityResolver>(),
+    developerAccess: sl<DeveloperAccessController>(),
     retention: sl<RetentionTracker>(),
     crash: sl<CrashCoordinator>(),
     feedback: sl<FeedbackProvider>(),
@@ -147,6 +149,15 @@ const _storageKeys = <DevStorageGroup>[
       DevStorageEntry(
         key: 'genrevibes.analytics.session_replay.override.v1',
         label: 'Developer force on/off',
+      ),
+    ],
+  ),
+  DevStorageGroup(
+    title: 'Developer access',
+    entries: <DevStorageEntry>[
+      DevStorageEntry(
+        key: DeveloperAccessKeys.failedPasscodeAttempts,
+        label: 'Wrong passcode attempts',
       ),
     ],
   ),

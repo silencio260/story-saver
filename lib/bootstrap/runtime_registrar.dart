@@ -8,6 +8,7 @@ import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
@@ -35,6 +36,7 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<KeyValueStore>(runtime.store)
     ..registerSingleton<CrashCoordinator>(runtime.crash)
     ..registerSingleton<DeviceIdentityResolver>(runtime.identity)
+    ..registerSingleton<DeveloperAccessController>(runtime.developerAccess)
     ..registerSingleton<ConsentGate>(runtime.consent)
     ..registerSingleton<AnalyticsPipeline>(runtime.analytics)
     ..registerSingleton<AdPolicyController>(runtime.adPolicy)

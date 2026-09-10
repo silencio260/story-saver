@@ -7,6 +7,7 @@ import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_feedbacknest/genrevibes_feedbacknest.dart';
 import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
@@ -25,6 +26,20 @@ abstract final class AppPlacements {
 
   /// Every placement, for policy configuration.
   static const all = <AdPlacement>[banner, interstitial];
+}
+
+/// Phones that always have the developer tools and test ads, in every build.
+///
+/// Hashes, never device identifiers: this list is compiled into the app, so
+/// whatever is here is public. Copy a phone's hash from Settings → Developer
+/// Options → Copy Developer Device Hash, or Starter Kit Lab → Developer access.
+///
+/// For phones that come and go, use `developer_device_hashes` in the env file
+/// or in remote config instead. Neither needs a code change, and remote config
+/// needs no release.
+abstract final class AppDeveloperDevices {
+  /// Developer device hashes.
+  static const hashes = <String>[];
 }
 
 /// Build-time configuration, read from `--dart-define-from-file`.
@@ -48,6 +63,8 @@ final class AppEnv {
     this.privacyPolicyUrl = '',
     this.termsUrl = '',
     this.consentTestDeviceIds = '',
+    this.developerPasscode = '',
+    this.developerDeviceHashes = '',
   });
 
   /// Reads the environment from compile-time defines.
@@ -73,6 +90,9 @@ final class AppEnv {
       termsUrl: String.fromEnvironment('terms_url'),
       consentTestDeviceIds:
           String.fromEnvironment('consent_debug_device_ids'),
+      developerPasscode: String.fromEnvironment('developer_passcode'),
+      developerDeviceHashes:
+          String.fromEnvironment('developer_device_hashes'),
     );
   }
 
@@ -156,6 +176,20 @@ final class AppEnv {
   /// ConsentDebugSettings.Builder().addTestDeviceHashedId(...)".
   final String consentTestDeviceIds;
 
+  /// Passcode for the hidden developer unlock in a store build.
+  ///
+  /// Defined as `developer_passcode` in `env/*.json`; blank means
+  /// `DeveloperAccessDefaults.passcode`. Like every define it is compiled into
+  /// the binary, so it stops casual discovery, not a determined attacker. The
+  /// lockout after three wrong attempts is what stops guessing.
+  final String developerPasscode;
+
+  /// Developer device hashes from the env file, comma separated.
+  ///
+  /// Defined as `developer_device_hashes`. Hashes only — see
+  /// [AppDeveloperDevices].
+  final String developerDeviceHashes;
+
   /// [consentTestDeviceIds] split into a list.
   List<String> get consentTestDeviceIdList => consentTestDeviceIds
       .split(',')
@@ -181,20 +215,6 @@ final class AppEnv {
             )
           : const ConsentDebugConfig();
 
-  /// Whether ads are requested from Google's sample units instead of this
-  /// app's own.
-  ///
-  /// Every development build, whatever its env file says. Requesting a real
-  /// unit from a build that is not on the store is invalid traffic under the
-  /// AdMob program policies, and it only works at all while the account is in
-  /// good standing — a suspended account serves nothing, which left no way to
-  /// see an ad locally. Sample units are not tied to any account, so they fill
-  /// regardless.
-  ///
-  /// The manifest follows the same rule: `android/app/build.gradle` names
-  /// Google's sample app ID for the same builds.
-  bool get useTestAds => isDevelopment;
-
   /// The banner unit, for `AdMobBannerView`.
   ///
   /// Deliberately not part of [adMob]. `AdMobAdProvider` serves the
@@ -202,29 +222,40 @@ final class AppEnv {
   /// rejects a banner unit at initialization, which took the whole ads module
   /// down with it. Inline formats are rendered by the widget in
   /// `genrevibes_ads_admob_ui`, which holds its own unit.
-  AdMobAdUnit get bannerAdUnit {
-    final unit = AdMobAdUnit(
-      placement: AppPlacements.banner,
-      adUnitId: bannerAdUnitId,
-    );
-    return useTestAds ? unit.withTestUnitId() : unit;
-  }
+  ///
+  /// Always this app's own unit. Whether a device gets Google's sample unit
+  /// instead is decided at runtime by `DeveloperAccessController`, because a
+  /// developer device can be recognised after startup — when remote config
+  /// arrives, or when the passcode is entered. Every development build is one.
+  AdMobAdUnit get bannerAdUnit => AdMobAdUnit(
+        placement: AppPlacements.banner,
+        adUnitId: bannerAdUnitId,
+      );
 
   /// AdMob configuration for the full-screen placements this app declares.
-  GenRevibesAdMobConfiguration get adMob {
-    final configuration = GenRevibesAdMobConfiguration(
-      adUnits: <AdMobAdUnit>[
-        AdMobAdUnit(
-          placement: AppPlacements.interstitial,
-          adUnitId: interstitialAdUnitId,
-        ),
-      ],
-      // Carried over verbatim from AppServicesDataSource so test-device
-      // behavior does not change with this migration.
-      testDeviceIds: const <String>['5e2d630f-0073-4c73-b2b8-f05738eb5b6f'],
-    );
-    return useTestAds ? configuration.withTestAdUnits() : configuration;
-  }
+  ///
+  /// Always this app's own units; see [bannerAdUnit] for test ads. No test
+  /// device IDs: the one carried over from the pre-kit service was a UUID, not
+  /// the hashed ID AdMob matches on, so it never applied to any device.
+  GenRevibesAdMobConfiguration get adMob => GenRevibesAdMobConfiguration(
+        adUnits: <AdMobAdUnit>[
+          AdMobAdUnit(
+            placement: AppPlacements.interstitial,
+            adUnitId: interstitialAdUnitId,
+          ),
+        ],
+      );
+
+  /// Who gets the developer tools and test ads in this build.
+  ///
+  /// The remote list is not here; it is bound at runtime by
+  /// `DeveloperAccessRemotePolicyBinder`.
+  DeveloperAccessConfig get developerAccess => DeveloperAccessConfig(
+        isDevelopmentBuild: isDevelopment,
+        hardcodedDeviceHashes: AppDeveloperDevices.hashes,
+        environmentDeviceHashes: developerDeviceHashes,
+        passcode: developerPasscode,
+      );
 
   /// RevenueCat configuration.
   ///

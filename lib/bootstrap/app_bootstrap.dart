@@ -17,6 +17,7 @@ import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_consent_ump/genrevibes_consent_ump.dart';
 import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
@@ -49,6 +50,9 @@ abstract final class AppModules {
 
   /// Stable install identity.
   static const deviceIdentity = 'device_identity';
+
+  /// Developer tools and test ads in store builds.
+  static const developerAccess = 'developer_access';
 
   /// Privacy consent.
   static const consent = 'consent';
@@ -152,6 +156,20 @@ Future<AppRuntime> bootstrapApp(
         dependencies.advertising ?? const AttAdvertisingIdSource(),
     vendor: dependencies.vendor ?? const DeviceInfoVendorIdSource(),
   );
+  // Who gets the developer tools and test ads. Settled before the ad provider
+  // is built, which starts in the mode this decides. A device recognised later
+  // — when its identifier resolves, remote config arrives, or the passcode is
+  // entered — moves ads over through the listener further down.
+  final developerAccess = DeveloperAccessController(
+    store: store,
+    config: env.developerAccess,
+    installMarker: await InstallMarker.read().timeout(
+      const Duration(seconds: 2),
+      onTimeout: () => null,
+    ),
+    logger: logger,
+  );
+  await developerAccess.initialize();
   final consentProvider = dependencies.consent ??
       UmpConsentProvider(debugConfig: env.consentDebug);
   final consent = ConsentGate(provider: consentProvider);
@@ -231,7 +249,11 @@ Future<AppRuntime> bootstrapApp(
         placement.id: const AdPlacementPolicy(),
     },
   );
-  final ads = dependencies.ads ?? AdMobAdProvider(configuration: env.adMob);
+  final ads = dependencies.ads ??
+      AdMobAdProvider(
+        configuration: env.adMob,
+        testMode: developerAccess.current.servesTestAds,
+      );
   final iap = dependencies.iap ??
       RevenueCatIapProvider(
         configuration: env.revenueCat,
@@ -320,6 +342,12 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.deviceIdentity,
         create: () => identity,
+        isRequired: false,
+      ),
+      // Already initialized above, before the ad provider chose its mode.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.developerAccess,
+        create: () => developerAccess,
         isRequired: false,
       ),
       // Consent and ads are deferred: they start after the first frame, in
@@ -460,6 +488,9 @@ Future<AppRuntime> bootstrapApp(
       );
   await resolved.fold(
     onSuccess: (value) async {
+      // Developer devices are listed under a hash of the vendor ID. This is
+      // what recognises a listed phone; the ID itself is hashed and dropped.
+      developerAccess.setDeviceId(value.vendorId);
       await crash.identify(value.installId);
       // The same identity on analytics, so a crash and the events around it
       // describe one device. The old service sent this as a `unique_device_id`
@@ -507,6 +538,37 @@ Future<AppRuntime> bootstrapApp(
   );
   await sessionReplayBinder.initialize();
 
+  // The remote developer device list: applied now from what a previous run
+  // activated, and again whenever a fetch changes it.
+  final developerAccessBinder =
+      DeveloperAccessRemotePolicyBinder.forCoordinator(
+    remoteConfig,
+    controller: developerAccess,
+    logger: logger,
+  );
+  await developerAccessBinder.initialize();
+
+  // Ads follow developer access for the life of the process. A phone that
+  // becomes a developer device mid-session drops any live creative it loaded
+  // and requests test inventory from then on; the banner widget listens to the
+  // same changes. The user property lets a developer's own sessions be
+  // filtered out of production numbers.
+  void followDeveloperAccess(DeveloperAccess access) {
+    // An optional capability on a different interface, so bind it by pattern:
+    // `is` cannot narrow an AdProvider to an unrelated type.
+    if (ads case final AdTestModeProvider testable) {
+      unawaited(testable.setTestMode(access.servesTestAds));
+    }
+    unawaited(
+      analytics.setUserProperties(<String, Object?>{
+        'developer_access': access.reason.name,
+      }),
+    );
+  }
+
+  followDeveloperAccess(developerAccess.current);
+  developerAccess.changes.listen(followDeveloperAccess);
+
   // Nothing else fetches. `initialize` only reads what a previous run
   // activated, so without this a rollout percentage set in Firebase would
   // reach a device once and never move again — and a fresh install would never
@@ -535,6 +597,7 @@ Future<AppRuntime> bootstrapApp(
     store: store,
     crash: crash,
     identity: identity,
+    developerAccess: developerAccess,
     consent: consent,
     analytics: analytics,
     adPolicy: adPolicy,

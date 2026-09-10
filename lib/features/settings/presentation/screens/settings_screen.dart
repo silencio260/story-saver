@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,9 +8,10 @@ import '../../../../bootstrap/app_runtime.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
+import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 
 import '../../../../container_injector.dart';
-import '../../../../core/utils/development_mode_utils.dart';
 import '../../../analytics/domain/entities/analytics_event.dart';
 import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
@@ -68,12 +70,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          SettingsStrings.title,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
+        // Seven quick taps open the developer passcode prompt. Nothing
+        // happens, and nothing hints that anything could, once access is
+        // granted or entry is locked out.
+        title: DeveloperUnlockGesture(
+          controller: sl<DeveloperAccessController>(),
+          child: const Text(
+            SettingsStrings.title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         centerTitle: true,
@@ -213,8 +221,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: () => sl<AppLinkActions>().shareApp(),
                             ),
                             const SizedBox(height: 24),
-                            if (DevelopmentModeUtils.checkDevelopmentMode())
-                              ..._developerOptions(iapState),
+                            // Every development build, a listed developer
+                            // device, or the passcode this session — the same
+                            // decision that switches this phone to test ads.
+                            StreamBuilder<DeveloperAccess>(
+                              stream: sl<DeveloperAccessController>().changes,
+                              initialData:
+                                  sl<DeveloperAccessController>().current,
+                              builder:
+                                  (context, access) =>
+                                      access.data?.isGranted ?? false
+                                          ? Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: _developerOptions(
+                                              iapState,
+                                            ),
+                                          )
+                                          : const SizedBox.shrink(),
+                            ),
                           ],
                         ),
                   ),
@@ -243,6 +268,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
       ),
     ),
+    // The value to add to a developer device list to make this phone one.
+    _settingsItem(
+      icon: Icons.fingerprint,
+      label: SettingsStrings.copyDeveloperDeviceHash,
+      onTap: _copyDeveloperDeviceHash,
+    ),
+    const SizedBox(height: 12),
     // The only way to see on device that every starter-kit module started. A
     // degraded module is designed not to crash the application, so without
     // this a capability can be silently dead and nothing says so.
@@ -396,6 +428,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (_) => false,
       );
     }
+  }
+
+  Future<void> _copyDeveloperDeviceHash() async {
+    final hash = sl<DeveloperAccessController>().current.deviceHash;
+    if (hash == null) {
+      _showMessage(SettingsStrings.developerDeviceHashUnavailable);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: hash));
+    _showMessage(SettingsStrings.developerDeviceHashCopied);
   }
 
   Future<void> _showOneSignalUser() async {

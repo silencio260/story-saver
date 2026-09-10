@@ -510,14 +510,14 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.3"
   genrevibes_ads_admob:
     dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.3"
   genrevibes_ads_admob_ui:
     dependency: "direct main"
     description:
@@ -609,6 +609,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_developer_access:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/devtools/genrevibes_developer_access"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_device_identity:
     dependency: "direct main"
     description:
@@ -622,7 +629,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity_platform"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_devtools:
     dependency: "direct main"
     description:
@@ -720,7 +727,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_config"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_remote_config_firebase:
     dependency: "direct main"
     description:
@@ -734,7 +741,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_policy"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.3"
   genrevibes_settings:
     dependency: "direct main"
     description:

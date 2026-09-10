@@ -22,6 +22,11 @@ class SettingsStrings {
   static const String developerOptions = 'Developer Options';
   static const String moduleHealth = 'Starter Kit Module Health';
   static const String starterKitLab = 'Starter Kit Lab';
+  static const String copyDeveloperDeviceHash = 'Copy Developer Device Hash';
+  static const String developerDeviceHashCopied =
+      'Device hash copied. Add it to a developer device list.';
+  static const String developerDeviceHashUnavailable =
+      'This device has no identifier to hash yet.';
   static const String resetOnboarding = 'Reset Onboarding';
   static const String resetRatingCount = 'Reset count to first review popup';
   static const String ratingCountReset = 'Download count reset to 0';
