@@ -8,6 +8,25 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Which AdMob app the manifest names.
+//
+// Development builds request Google's sample ad units (AppEnv.useTestAds), and
+// Google's quick start pairs those with its sample app ID. A build counts as
+// development by the same rule as AppEnv.isDevelopment: a debug build, or any
+// of these flags in the env file. Flutter hands --dart-define-from-file values
+// to Gradle as comma-separated base64 "key=value" entries.
+def dartDefines = [:]
+if (project.hasProperty('dart-defines')) {
+    project.property('dart-defines').toString().split(',').each { entry ->
+        def pair = new String(entry.decodeBase64(), 'UTF-8').split('=', 2)
+        if (pair.length == 2) dartDefines[pair[0]] = pair[1]
+    }
+}
+def developmentDefines = ['development_mode', 'founders_version', 'special_version_mode']
+        .any { dartDefines[it] == 'true' }
+def admobTestAppId = 'ca-app-pub-3940256099942544~3347511713'
+def admobProductionAppId = 'ca-app-pub-4210665095499726~4296169317'
+
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
@@ -40,6 +59,9 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+        manifestPlaceholders += [
+            admobAppId: developmentDefines ? admobTestAppId : admobProductionAppId
+        ]
     }
 
     signingConfigs {
@@ -52,6 +74,12 @@ android {
     }
 
     buildTypes {
+        // A debug build is always development, whatever the env file says.
+        // Flutter's profile type copies debug before this block runs, so it
+        // follows the env file like release does.
+        debug {
+            manifestPlaceholders += [admobAppId: admobTestAppId]
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.

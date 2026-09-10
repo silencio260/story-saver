@@ -181,31 +181,50 @@ final class AppEnv {
             )
           : const ConsentDebugConfig();
 
+  /// Whether ads are requested from Google's sample units instead of this
+  /// app's own.
+  ///
+  /// Every development build, whatever its env file says. Requesting a real
+  /// unit from a build that is not on the store is invalid traffic under the
+  /// AdMob program policies, and it only works at all while the account is in
+  /// good standing — a suspended account serves nothing, which left no way to
+  /// see an ad locally. Sample units are not tied to any account, so they fill
+  /// regardless.
+  ///
+  /// The manifest follows the same rule: `android/app/build.gradle` names
+  /// Google's sample app ID for the same builds.
+  bool get useTestAds => isDevelopment;
+
   /// The banner unit, for `AdMobBannerView`.
   ///
   /// Deliberately not part of [adMob]. `AdMobAdProvider` serves the
   /// full-screen formats only — interstitial, rewarded and app-open — and
   /// rejects a banner unit at initialization, which took the whole ads module
   /// down with it. Inline formats are rendered by the widget in
-  /// `genrevibes_ads_admob_ui`, which holds its own unit. The ads migration
-  /// consumes this; nothing reads it yet.
-  AdMobAdUnit get bannerAdUnit => AdMobAdUnit(
-        placement: AppPlacements.banner,
-        adUnitId: bannerAdUnitId,
-      );
+  /// `genrevibes_ads_admob_ui`, which holds its own unit.
+  AdMobAdUnit get bannerAdUnit {
+    final unit = AdMobAdUnit(
+      placement: AppPlacements.banner,
+      adUnitId: bannerAdUnitId,
+    );
+    return useTestAds ? unit.withTestUnitId() : unit;
+  }
 
   /// AdMob configuration for the full-screen placements this app declares.
-  GenRevibesAdMobConfiguration get adMob => GenRevibesAdMobConfiguration(
-        adUnits: <AdMobAdUnit>[
-          AdMobAdUnit(
-            placement: AppPlacements.interstitial,
-            adUnitId: interstitialAdUnitId,
-          ),
-        ],
-        // Carried over verbatim from AppServicesDataSource so test-device
-        // behavior does not change with this migration.
-        testDeviceIds: const <String>['5e2d630f-0073-4c73-b2b8-f05738eb5b6f'],
-      );
+  GenRevibesAdMobConfiguration get adMob {
+    final configuration = GenRevibesAdMobConfiguration(
+      adUnits: <AdMobAdUnit>[
+        AdMobAdUnit(
+          placement: AppPlacements.interstitial,
+          adUnitId: interstitialAdUnitId,
+        ),
+      ],
+      // Carried over verbatim from AppServicesDataSource so test-device
+      // behavior does not change with this migration.
+      testDeviceIds: const <String>['5e2d630f-0073-4c73-b2b8-f05738eb5b6f'],
+    );
+    return useTestAds ? configuration.withTestAdUnits() : configuration;
+  }
 
   /// RevenueCat configuration.
   ///

@@ -121,7 +121,12 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
           AnalyticsEvent(
             name: 'ad_impression',
             properties: <String, Object>{
-              'ad_unit_id': sl<AppEnv>().interstitialAdUnitId,
+              // The unit that served, which is a sample unit in development.
+              'ad_unit_id': sl<AppEnv>()
+                      .adMob
+                      .unitFor(AppPlacements.interstitial)
+                      ?.adUnitId ??
+                  '',
               'ad_format': event.placement.format.name,
               'value_micros': revenue.valueMicros,
               'currency': revenue.currencyCode,

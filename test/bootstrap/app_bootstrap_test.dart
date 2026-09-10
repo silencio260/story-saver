@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
@@ -288,8 +289,7 @@ void main() {
       // AdMobAdProvider serves interstitial, rewarded and app-open. Handing it
       // a banner made it fail initialization outright, which took the entire
       // ads module down on device while every unit test passed.
-      expect(env.adMob.unitFor(AppPlacements.interstitial)?.adUnitId,
-          'interstitial-unit');
+      expect(env.adMob.unitFor(AppPlacements.interstitial), isNotNull);
       expect(env.adMob.unitFor(AppPlacements.banner), isNull);
       for (final unit in env.adMob.adUnits.values) {
         expect(unit.placement.format, isNot(AdFormat.banner));
@@ -297,8 +297,40 @@ void main() {
     });
 
     test('carries the banner unit separately, for the inline ad view', () {
-      expect(env.bannerAdUnit.adUnitId, 'banner-unit');
       expect(env.bannerAdUnit.placement.format, AdFormat.banner);
+    });
+
+    test('serves Google sample units in development, never the real ones', () {
+      // A real unit requested from a development build is invalid traffic, and
+      // serves nothing at all while the account is suspended.
+      expect(env.useTestAds, isTrue);
+      expect(
+        env.adMob.unitFor(AppPlacements.interstitial)?.adUnitId,
+        AdMobTestAds.unitIdFor(AdFormat.interstitial),
+      );
+      expect(
+        env.bannerAdUnit.adUnitId,
+        AdMobTestAds.unitIdFor(AdFormat.banner),
+      );
+    });
+
+    test('serves the env file units in release', () {
+      const release = AppEnv(
+        isDevelopment: false,
+        revenueCatAndroidKey: 'rc-key',
+        oneSignalAppId: 'os-id',
+        postHogApiKey: 'ph-key',
+        feedbackNestApiKey: 'fn-key',
+        bannerAdUnitId: 'banner-unit',
+        interstitialAdUnitId: 'interstitial-unit',
+      );
+
+      expect(release.useTestAds, isFalse);
+      expect(
+        release.adMob.unitFor(AppPlacements.interstitial)?.adUnitId,
+        'interstitial-unit',
+      );
+      expect(release.bannerAdUnit.adUnitId, 'banner-unit');
     });
 
     test('leaves session replay to the controller, in its safe state', () {
