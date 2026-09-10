@@ -28,7 +28,7 @@ class _StatusFolderPermissionScreenState
     setState(() => _requestInProgress = true);
     _overlayContext = overlayContext;
     overlayContext.loaderOverlay.show();
-    _log('request_folder_permission');
+    _log('request_whatsapp_folder_permission');
     context.read<PermissionsBloc>().add(
       StatusFolderPermissionRequested(isBusinessMode: widget.isBusinessMode),
     );
@@ -58,14 +58,21 @@ class _StatusFolderPermissionScreenState
         _log(
           widget.isBusinessMode
               ? 'grant_business_folder_permission'
-              : 'grant_wa_folder_permission',
+              : 'grant_whatsapp_folder_permission',
         );
         Navigator.pushNamedAndRemoveUntil(context, Routes.home, (_) => false);
       } else {
+        // A refusal and a broken picker are different problems and were two
+        // events before the migration: one is the user saying no, the other is
+        // the flow failing to ask. Collapsing them hid every SAF failure
+        // inside the denial rate.
+        if (state.status == PermissionViewStatus.failure) {
+          _log('app_error_operation_failed');
+        }
         _log(
           widget.isBusinessMode
               ? 'denied_business_folder_permission'
-              : 'denied_wa_folder_permission',
+              : 'denied_whatsapp_folder_permission',
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

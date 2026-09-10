@@ -82,21 +82,23 @@ abstract final class AppAnalyticsCatalogue {
           ),
 
           // -------------------------------------------------- permissions
-          // These are the real spellings. The old bench fired
-          // `request_whatsapp_folder_permission` and friends, which no emitter
-          // uses.
+          // The pre-kit spellings, restored. An earlier step shortened three of
+          // these at the emitter and then changed the bench to match, which
+          // made them agree with each other and disagree with every dashboard
+          // and funnel built on the original names. The names are the contract.
           DevEventSpec(
-            name: 'request_folder_permission',
+            name: 'request_whatsapp_folder_permission',
             group: 'Permissions',
-            description: 'Status folder permission screen shown.',
+            description: 'Status folder permission requested. Fires for both '
+                'the regular and business flows, as it always has.',
           ),
           DevEventSpec(
-            name: 'grant_wa_folder_permission',
+            name: 'grant_whatsapp_folder_permission',
             group: 'Permissions',
             description: 'WhatsApp status folder granted.',
           ),
           DevEventSpec(
-            name: 'denied_wa_folder_permission',
+            name: 'denied_whatsapp_folder_permission',
             group: 'Permissions',
             description: 'WhatsApp status folder refused.',
           ),
@@ -109,6 +111,12 @@ abstract final class AppAnalyticsCatalogue {
             name: 'denied_business_folder_permission',
             group: 'Permissions',
             description: 'Business status folder refused.',
+          ),
+          DevEventSpec(
+            name: 'app_error_operation_failed',
+            group: 'Permissions',
+            description: 'The folder picker itself failed, as opposed to the '
+                'user refusing. Reported alongside the denial event.',
           ),
           DevEventSpec(
             name: 'grant_Android/Media_folder_permission',
