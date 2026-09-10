@@ -119,10 +119,9 @@ abstract final class AppAnalyticsCatalogue {
                 'user refusing. Reported alongside the denial event.',
           ),
           DevEventSpec(
-            name: 'grant_Android/Media_folder_permission',
+            name: 'grant_android_media_folder_permission',
             group: 'Permissions',
-            description: 'Android media permission granted. The mixed case and '
-                'slash are deliberate — renaming splits the metric.',
+            description: 'Android media permission granted.',
           ),
 
           // ------------------------------------------------- monetisation

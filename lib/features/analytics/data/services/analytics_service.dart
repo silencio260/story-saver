@@ -57,11 +57,8 @@ abstract final class AnalyticsService {
   static Future<void> logShowHelpModal() async => _track('show_help');
 
   /// Android media-folder permission was granted.
-  ///
-  /// The name keeps its original mixed case and slash. Renaming it would split
-  /// the metric in two, which is a reporting decision rather than a migration.
   static Future<void> logGrantAndroidMediaFolderPermission() async =>
-      _track('grant_Android/Media_folder_permission');
+      _track('grant_android_media_folder_permission');
 
   /// The rating prompt was postponed.
   static Future<void> logRatingMaybeLater() async => _track('rating_maybe_later');
