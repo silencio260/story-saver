@@ -21,19 +21,31 @@ import 'legacy/feedback_helper.dart';
 /// legacy-key mapping, so existing users keep their eligibility rather than
 /// being re-prompted on the release that adopts this.
 abstract final class RatingPrompt {
-  /// Counts a completed download and prompts once the milestone is reached.
+  /// The download that earns the right to interrupt.
   ///
-  /// The old code prompted on exactly the second download. That is preserved,
-  /// but the check is now "at least two" rather than "equal to two", so a
-  /// counter that advances twice between prompts does not skip the milestone
-  /// forever.
+  /// Low enough that a user who has clearly got value from the app is asked
+  /// early, high enough that a first-run accident does not trigger it.
+  static const int _promptOnDownload = 2;
+
+  /// Counts a completed download and prompts on the milestone download only.
+  ///
+  /// The milestone is a single moment in the life of an install, not a state
+  /// the app stays in. Exactly one download — the [_promptOnDownload]th — may
+  /// interrupt the user, and it is allowed to skip the timing thresholds
+  /// because reaching it is itself the evidence that the app is being used.
+  /// Every other download is silent: downloads do not re-enter the eligibility
+  /// check at all, because a heavy user would then be asked as often as the
+  /// interval allowed, which is not what a download is for.
+  ///
+  /// After this, the only thing that can ever prompt again is the home screen,
+  /// under the full timing rules.
   static Future<void> recordDownload(BuildContext context) async {
     final rating = sl<RatingCoordinator>();
     final count = (await rating.recordTrigger('download')).fold(
       onSuccess: (value) => value,
       onFailure: (_) => 0,
     );
-    if (count < 2 || !context.mounted) return;
+    if (count != _promptOnDownload || !context.mounted) return;
     await showIfEligible(context, force: true);
   }
 
