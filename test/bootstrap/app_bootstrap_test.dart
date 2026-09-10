@@ -301,12 +301,21 @@ void main() {
       expect(env.bannerAdUnit.placement.format, AdFormat.banner);
     });
 
-    test('reproduces the app PostHog settings rather than kit defaults', () {
-      // Parity: the app ships session replay with masking off. Changing that is
-      // a product decision, not a migration side effect.
+    test('leaves session replay to the controller, in its safe state', () {
+      // The environment no longer decides any of these. SessionReplayController
+      // resolves recording and masking together from the rollout, and
+      // withSessionReplay applies all three before the SDK is configured. What
+      // is here is only what would ship if that never ran.
+      expect(env.postHog.sessionReplayEnabled, isFalse);
+      // Masking off, as it was pre-kit: a masked replay cannot show where a
+      // user got stuck. The remote keys turn it on without a release.
       expect(env.postHog.maskAllTexts, isFalse);
       expect(env.postHog.maskAllImages, isFalse);
-      expect(env.postHog.sessionReplayEnabled, isFalse); // isDevelopment: true
+    });
+
+    test('does not let the analytics SDK show surveys of its own', () {
+      expect(env.postHog.surveys, isFalse);
+      expect(env.postHog.toSdkConfiguration().surveys, isFalse);
     });
 
     test('disables crash collection in development builds', () {
@@ -350,10 +359,11 @@ void main() {
       expect(production.crash.collectionEnabled, isTrue);
     });
 
-    test('session replay can be turned on in a development build', () {
-      // Release-only replay cannot be verified without shipping, so masking
-      // behaviour and whether it records at all were untestable.
-      expect(env.postHog.sessionReplayEnabled, isFalse);
+    test('keeps development builds out of the replay rollout by default', () {
+      // A development build that records costs the same and fills the same
+      // dashboards as a real user, for footage of a test handset. It seeds
+      // itself off; the dart-define seeds it on for a deliberate check.
+      expect(env.sessionReplayBuildOverride, SessionReplayOverride.forceOff);
 
       const forced = AppEnv(
         isDevelopment: true,
@@ -365,7 +375,22 @@ void main() {
         interstitialAdUnitId: '',
         forceSessionReplay: true,
       );
-      expect(forced.postHog.sessionReplayEnabled, isTrue);
+      expect(forced.sessionReplayBuildOverride, SessionReplayOverride.forceOn);
+    });
+
+    test('release builds seed nothing and follow the rollout', () {
+      const production = AppEnv(
+        isDevelopment: false,
+        revenueCatAndroidKey: '',
+        oneSignalAppId: '',
+        postHogApiKey: '',
+        feedbackNestApiKey: '',
+        bannerAdUnitId: '',
+        interstitialAdUnitId: '',
+        // Ignored in release: the rollout is the only thing that decides.
+        forceSessionReplay: true,
+      );
+      expect(production.sessionReplayBuildOverride, isNull);
     });
   });
 }
@@ -382,6 +407,8 @@ final class _Harness {
   final _FakePush push = _FakePush();
   final _FakeFeedback feedback = _FakeFeedback();
   final _FakeRemoteConfig remoteConfig = _FakeRemoteConfig();
+  final _FakeSessionReplayRecorder sessionReplayRecorder =
+      _FakeSessionReplayRecorder();
   final _FakeLinkOpener linkOpener = _FakeLinkOpener();
   final _FakeStoreReview storeReview = _FakeStoreReview();
   final _FakeLocalNotifications localNotifications = _FakeLocalNotifications();
@@ -401,11 +428,35 @@ final class _Harness {
         push: push,
         feedback: feedback,
         remoteConfig: remoteConfig,
+        sessionReplayRecorder: sessionReplayRecorder,
         linkOpener: linkOpener,
         storeReview: storeReview,
         localNotifications: localNotifications,
       ),
     );
+  }
+}
+
+/// Stands in for the PostHog replay controls, which need a method channel.
+final class _FakeSessionReplayRecorder implements SessionReplayRecorder {
+  bool recording = false;
+
+  @override
+  String get providerId => 'fake';
+
+  @override
+  Future<KitResult<bool>> isRecording() async => KitSuccess<bool>(recording);
+
+  @override
+  Future<KitResult<void>> startRecording() async {
+    recording = true;
+    return const KitSuccess<void>(null);
+  }
+
+  @override
+  Future<KitResult<void>> stopRecording() async {
+    recording = false;
+    return const KitSuccess<void>(null);
   }
 }
 

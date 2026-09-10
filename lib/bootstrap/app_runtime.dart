@@ -41,6 +41,7 @@ final class AppRuntime {
     required this.push,
     required this.feedback,
     required this.remoteConfig,
+    required this.sessionReplay,
     required this.retention,
     required this.permissions,
     required this.links,
@@ -105,6 +106,12 @@ final class AppRuntime {
 
   /// Typed remote configuration.
   final RemoteConfigCoordinator remoteConfig;
+
+  /// Whether this install records session replay, and why.
+  ///
+  /// The rollout percentage and the masking flags come from remote config; the
+  /// override on top of them is device-local and set in the Starter Kit Lab.
+  final SessionReplayController sessionReplay;
 
   /// Retention history, milestones and targeting.
   final RetentionTracker retention;

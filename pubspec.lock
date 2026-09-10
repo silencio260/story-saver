@@ -531,7 +531,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.3"
   genrevibes_analytics_firebase:
     dependency: "direct main"
     description:
@@ -545,7 +545,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_posthog"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_app_links:
     dependency: "direct main"
     description:
@@ -1208,10 +1208,10 @@ packages:
     dependency: transitive
     description:
       name: posthog_flutter
-      sha256: "7be6408dd164b40d6eed86f19c36f25d69db16d015f22029431fb2cb0a43ac60"
+      sha256: "7b61aca485bcef80ac5d76c4855da8c81a9d65872002562b9dce63ad97bd6260"
       url: "https://pub.dev"
     source: hosted
-    version: "5.5.0"
+    version: "5.39.0"
   provider:
     dependency: "direct main"
     description:

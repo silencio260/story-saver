@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
+import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
@@ -101,6 +102,10 @@ final class AppEnv {
   /// Replay is normally release-only, which makes it impossible to check that
   /// it records anything, or that masking behaves, without shipping. Pass
   /// `--dart-define=posthog_session_replay=true` to exercise it locally.
+  ///
+  /// This is now a *seed* rather than a switch: see
+  /// [sessionReplayBuildOverride]. Once a device has been told on or off in the
+  /// Starter Kit Lab, that answer wins and this is ignored.
   final bool forceSessionReplay;
 
   /// Forces UMP into European geography for testing the consent form.
@@ -220,22 +225,46 @@ final class AppEnv {
         verboseLogging: isDevelopment,
       );
 
-  /// PostHog configuration.
+  /// How this build seeds a device that has never been told either way.
   ///
-  /// These values reproduce `PostHogWrapper.init()` exactly, because this stage
-  /// is a parity migration. Two of them are worth revisiting separately, and
-  /// deliberately are not changed here:
+  /// Replay is a release feature. A development build that records spends the
+  /// same money and fills the same dashboards as a real user would, in exchange
+  /// for footage of a developer poking at a test handset — so a development
+  /// build starts forced off, and `--dart-define=posthog_session_replay=true`
+  /// is how it is exercised on purpose.
   ///
-  /// - `debug` was set unconditionally, so production builds log verbosely.
-  /// - Session replay runs in production with `maskAllTexts` and
-  ///   `maskAllImages` both false, so replays capture text and images
-  ///   unmasked. The kit's defaults are the privacy-first opposite.
+  /// Release builds seed nothing and follow the rollout, which is the whole
+  /// point of having one.
+  ///
+  /// A seed only reaches a device with no stored choice. Whatever is chosen in
+  /// the Starter Kit Lab wins from then on, including across relaunches.
+  SessionReplayOverride? get sessionReplayBuildOverride {
+    if (!isDevelopment) return null;
+    return forceSessionReplay
+        ? SessionReplayOverride.forceOn
+        : SessionReplayOverride.forceOff;
+  }
+
+  /// PostHog configuration, before session replay is decided.
+  ///
+  /// These values reproduce `PostHogWrapper.init()` except for replay, which no
+  /// longer belongs to the environment at all. `SessionReplayController`
+  /// resolves recording and masking together and
+  /// `GenRevibesPostHogConfiguration.withSessionReplay` applies all three, so
+  /// what is written here is only the state to be in if that never happens:
+  /// recording off.
+  ///
+  /// Masking stays off, as it was pre-kit. A replay of a masked screen is grey
+  /// boxes moving around and cannot show where a user got stuck, which is the
+  /// only reason this app pays for replay. `session_replay_mask_text` and
+  /// `session_replay_mask_images` can turn it on for everyone without a
+  /// release if a screen ever renders something that should not be recorded.
+  ///
+  /// `debug` is still set unconditionally, so production builds log verbosely.
+  /// That is a separate parity carry-over and is worth revisiting on its own.
   GenRevibesPostHogConfiguration get postHog => GenRevibesPostHogConfiguration(
         apiKey: postHogApiKey,
         debug: true,
-        sessionReplayEnabled: forceSessionReplay || !isDevelopment,
-        maskAllTexts: false,
-        maskAllImages: false,
       );
 
   /// FeedbackNest configuration.

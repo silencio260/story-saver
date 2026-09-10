@@ -43,6 +43,7 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<PushNotificationProvider>(runtime.push)
     ..registerSingleton<FeedbackProvider>(runtime.feedback)
     ..registerSingleton<RemoteConfigCoordinator>(runtime.remoteConfig)
+    ..registerSingleton<SessionReplayController>(runtime.sessionReplay)
     ..registerSingleton<RetentionTracker>(runtime.retention)
     ..registerSingleton<PermissionProvider>(runtime.permissions)
     ..registerSingleton<AppLinkActions>(runtime.links)

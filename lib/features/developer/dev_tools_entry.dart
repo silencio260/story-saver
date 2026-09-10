@@ -40,6 +40,7 @@ DevToolsHost _host() {
     logger: sl<AppRuntime>().kitLog,
     catalogue: AppAnalyticsCatalogue.catalogue,
     analytics: sl<AnalyticsPipeline>(),
+    sessionReplay: sl<SessionReplayController>(),
     ads: sl<AdProvider>(),
     adPolicy: sl<AdPolicyController>(),
     adPlacements: AppPlacements.all,
@@ -133,6 +134,19 @@ const _storageKeys = <DevStorageGroup>[
       DevStorageEntry(
         key: 'genrevibes.app_rating.trigger.download.v1',
         legacyKey: 'download_count',
+      ),
+    ],
+  ),
+  DevStorageGroup(
+    title: 'Session replay',
+    entries: <DevStorageEntry>[
+      DevStorageEntry(
+        key: 'genrevibes.analytics.session_replay.bucket.v1',
+        label: 'Rollout bucket, 0-99',
+      ),
+      DevStorageEntry(
+        key: 'genrevibes.analytics.session_replay.override.v1',
+        label: 'Developer force on/off',
       ),
     ],
   ),

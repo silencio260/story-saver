@@ -59,6 +59,9 @@ abstract final class AppModules {
   /// Analytics fan-out.
   static const analytics = 'analytics';
 
+  /// Session replay rollout, and the developer override over it.
+  static const sessionReplay = 'analytics.session_replay';
+
   /// Purchases.
   static const iap = 'iap';
 
@@ -163,6 +166,41 @@ Future<AppRuntime> bootstrapApp(
         GenRevibesFirebaseRemoteConfigProvider(schema: remoteConfigSchema),
     logger: logger,
   );
+  // Started here rather than left to `kit.initialize()` below, which would
+  // start it after analytics. Session replay has to be settled before the
+  // PostHog SDK is configured — masking is fixed at setup and cannot be moved
+  // afterwards — and settling it means reading the rollout first. This costs
+  // no network: Firebase's `initialize` only registers defaults and reads the
+  // values it activated on a previous run. The registration further down calls
+  // this again and the module returns immediately.
+  //
+  // Bounded all the same. This is the one module now sitting on the critical
+  // path, and a provider that never calls back would hold the first frame
+  // indefinitely; on timeout the controller resolves against schema defaults,
+  // which is the behaviour of an app that has never fetched anything.
+  await remoteConfig.initialize().timeout(
+        moduleTimeout,
+        onTimeout: () => const KitFailure<void>(
+          KitError(
+            code: KitErrorCode.timeout,
+            message: 'Remote config did not initialize in time.',
+          ),
+        ),
+      );
+
+  // Who records, and what their recording shows. The controller draws this
+  // install's rollout bucket once and keeps it, so lowering the percentage
+  // narrows the recorded group rather than choosing a different one every
+  // launch — which is what makes a replay cohort answerable for a retention
+  // question.
+  final sessionReplay = SessionReplayController(
+    store: store,
+    policy: SessionReplayRemotePolicyBinder.policyFrom(remoteConfig.current),
+    buildOverride: env.sessionReplayBuildOverride,
+    logger: logger,
+  );
+  await sessionReplay.initialize();
+
   final analytics = AnalyticsPipeline(
     // Granted at construction. Product analytics is a core function of this
     // application, not something an ad-consent dialog decides. See the note
@@ -173,7 +211,9 @@ Future<AppRuntime> bootstrapApp(
           FirebaseAnalyticsSink(
             collectionEnabled: env.firebaseAnalyticsCollectionEnabled,
           ),
-          PostHogAnalyticsSink(configuration: env.postHog),
+          PostHogAnalyticsSink(
+            configuration: env.postHog.withSessionReplay(sessionReplay.plan),
+          ),
         ],
     names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
     observer: eventLog,
@@ -305,6 +345,14 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.analytics,
         create: () => analytics,
+        isRequired: false,
+      ),
+      // Already initialized above, before the PostHog SDK was configured from
+      // its plan. Registered so it appears in module health beside everything
+      // else, and so it is disposed with the rest.
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.sessionReplay,
+        create: () => sessionReplay,
         isRequired: false,
       ),
       StarterModuleRegistration.enabled(
@@ -445,6 +493,27 @@ Future<AppRuntime> bootstrapApp(
   );
   await adPolicyBinder.initialize();
 
+  // Now that the SDK is configured, the controller can move recording without
+  // a relaunch: a rollout change, or the switch in the Starter Kit Lab, starts
+  // or stops capture in place.
+  await sessionReplay.attach(
+    dependencies.sessionReplayRecorder ??
+        PostHogSessionReplayRecorder(logger: logger),
+  );
+  final sessionReplayBinder = SessionReplayRemotePolicyBinder.forCoordinator(
+    remoteConfig,
+    controller: sessionReplay,
+    logger: logger,
+  );
+  await sessionReplayBinder.initialize();
+
+  // Nothing else fetches. `initialize` only reads what a previous run
+  // activated, so without this a rollout percentage set in Firebase would
+  // reach a device once and never move again — and a fresh install would never
+  // see one at all. Unawaited because none of it is worth a slower first frame:
+  // the binders are listening, and whatever arrives is applied when it does.
+  unawaited(remoteConfig.refresh());
+
   // One app open per launch, which is what emits the D1/D3/D7/D30 milestones.
   // Not awaited for its result: a storage failure degrades the module and must
   // not delay the first frame.
@@ -474,6 +543,7 @@ Future<AppRuntime> bootstrapApp(
     push: push,
     feedback: feedback,
     remoteConfig: remoteConfig,
+    sessionReplay: sessionReplay,
     retention: retention,
     permissions: permissions,
     links: links,
@@ -574,6 +644,7 @@ final class BootstrapDependencies {
     this.push,
     this.feedback,
     this.remoteConfig,
+    this.sessionReplayRecorder,
     this.permissions,
     this.linkOpener,
     this.storeReview,
@@ -582,6 +653,12 @@ final class BootstrapDependencies {
 
   /// Backing key-value store.
   final KeyValueStore? store;
+
+  /// Runtime session-replay control.
+  ///
+  /// The real one talks to the PostHog plugin over a method channel, which
+  /// a test has no binding for.
+  final SessionReplayRecorder? sessionReplayRecorder;
 
   /// URL, email and share opener.
   final LinkOpener? linkOpener;
