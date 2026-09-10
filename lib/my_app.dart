@@ -71,9 +71,7 @@ class _MyAppState extends State<MyApp> {
           initialRoute: Routes.splash,
           onGenerateRoute: AppRouter.getRoute,
           navigatorKey: myGlobalNavigatorKey,
-          navigatorObservers: <NavigatorObserver>[
-            AnalyticsScope.navigatorObserver,
-          ],
+          navigatorObservers: AnalyticsScope.navigatorObservers,
         ),
       ),
     ),
