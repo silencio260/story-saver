@@ -573,14 +573,14 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/consent/genrevibes_consent"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_consent_appodeal:
     dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_appodeal"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_core:
     dependency: "direct main"
     description:
