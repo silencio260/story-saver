@@ -1,7 +1,6 @@
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 
 import 'app_env.dart';
-import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
@@ -55,7 +54,6 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<LocalNotificationScheduler>(
       runtime.localNotifications,
     )
-    ..registerSingleton<AdMobAdUnit>(runtime.bannerAdUnit)
     ..registerSingleton<AppEnv>(runtime.env)
     ..registerSingleton<OnboardingController>(runtime.onboarding);
 }

@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:genrevibes_ads/genrevibes_ads.dart';
-import 'package:genrevibes_analytics/genrevibes_analytics.dart';
-import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
@@ -14,23 +12,21 @@ import 'ads_base_remote_data_source.dart';
 
 /// Interstitials, over the kit's [AdProvider].
 ///
-/// Loading, the show lifecycle, paid callbacks and disposal are the provider's
-/// job. What stays here is the part the kit deliberately has no opinion on:
-/// when this app wants an interstitial, how long it waits before the first one,
-/// and that a premium user never sees any.
+/// Loading, the show lifecycle and revenue events are the provider's job, and
+/// revenue reaches analytics from its event stream in bootstrap. What stays
+/// here is the part the kit deliberately has no opinion on: when this app
+/// wants an interstitial, how long it waits before the first one, and that a
+/// premium user never sees any.
 ///
 /// The class name is kept because it names a role in this app's DI, not a
-/// vendor — nothing in this file mentions Google any more, and swapping AdMob
-/// for a mediation SDK is now a change at the composition root alone.
+/// vendor — nothing in this file mentions one, and the move from AdMob to
+/// Appodeal changed only the composition root.
 class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
   GoogleMobileAdsRemoteDataSource({
     required SubscriptionManager subscriptionManager,
-    required AnalyticsPipeline analyticsRepo,
-  })  : _subscriptionManager = subscriptionManager,
-        _analyticsRepo = analyticsRepo;
+  }) : _subscriptionManager = subscriptionManager;
 
   final SubscriptionManager _subscriptionManager;
-  final AnalyticsPipeline _analyticsRepo;
 
   /// Ad pacing, from remote configuration with schema defaults as the floor.
   ///
@@ -41,7 +37,6 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
 
   AdProvider get _ads => sl<AdProvider>();
 
-  StreamSubscription<AdEvent>? _events;
   bool _isLoading = false;
   bool _initialDelayApplied = false;
   bool _adsDisabled = false;
@@ -51,15 +46,13 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     _adsDisabled = false;
     if (_isLoading || _ads.isReady(AppPlacements.interstitial)) return;
 
-    // Consent and MobileAds.initialize() run after the first frame. An ad may
-    // not be requested before consent has been gathered, so this waits for
-    // them rather than the application waiting at launch.
+    // Consent and the ad SDK start after the first frame. An ad may not be
+    // requested before consent has been gathered, so this waits for them
+    // rather than the application waiting at launch.
     await sl<GenRevibesStarterKit>().deferredStartupComplete;
 
     await _subscriptionManager.initialize();
     if (_subscriptionManager.isPremium) return;
-
-    _listenForPaidEvents();
 
     _isLoading = true;
     if (!_initialDelayApplied) {
@@ -107,42 +100,6 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     return displayed;
   }
 
-  /// Mirrors provider paid events into analytics.
-  ///
-  /// Subscribed once and filtered by placement, because the provider reports
-  /// every format on one stream.
-  void _listenForPaidEvents() {
-    _events ??= _ads.events.listen((event) {
-      if (event.type != AdEventType.paid) return;
-      if (event.placement != AppPlacements.interstitial) return;
-      final revenue = event.revenue;
-      if (revenue == null) return;
-      unawaited(
-        _analyticsRepo.track(
-          AnalyticsEvent(
-            name: 'ad_impression',
-            properties: <String, Object>{
-              'ad_unit_id': _servedInterstitialUnitId(),
-              'ad_format': event.placement.format.name,
-              'value_micros': revenue.valueMicros,
-              'currency': revenue.currencyCode,
-            },
-          ),
-        ),
-      );
-    });
-  }
-
-  /// The unit that served: Google's sample unit on a device with developer
-  /// access, which is every development build.
-  String _servedInterstitialUnitId() {
-    final configuration = sl<AppEnv>().adMob;
-    final served = sl<DeveloperAccessController>().current.servesTestAds
-        ? configuration.withTestAdUnits()
-        : configuration;
-    return served.unitFor(AppPlacements.interstitial)?.adUnitId ?? '';
-  }
-
   Future<void> _reloadAfterInterval() async {
     await Future<void>.delayed(
       Duration(seconds: _config.read(AdsPolicyKeys.minInterstitialInterval)),
@@ -157,8 +114,6 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
   @override
   Future<void> dispose() async {
     _adsDisabled = true;
-    await _events?.cancel();
-    _events = null;
     await _ads.discard(AppPlacements.interstitial);
   }
 }

@@ -2,10 +2,9 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
-import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
+import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
-import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_feedbacknest/genrevibes_feedbacknest.dart';
@@ -14,8 +13,8 @@ import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_ones
 
 /// Logical ad placements this app uses.
 ///
-/// Placement IDs are stable and app-owned; the ad unit behind one may change
-/// per platform or from remote configuration without the call sites moving.
+/// Placement IDs are stable and app-owned; the provider placement behind one
+/// may change without the call sites moving.
 abstract final class AppPlacements {
   /// Inline banner shown on the status and saved-media grids.
   static const banner = AdPlacement(id: 'banner', format: AdFormat.banner);
@@ -55,14 +54,12 @@ final class AppEnv {
     required this.oneSignalAppId,
     required this.postHogApiKey,
     required this.feedbackNestApiKey,
-    required this.bannerAdUnitId,
-    required this.interstitialAdUnitId,
+    required this.appodealAndroidAppKey,
+    this.appodealIosAppKey = '',
     this.forceSessionReplay = false,
-    this.forceConsentDebugEea = false,
     this.disableFirebaseAnalyticsInDebug = false,
     this.privacyPolicyUrl = '',
     this.termsUrl = '',
-    this.consentTestDeviceIds = '',
     this.developerPasscode = '',
     this.developerDeviceHashes = '',
   });
@@ -80,16 +77,14 @@ final class AppEnv {
       oneSignalAppId: String.fromEnvironment('one_signal_app_id'),
       postHogApiKey: String.fromEnvironment('posthog_api_key'),
       feedbackNestApiKey: String.fromEnvironment('feed_back_nest_api_key'),
-      bannerAdUnitId: String.fromEnvironment('banner_ad_id'),
-      interstitialAdUnitId: String.fromEnvironment('interstitial_ad_id'),
+      appodealAndroidAppKey:
+          String.fromEnvironment('appodeal_app_key_android'),
+      appodealIosAppKey: String.fromEnvironment('appodeal_app_key_ios'),
       forceSessionReplay: bool.fromEnvironment('posthog_session_replay'),
-      forceConsentDebugEea: bool.fromEnvironment('consent_debug_eea'),
       disableFirebaseAnalyticsInDebug:
           bool.fromEnvironment('disabled_firebase_analytics_in_debug_mode'),
       privacyPolicyUrl: String.fromEnvironment('privacy_policy_url'),
       termsUrl: String.fromEnvironment('terms_url'),
-      consentTestDeviceIds:
-          String.fromEnvironment('consent_debug_device_ids'),
       developerPasscode: String.fromEnvironment('developer_passcode'),
       developerDeviceHashes:
           String.fromEnvironment('developer_device_hashes'),
@@ -111,11 +106,15 @@ final class AppEnv {
   /// FeedbackNest project API key.
   final String feedbackNestApiKey;
 
-  /// AdMob banner unit.
-  final String bannerAdUnitId;
+  /// Appodeal app key for Android, defined as `appodeal_app_key_android`.
+  ///
+  /// Development builds need the real key too: Appodeal's test mode is a switch
+  /// on the SDK, which still initializes against the app. Without a key the ads
+  /// and consent modules report themselves unconfigured.
+  final String appodealAndroidAppKey;
 
-  /// AdMob interstitial unit.
-  final String interstitialAdUnitId;
+  /// Appodeal app key for iOS, defined as `appodeal_app_key_ios`.
+  final String appodealIosAppKey;
 
   /// Turns PostHog session replay on even in a development build.
   ///
@@ -127,16 +126,6 @@ final class AppEnv {
   /// [sessionReplayBuildOverride]. Once a device has been told on or off in the
   /// Starter Kit Lab, that answer wins and this is ignored.
   final bool forceSessionReplay;
-
-  /// Forces UMP into European geography for testing the consent form.
-  ///
-  /// Off by default. It used to be on in every development build, which meant
-  /// UMP reported `consentRequired` on every local run, and because consent
-  /// gates the analytics pipeline, **no event reached any sink until the form
-  /// was completed**. Analytics appeared to be broken when it was working
-  /// exactly as designed. Pass `--dart-define=consent_debug_eea=true` to test
-  /// the form deliberately.
-  final bool forceConsentDebugEea;
 
   /// Keeps development traffic out of the Firebase Analytics project.
   ///
@@ -167,15 +156,6 @@ final class AppEnv {
   bool get firebaseAnalyticsCollectionEnabled =>
       !(isDevelopment && disableFirebaseAnalyticsInDebug);
 
-  /// Hashed device identifiers UMP should treat as test devices.
-  ///
-  /// Comma separated. Required for [forceConsentDebugEea] to do anything at
-  /// all: UMP applies a debug geography only to devices registered here, and
-  /// silently ignores it everywhere else. The hash is printed to logcat on
-  /// every run — look for "UserMessagingPlatform: Use new
-  /// ConsentDebugSettings.Builder().addTestDeviceHashedId(...)".
-  final String consentTestDeviceIds;
-
   /// Passcode for the hidden developer unlock in a store build.
   ///
   /// Defined as `developer_passcode` in `env/*.json`; blank means
@@ -190,60 +170,29 @@ final class AppEnv {
   /// [AppDeveloperDevices].
   final String developerDeviceHashes;
 
-  /// [consentTestDeviceIds] split into a list.
-  List<String> get consentTestDeviceIdList => consentTestDeviceIds
-      .split(',')
-      .map((id) => id.trim())
-      .where((id) => id.isNotEmpty)
-      .toList(growable: false);
-
   /// Crash collection is off in development so local runs do not pollute
   /// production crash-free rates.
   CrashReportingConfig get crash =>
       CrashReportingConfig(collectionEnabled: !isDevelopment);
 
-  /// Consent debug overrides.
-  ///
-  /// Inactive outside development. The previous implementation hardcoded an
-  /// EEA geography in every build, which forced the consent form on users who
-  /// should never have seen it.
-  ConsentDebugConfig get consentDebug =>
-      isDevelopment && forceConsentDebugEea
-          ? ConsentDebugConfig(
-              geography: ConsentDebugGeography.europeanEconomicArea,
-              testDeviceIds: consentTestDeviceIdList,
-            )
-          : const ConsentDebugConfig();
+  /// The Appodeal app key for the platform this build runs on.
+  String get appodealAppKey => defaultTargetPlatform == TargetPlatform.iOS
+      ? appodealIosAppKey
+      : appodealAndroidAppKey;
 
-  /// The banner unit, for `AdMobBannerView`.
+  /// Appodeal configuration for every placement this app shows.
   ///
-  /// Deliberately not part of [adMob]. `AdMobAdProvider` serves the
-  /// full-screen formats only — interstitial, rewarded and app-open — and
-  /// rejects a banner unit at initialization, which took the whole ads module
-  /// down with it. Inline formats are rendered by the widget in
-  /// `genrevibes_ads_admob_ui`, which holds its own unit.
-  ///
-  /// Always this app's own unit. Whether a device gets Google's sample unit
-  /// instead is decided at runtime by `DeveloperAccessController`, because a
-  /// developer device can be recognised after startup — when remote config
-  /// arrives, or when the passcode is entered. Every development build is one.
-  AdMobAdUnit get bannerAdUnit => AdMobAdUnit(
-        placement: AppPlacements.banner,
-        adUnitId: bannerAdUnitId,
-      );
-
-  /// AdMob configuration for the full-screen placements this app declares.
-  ///
-  /// Always this app's own units; see [bannerAdUnit] for test ads. No test
-  /// device IDs: the one carried over from the pre-kit service was a UUID, not
-  /// the hashed ID AdMob matches on, so it never applied to any device.
-  GenRevibesAdMobConfiguration get adMob => GenRevibesAdMobConfiguration(
-        adUnits: <AdMobAdUnit>[
-          AdMobAdUnit(
-            placement: AppPlacements.interstitial,
-            adUnitId: interstitialAdUnitId,
-          ),
+  /// Both placements use the dashboard's `default` placement. Nothing here
+  /// changes between live and test ads: test mode is a switch on the SDK, and
+  /// `DeveloperAccessController` decides it when the provider starts.
+  GenRevibesAppodealConfiguration get appodeal =>
+      GenRevibesAppodealConfiguration(
+        appKey: appodealAppKey,
+        placements: const <AppodealPlacement>[
+          AppodealPlacement(placement: AppPlacements.banner),
+          AppodealPlacement(placement: AppPlacements.interstitial),
         ],
+        verboseLogging: isDevelopment,
       );
 
   /// Who gets the developer tools and test ads in this build.

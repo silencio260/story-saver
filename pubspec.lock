@@ -510,18 +510,11 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads"
       relative: true
     source: path
-    version: "0.1.0-dev.3"
-  genrevibes_ads_admob:
+    version: "0.1.0-dev.4"
+  genrevibes_ads_appodeal:
     dependency: "direct main"
     description:
-      path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob"
-      relative: true
-    source: path
-    version: "0.1.0-dev.3"
-  genrevibes_ads_admob_ui:
-    dependency: "direct main"
-    description:
-      path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui"
+      path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal"
       relative: true
     source: path
     version: "0.1.0-dev.1"
@@ -581,10 +574,10 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
-  genrevibes_consent_ump:
+  genrevibes_consent_appodeal:
     dependency: "direct main"
     description:
-      path: "packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_ump"
+      path: "packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_appodeal"
       relative: true
     source: path
     version: "0.1.0-dev.1"
@@ -778,14 +771,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.2.1"
-  google_mobile_ads:
-    dependency: "direct main"
-    description:
-      name: google_mobile_ads
-      sha256: a4f59019f2c32769fb6c60ed8aa321e9c21a36297e2c4f23452b3e779a3e7a26
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
   html:
     dependency: transitive
     description:
@@ -1408,6 +1393,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
+  stack_appodeal_flutter:
+    dependency: transitive
+    description:
+      name: stack_appodeal_flutter
+      sha256: bae93b939662a501d892c3e3a5a90e31421005f0210d4797be04391a713822c4
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.0"
   stack_trace:
     dependency: transitive
     description:
@@ -1664,38 +1657,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  webview_flutter:
-    dependency: transitive
-    description:
-      name: webview_flutter
-      sha256: c3e4fe614b1c814950ad07186007eff2f2e5dd2935eba7b9a9a1af8e5885f1ba
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.13.0"
-  webview_flutter_android:
-    dependency: transitive
-    description:
-      name: webview_flutter_android
-      sha256: "0a42444056b24ed832bdf3442d65c5194f6416f7e782152384944053c2ecc9a3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.10.0"
-  webview_flutter_platform_interface:
-    dependency: transitive
-    description:
-      name: webview_flutter_platform_interface
-      sha256: "63d26ee3aca7256a83ccb576a50272edd7cfc80573a4305caa98985feb493ee0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.14.0"
-  webview_flutter_wkwebview:
-    dependency: transitive
-    description:
-      name: webview_flutter_wkwebview
-      sha256: "71523b9048cf510cfa1fd4e0a3fa5e476a66e0884d5df51d59d5023dba237107"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.22.1"
   win32:
     dependency: transitive
     description:

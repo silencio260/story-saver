@@ -5,7 +5,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../features/monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
-import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
+import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_firebase/genrevibes_analytics_firebase.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
@@ -14,7 +14,7 @@ import 'package:genrevibes_app_links_launcher/genrevibes_app_links_launcher.dart
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_app_rating_in_app_review/genrevibes_app_rating_in_app_review.dart';
 import 'package:genrevibes_consent/genrevibes_consent.dart';
-import 'package:genrevibes_consent_ump/genrevibes_consent_ump.dart';
+import 'package:genrevibes_consent_appodeal/genrevibes_consent_appodeal.dart';
 import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
@@ -171,7 +171,7 @@ Future<AppRuntime> bootstrapApp(
   );
   await developerAccess.initialize();
   final consentProvider = dependencies.consent ??
-      UmpConsentProvider(debugConfig: env.consentDebug);
+      AppodealConsentProvider(appKey: env.appodealAppKey, logger: logger);
   final consent = ConsentGate(provider: consentProvider);
   // Remote configuration is built before analytics, because the pipeline
   // resolves event names through it: a name overridden remotely then reaches
@@ -249,10 +249,16 @@ Future<AppRuntime> bootstrapApp(
         placement.id: const AdPlacementPolicy(),
     },
   );
+  // Appodeal takes test mode when its SDK initializes, which happens in the
+  // deferred ads module, behind consent's network round trip. By then the
+  // access listener further down has normally applied the identity and the
+  // remote list. A device recognised later — or, rarely, before consent
+  // finishes — gets no ads until relaunch rather than live ones.
   final ads = dependencies.ads ??
-      AdMobAdProvider(
-        configuration: env.adMob,
+      AppodealAdProvider(
+        configuration: env.appodeal,
         testMode: developerAccess.current.servesTestAds,
+        logger: logger,
       );
   final iap = dependencies.iap ??
       RevenueCatIapProvider(
@@ -359,9 +365,9 @@ Future<AppRuntime> bootstrapApp(
       // even when no form appeared. It touches nothing else in this
       // application: its result goes to the ad network and stays there.
       //
-      // Ads follow it rather than running alongside, because Google requires
-      // consent to be gathered before an ad is requested, and
-      // AdMobAdProvider.initialize() owns MobileAds.initialize().
+      // Ads follow it rather than running alongside, because consent must be
+      // gathered before an ad is requested, and
+      // AppodealAdProvider.initialize() owns Appodeal.initialize().
       StarterModuleRegistration.deferred(
         moduleId: AppModules.consent,
         create: () => consent,
@@ -469,11 +475,12 @@ Future<AppRuntime> bootstrapApp(
   // gated on an ad-consent dialog. The pipeline is constructed already
   // granted, above.
   //
-  // Nothing waits on the consent outcome. The flow runs so UMP can store its
-  // decision, and the AdMob SDK reads that itself when deciding whether to
-  // serve personalized or limited ads — which is exactly what the pre-kit
-  // implementation did: run the flow, then initialize ads regardless, "proceed
-  // even on error, SDK handles limited ads".
+  // Nothing waits on the consent outcome. The flow runs so Appodeal's consent
+  // manager, which is UMP underneath, can store its decision, and the mediated
+  // networks read that themselves when deciding whether to serve personalized
+  // or limited ads — which is what the pre-kit implementation did: run the
+  // flow, then initialize ads regardless, "proceed even on error, SDK handles
+  // limited ads".
 
   // Name the user on crash reports. Tracking is deliberately not prompted here:
   // an out-of-context ATT prompt at launch is an App Store rejection.
@@ -569,6 +576,36 @@ Future<AppRuntime> bootstrapApp(
   followDeveloperAccess(developerAccess.current);
   developerAccess.changes.listen(followDeveloperAccess);
 
+  // Ad analytics, once for every placement. Appodeal reports banner and
+  // full-screen callbacks per format rather than per view, so a listener per
+  // widget would count the same impression twice. `value` and `currency` are
+  // the parameters Firebase counts as ad revenue; `value_micros` keeps the
+  // event comparable with the AdMob-era one.
+  ads.events.listen((event) {
+    final revenue = event.revenue;
+    final AnalyticsEvent? tracked = switch (event.type) {
+      AdEventType.paid when revenue != null => AnalyticsEvent(
+          name: 'ad_impression',
+          properties: <String, Object?>{
+            'ad_platform': revenue.provider,
+            if (revenue.mediationNetwork case final network?)
+              'ad_source': network,
+            'ad_format': event.format.name,
+            if (revenue.adUnitName case final unit?) 'ad_unit_name': unit,
+            'value': revenue.value,
+            'value_micros': revenue.valueMicros,
+            'currency': revenue.currencyCode,
+          },
+        ),
+      AdEventType.clicked => AnalyticsEvent(
+          name: 'ad_click',
+          properties: <String, Object?>{'ad_type': event.format.name},
+        ),
+      _ => null,
+    };
+    if (tracked != null) unawaited(analytics.track(tracked));
+  });
+
   // Nothing else fetches. `initialize` only reads what a previous run
   // activated, so without this a rollout percentage set in Firebase would
   // reach a device once and never move again — and a fresh install would never
@@ -615,7 +652,6 @@ Future<AppRuntime> bootstrapApp(
     storeReview: storeReview,
     localNotifications: localNotifications,
     onboarding: onboarding,
-    bannerAdUnit: env.bannerAdUnit,
     env: env,
     eventLog: eventLog,
     kitLog: kitLog,

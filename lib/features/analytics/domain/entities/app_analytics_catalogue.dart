@@ -207,18 +207,34 @@ abstract final class AppAnalyticsCatalogue {
           DevEventSpec(
             name: 'ad_impression',
             group: 'Monetisation',
-            description: 'AdMob paid event, from the banner and interstitial '
-                'paths.',
+            description: 'Impression-level revenue from Appodeal, for every '
+                'placement. value and currency are what Firebase counts as ad '
+                'revenue.',
             parameters: <DevParamSpec>[
               DevParamSpec(
-                name: 'ad_unit_id',
+                name: 'ad_platform',
                 kind: DevParamKind.text,
-                example: 'ca-app-pub-3940256099942544/6300978111',
+                example: 'appodeal',
+              ),
+              DevParamSpec(
+                name: 'ad_source',
+                kind: DevParamKind.text,
+                example: 'admob',
               ),
               DevParamSpec(
                 name: 'ad_format',
                 kind: DevParamKind.text,
                 example: 'banner',
+              ),
+              DevParamSpec(
+                name: 'ad_unit_name',
+                kind: DevParamKind.text,
+                example: 'default',
+              ),
+              DevParamSpec(
+                name: 'value',
+                kind: DevParamKind.number,
+                example: 0.0015,
               ),
               DevParamSpec(
                 name: 'value_micros',
@@ -229,6 +245,18 @@ abstract final class AppAnalyticsCatalogue {
                 name: 'currency',
                 kind: DevParamKind.text,
                 example: 'USD',
+              ),
+            ],
+          ),
+          DevEventSpec(
+            name: 'ad_click',
+            group: 'Monetisation',
+            description: 'An ad was clicked, on any placement.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'ad_type',
+                kind: DevParamKind.text,
+                example: 'interstitial',
               ),
             ],
           ),

@@ -1,5 +1,4 @@
 import 'package:genrevibes_ads/genrevibes_ads.dart';
-import 'package:genrevibes_ads_admob/genrevibes_ads_admob.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
@@ -52,7 +51,6 @@ final class AppRuntime {
     required this.storeReview,
     required this.localNotifications,
     required this.onboarding,
-    required this.bannerAdUnit,
     required this.env,
     this.eventLog,
     this.kitLog,
@@ -97,7 +95,7 @@ final class AppRuntime {
   /// migration replaces `AdsBloc`.
   final AdPolicyController adPolicy;
 
-  /// Ad provider. Owns `MobileAds.initialize()`.
+  /// Ad provider. Owns `Appodeal.initialize()`.
   final AdProvider ads;
 
   /// Purchases and entitlements.
@@ -146,14 +144,6 @@ final class AppRuntime {
 
   /// Onboarding completion state.
   final OnboardingController onboarding;
-
-  /// The inline banner unit.
-  ///
-  /// Inline formats are not owned by [ads]: `AdMobAdProvider` handles only
-  /// full-screen placements, and passing it a banner unit fails the whole ads
-  /// module. The banner is rendered by the widget in `genrevibes_ads_admob_ui`,
-  /// which needs this unit directly.
-  final AdMobAdUnit bannerAdUnit;
 
   /// Analytics deliveries captured in development, for the Lab's event log.
   final RecordingDeliveryObserver? eventLog;

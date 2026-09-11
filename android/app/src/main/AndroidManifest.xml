@@ -29,7 +29,8 @@
     <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
     <meta-data android:name="flutterEmbedding" android:value="2"/>
-    <!-- Set in android/app/build.gradle: Google's sample app ID for development builds, this app's own for release. -->
+    <!-- Set in android/app/build.gradle: Google's sample app ID for development builds, this app's own for release.
+         Required by Appodeal's AdMob adapter, which brings the Google Mobile Ads SDK: without it the app crashes at launch. -->
     <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}"/>
     <!-- OneSignal Notification Icon Configuration -->
     <!-- New Key -->

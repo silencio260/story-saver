@@ -24,8 +24,7 @@ void main() {
     oneSignalAppId: 'os-id',
     postHogApiKey: 'ph-key',
     feedbackNestApiKey: 'fn-key',
-    bannerAdUnitId: 'banner-unit',
-    interstitialAdUnitId: 'interstitial-unit',
+    appodealAndroidAppKey: 'appodeal-key',
   );
 
   group('bootstrapApp composition', () {
@@ -279,28 +278,19 @@ void main() {
   });
 
   group('AppEnv', () {
-    test('registers no AdMob test device ids', () {
-      // The one carried over from the pre-kit service was a UUID, not the
-      // hashed id AdMob matches on, so it never applied to any device.
-      // Developer devices get test ads through DeveloperAccessController.
-      expect(env.adMob.testDeviceIds, isEmpty);
-    });
-
-    test('gives the full-screen adapter only full-screen units', () {
-      // AdMobAdProvider serves interstitial, rewarded and app-open. Handing it
-      // a banner made it fail initialization outright, which took the entire
-      // ads module down on device while every unit test passed.
-      expect(env.adMob.unitFor(AppPlacements.interstitial)?.adUnitId,
-          'interstitial-unit');
-      expect(env.adMob.unitFor(AppPlacements.banner), isNull);
-      for (final unit in env.adMob.adUnits.values) {
-        expect(unit.placement.format, isNot(AdFormat.banner));
-      }
-    });
-
-    test('carries the banner unit separately, for the inline ad view', () {
-      expect(env.bannerAdUnit.adUnitId, 'banner-unit');
-      expect(env.bannerAdUnit.placement.format, AdFormat.banner);
+    test('configures Appodeal for both placements, under default', () {
+      // Appodeal has no ad-unit IDs: the app key selects the app, and each
+      // placement only picks dashboard rules. flutter_test reports Android.
+      expect(env.appodeal.appKey, 'appodeal-key');
+      expect(env.appodeal.placementFor(AppPlacements.banner)?.name, 'default');
+      expect(
+        env.appodeal.placementFor(AppPlacements.interstitial)?.name,
+        'default',
+      );
+      expect(
+        env.appodeal.formats,
+        <AdFormat>{AdFormat.banner, AdFormat.interstitial},
+      );
     });
 
     test('gives development builds developer access, with the default passcode',
@@ -331,40 +321,15 @@ void main() {
       expect(env.crash.collectionEnabled, isFalse);
     });
 
-    test('does not force a consent geography just because it is a debug build',
-        () {
-      // This used to force European geography in every development build, so
-      // UMP reported consentRequired locally, and because consent gates the
-      // analytics pipeline no event reached any sink until the form was
-      // completed. Analytics looked broken while working exactly as designed.
-      expect(env.consentDebug.isActive, isFalse);
-    });
-
-    test('forces European geography only when explicitly asked', () {
-      const testingTheForm = AppEnv(
-        isDevelopment: true,
-        revenueCatAndroidKey: '',
-        oneSignalAppId: '',
-        postHogApiKey: '',
-        feedbackNestApiKey: '',
-        bannerAdUnitId: '',
-        interstitialAdUnitId: '',
-        forceConsentDebugEea: true,
-      );
-      expect(testingTheForm.consentDebug.isActive, isTrue);
-
-      // Never in a release build, whatever the flag says.
+    test('collects crashes in release builds', () {
       const production = AppEnv(
         isDevelopment: false,
         revenueCatAndroidKey: '',
         oneSignalAppId: '',
         postHogApiKey: '',
         feedbackNestApiKey: '',
-        bannerAdUnitId: '',
-        interstitialAdUnitId: '',
-        forceConsentDebugEea: true,
+        appodealAndroidAppKey: '',
       );
-      expect(production.consentDebug.isActive, isFalse);
       expect(production.crash.collectionEnabled, isTrue);
     });
 
@@ -380,8 +345,7 @@ void main() {
         oneSignalAppId: '',
         postHogApiKey: '',
         feedbackNestApiKey: '',
-        bannerAdUnitId: '',
-        interstitialAdUnitId: '',
+        appodealAndroidAppKey: '',
         forceSessionReplay: true,
       );
       expect(forced.sessionReplayBuildOverride, SessionReplayOverride.forceOn);
@@ -394,8 +358,7 @@ void main() {
         oneSignalAppId: '',
         postHogApiKey: '',
         feedbackNestApiKey: '',
-        bannerAdUnitId: '',
-        interstitialAdUnitId: '',
+        appodealAndroidAppKey: '',
         // Ignored in release: the rollout is the only thing that decides.
         forceSessionReplay: true,
       );

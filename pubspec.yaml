@@ -27,8 +27,8 @@ dependencies:
   # --- GenRevibes starter kit (Stage 2: initialization only) ---
   genrevibes_ads:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
-  genrevibes_ads_admob:
-    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob
+  genrevibes_ads_appodeal:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal
   genrevibes_analytics:
     path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:
@@ -37,8 +37,8 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics_posthog
   genrevibes_consent:
     path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent
-  genrevibes_consent_ump:
-    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_ump
+  genrevibes_consent_appodeal:
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_appodeal
   genrevibes_core:
     path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_core
   genrevibes_crash:
@@ -75,8 +75,6 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_local
   genrevibes_settings:
     path: packages/genrevibes_starter_kit/modules/settings/genrevibes_settings
-  genrevibes_ads_admob_ui:
-    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui
   genrevibes_remote_config:
     path: packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_config
   genrevibes_remote_config_firebase:
@@ -135,11 +133,9 @@ dependencies:
   url_launcher: ^6.3.1
 #  in_app_review: ^2.0.10
 #  webview_flutter: ^4.2.0
-#  google_mobile_ads: ^6.0.0
-#  webview_flutter: ^4.8.0  # Try this specific version
+##  webview_flutter: ^4.8.0  # Try this specific version
 #  webview_flutter_android: ^3.16.0
 #  webview_flutter_android: ^4.3.4
-  google_mobile_ads: ^6.0.0
 #  google_mobile_ads: ^5.2.0  # Downgrade to a more stable version
 
 
@@ -198,8 +194,8 @@ dependency_overrides:
   # app consuming them by path must resolve those siblings by path too.
   genrevibes_ads:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
-  genrevibes_ads_admob:
-    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob
+  genrevibes_ads_appodeal:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal
   genrevibes_analytics:
     path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:
@@ -210,8 +206,8 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/app_rating/genrevibes_app_rating
   genrevibes_consent:
     path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent
-  genrevibes_consent_ump:
-    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_ump
+  genrevibes_consent_appodeal:
+    path: packages/genrevibes_starter_kit/modules/consent/genrevibes_consent_appodeal
   genrevibes_core:
     path: packages/genrevibes_starter_kit/modules/foundation/genrevibes_core
   genrevibes_crash:
@@ -242,8 +238,6 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/notifications/genrevibes_notifications_local
   genrevibes_settings:
     path: packages/genrevibes_starter_kit/modules/settings/genrevibes_settings
-  genrevibes_ads_admob_ui:
-    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_admob_ui
   genrevibes_remote_config:
     path: packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_config
   genrevibes_remote_config_firebase:

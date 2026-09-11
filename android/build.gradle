@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Appodeal and the network adapters it mediates.
+        maven { url "https://artifactory.appodeal.com/appodeal" }
     }
 }
 

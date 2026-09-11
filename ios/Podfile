@@ -1,6 +1,12 @@
 # Uncomment this line to define a global platform for your project
 # platform :ios, '12.0'
 
+# Appodeal and its mediated networks publish pods to their own spec repos.
+# Naming any source replaces the default, so the CocoaPods CDN is named too.
+source 'https://github.com/appodeal/CocoaPods.git'
+source 'https://github.com/bidon-io/CocoaPods-Specs.git'
+source 'https://cdn.cocoapods.org/'
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 

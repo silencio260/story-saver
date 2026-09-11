@@ -1,5 +1,3 @@
-import 'package:genrevibes_analytics/genrevibes_analytics.dart';
-
 import '../../container_injector.dart';
 import 'data/datasources/ads_base_remote_data_source.dart';
 import 'data/datasources/google_mobile_ads_remote_data_source.dart';
@@ -27,10 +25,7 @@ void initMonetization() {
   sl.registerLazySingleton<SubscriptionManager>(SubscriptionManager.new);
   sl.registerLazySingleton<AdSuppressionManager>(AdSuppressionManager.new);
   sl.registerLazySingleton<AdsBaseRemoteDataSource>(
-    () => GoogleMobileAdsRemoteDataSource(
-      subscriptionManager: sl(),
-      analyticsRepo: sl<AnalyticsPipeline>(),
-    ),
+    () => GoogleMobileAdsRemoteDataSource(subscriptionManager: sl()),
   );
   sl.registerLazySingleton<AdsBaseRepo>(() => AdsRepo(remoteDataSource: sl()));
   sl.registerLazySingleton(() => LoadInterstitialAdUseCase(repo: sl()));
