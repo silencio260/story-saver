@@ -4,7 +4,9 @@ import '../../../../core/error/failure.dart';
 import '../entities/status_collection.dart';
 
 abstract class StatusBaseRepo {
-  Future<Either<Failure, StatusCollection>> loadStatuses();
+  Future<Either<Failure, StatusCollection>> loadStatuses({
+    void Function(StatusCollection)? onProgress,
+  });
 
   Future<Either<Failure, bool>> getBusinessMode();
 

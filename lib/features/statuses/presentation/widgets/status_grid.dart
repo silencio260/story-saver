@@ -46,8 +46,17 @@ class _StatusGridState extends State<StatusGrid>
     final bloc = context.read<StatusBloc>();
     bloc.add(const StatusLoadRequested());
     try {
-      await bloc.stream.firstWhere((state) => !state.isLoading);
-      _refreshController.refreshCompleted();
+      final result = await bloc.stream.firstWhere(
+        (state) =>
+            state.status == StatusViewStatus.success ||
+            state.status == StatusViewStatus.failure,
+      );
+      if (!mounted) return;
+      if (result.status == StatusViewStatus.failure) {
+        _refreshController.refreshFailed();
+      } else {
+        _refreshController.refreshCompleted();
+      }
     } catch (_) {
       _refreshController.refreshFailed();
     }
@@ -86,7 +95,8 @@ class _StatusGridState extends State<StatusGrid>
                       ),
                 );
               }
-              if (!statusState.collection.isWhatsAppAvailable) {
+              if (!statusState.collection.isWhatsAppAvailable &&
+                  !statusState.isLoading) {
                 return _RefreshMessage(
                   message:
                       isBusinessMode
@@ -377,7 +387,14 @@ class _StatusThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!item.isVideo) return Image.file(File(item.path), fit: BoxFit.cover);
+    if (!item.isVideo) {
+      return Image.file(
+        File(item.path),
+        fit: BoxFit.cover,
+        cacheWidth: 600,
+        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+      );
+    }
     return BlocBuilder<StatusBloc, StatusState>(
       buildWhen:
           (previous, current) =>
@@ -387,7 +404,11 @@ class _StatusThumbnail extends StatelessWidget {
       builder: (context, state) {
         final thumbnail = state.thumbnails[item.path];
         if (thumbnail != null) {
-          return Image.file(File(thumbnail), fit: BoxFit.cover);
+          return Image.file(
+            File(thumbnail),
+            fit: BoxFit.cover,
+            cacheWidth: 600,
+          );
         }
         if (state.thumbnailFailures.contains(item.path)) {
           return const ColoredBox(

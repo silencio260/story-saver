@@ -10,9 +10,11 @@ import java.io.ByteArrayOutputStream
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "video_thumbnail"
+    private var statusDirectoryChannel: StatusDirectoryChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        statusDirectoryChannel = StatusDirectoryChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "getThumbnail") {
                 val videoPath: String? = call.argument("videoPath")
@@ -30,6 +32,12 @@ class MainActivity : FlutterFragmentActivity() {
                 result.notImplemented()
             }
         }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        statusDirectoryChannel?.dispose()
+        statusDirectoryChannel = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     private fun generateThumbnail(videoPath: String): ByteArray? {

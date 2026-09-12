@@ -13,9 +13,11 @@ class StatusRepo implements StatusBaseRepo {
   final StatusBaseLocalDataSource _localDataSource;
 
   @override
-  Future<Either<Failure, StatusCollection>> loadStatuses() async {
+  Future<Either<Failure, StatusCollection>> loadStatuses({
+    void Function(StatusCollection)? onProgress,
+  }) async {
     try {
-      return Right(await _localDataSource.loadStatuses());
+      return Right(await _localDataSource.loadStatuses(onProgress: onProgress));
     } catch (error) {
       return Left(ErrorHandler.handle(error));
     }

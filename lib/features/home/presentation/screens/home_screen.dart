@@ -125,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen>
         listener: (context, permissions) {
           final isBusinessMode =
               context.read<StatusBloc>().state.isBusinessMode;
-          if (permissions.hasStoragePermission &&
+          if (permissions.status == PermissionViewStatus.ready &&
+              permissions.hasStoragePermission &&
               permissions.hasStatusFolderPermission(
                 isBusinessMode: isBusinessMode,
               )) {

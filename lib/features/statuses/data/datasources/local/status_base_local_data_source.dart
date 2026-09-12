@@ -1,7 +1,9 @@
 import '../../../domain/entities/status_collection.dart';
 
 abstract class StatusBaseLocalDataSource {
-  Future<StatusCollection> loadStatuses();
+  Future<StatusCollection> loadStatuses({
+    void Function(StatusCollection)? onProgress,
+  });
 
   Future<bool> getBusinessMode();
 

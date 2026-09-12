@@ -11,6 +11,10 @@ class LoadStatusesUseCase extends BaseUseCase<StatusCollection, NoParams> {
 
   final StatusBaseRepo _statusRepo;
 
+  Future<Either<Failure, StatusCollection>> load({
+    void Function(StatusCollection)? onProgress,
+  }) => _statusRepo.loadStatuses(onProgress: onProgress);
+
   @override
   Future<Either<Failure, StatusCollection>> call(NoParams params) =>
       _statusRepo.loadStatuses();

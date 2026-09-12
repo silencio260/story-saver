@@ -13,9 +13,12 @@ class StatusLocalDataSource implements StatusBaseLocalDataSource {
   final StatusFileSystemDataSourceEngine _statusEngine;
 
   @override
-  Future<StatusCollection> loadStatuses() async {
-    await _statusEngine.checkIsBusinessMode();
-    await _statusEngine.getAllStatusesWithSaf();
+  Future<StatusCollection> loadStatuses({
+    void Function(StatusCollection)? onProgress,
+  }) async {
+    await _statusEngine.getAllStatusesWithSaf(
+      onProgress: () => onProgress?.call(_snapshot()),
+    );
     return _snapshot();
   }
 

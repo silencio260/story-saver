@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
@@ -39,36 +40,72 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
   final ClearStatusCacheUseCase _clearStatusCache;
   final GenerateStatusThumbnailUseCase _generateStatusThumbnail;
 
+  Completer<void>? _loadFinished;
+  bool _loadInProgress = false;
+  bool _reloadAfterLoad = false;
+  int _sourceVersion = 0;
+
   Future<void> _onLoadRequested(
     StatusLoadRequested event,
     Emitter<StatusState> emit,
   ) async {
+    // Permission checks and tab rebuilds can request the same load together.
+    if (_loadInProgress) return;
+    _loadInProgress = true;
+    _loadFinished = Completer<void>();
+    final sourceVersion = _sourceVersion;
     emit(state.copyWith(status: StatusViewStatus.loading, clearMessage: true));
-    AnalyticsService.track('statuses_load_requested');
-    final result = await _loadStatuses(NoParams.instance);
-    await result.fold(
-      (_) => AnalyticsService.track('statuses_load_failed'),
-      (collection) => AnalyticsService.track('statuses_loaded', {
-        'image_count': collection.images.length,
-        'video_count': collection.videos.length,
-        'business_mode': collection.isBusinessMode,
-      }),
-    );
-    result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: StatusViewStatus.failure,
-          message: failure.message,
+    unawaited(AnalyticsService.track('statuses_load_requested'));
+    try {
+      final result = await _loadStatuses.load(
+        onProgress: (collection) {
+          if (!emit.isDone && sourceVersion == _sourceVersion) {
+            emit(
+              state.copyWith(
+                collection: collection,
+                status: StatusViewStatus.loading,
+                clearMessage: true,
+              ),
+            );
+          }
+        },
+      );
+      if (emit.isDone || sourceVersion != _sourceVersion) return;
+      result.fold(
+        (failure) => emit(
+          state.copyWith(
+            status: StatusViewStatus.failure,
+            message: failure.message,
+          ),
         ),
-      ),
-      (collection) => emit(
-        state.copyWith(
-          status: StatusViewStatus.success,
-          collection: collection,
-          clearMessage: true,
+        (collection) => emit(
+          state.copyWith(
+            status: StatusViewStatus.success,
+            collection: collection,
+            clearMessage: true,
+          ),
         ),
-      ),
-    );
+      );
+      // Display the result before waiting on any analytics SDK or disk queue.
+      unawaited(
+        result.fold(
+          (_) => AnalyticsService.track('statuses_load_failed'),
+          (collection) => AnalyticsService.track('statuses_loaded', {
+            'image_count': collection.images.length,
+            'video_count': collection.videos.length,
+            'business_mode': collection.isBusinessMode,
+          }),
+        ),
+      );
+    } finally {
+      _loadInProgress = false;
+      _loadFinished?.complete();
+      _loadFinished = null;
+      if (_reloadAfterLoad && !isClosed) {
+        _reloadAfterLoad = false;
+        add(const StatusLoadRequested());
+      }
+    }
   }
 
   Future<void> _onBusinessModeRequested(
@@ -91,11 +128,16 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
       isBusinessMode,
     ) {
       final current = state.collection;
+      final changedSource = current.isBusinessMode != isBusinessMode;
+      if (changedSource) {
+        _sourceVersion++;
+        if (_loadInProgress) _reloadAfterLoad = true;
+      }
       emit(
         state.copyWith(
           collection: StatusCollection(
-            images: current.images,
-            videos: current.videos,
+            images: changedSource ? const <StatusMedia>[] : current.images,
+            videos: changedSource ? const <StatusMedia>[] : current.videos,
             isBusinessMode: isBusinessMode,
             isWhatsAppAvailable: current.isWhatsAppAvailable,
           ),
@@ -110,6 +152,8 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
     StatusCacheClearRequested event,
     Emitter<StatusState> emit,
   ) async {
+    _sourceVersion++;
+    await _loadFinished?.future;
     final result = await _clearStatusCache(NoParams.instance);
     await result.fold(
       (_) => AnalyticsService.track('status_cache_clear_failed'),

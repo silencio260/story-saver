@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'status_cache_index.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:docman/docman.dart';
@@ -45,7 +48,7 @@ class StatusFileSystemDataSourceEngine {
 
   Future<void> setIsBusinessMode(bool newValue) async {
     final prefs = await SharedPreferences.getInstance();
-    final val = prefs.setBool(AppConstants().IS_BUSINESS_MODE, newValue);
+    await prefs.setBool(AppConstants().IS_BUSINESS_MODE, newValue);
 
     _isBusinessMode = newValue;
   }
@@ -63,6 +66,14 @@ class StatusFileSystemDataSourceEngine {
       if (await docManCacheDir.exists()) {
         await docManCacheDir.delete(recursive: true);
         print("Cache directory deleted");
+      }
+      final temporary = await getTemporaryDirectory();
+      final mediaCache = Directory('${temporary.path}/status_media');
+      if (await mediaCache.exists()) await mediaCache.delete(recursive: true);
+      final support = await getApplicationSupportDirectory();
+      for (final mode in ['regular', 'business']) {
+        final manifest = File('${support.path}/statuses_$mode.json');
+        if (await manifest.exists()) await manifest.delete();
       }
       clearAllStatus();
     } catch (e) {
@@ -114,7 +125,10 @@ class StatusFileSystemDataSourceEngine {
     return filesToKeep;
   }
 
-  Future<void> getAllStatusesWithSaf({void Function()? onComplete}) async {
+  Future<void> getAllStatusesWithSaf({
+    void Function()? onComplete,
+    void Function()? onProgress,
+  }) async {
     await checkIsBusinessMode();
     print(' getAllStatusesWithSaf checkIsBusinessMode $_isBusinessMode');
 
@@ -131,9 +145,12 @@ class StatusFileSystemDataSourceEngine {
     // }
 
     if (_isBusinessMode == true) {
-      await _getAllStatusWithDocMan(isBusinessMode: true);
+      await _getAllStatusWithDocMan(
+        isBusinessMode: true,
+        onProgress: onProgress,
+      );
     } else {
-      await _getAllStatusWithDocMan();
+      await _getAllStatusWithDocMan(onProgress: onProgress);
     }
 
     // At the end of the method
@@ -181,9 +198,51 @@ class StatusFileSystemDataSourceEngine {
     return null;
   }
 
-  Future<void> _getAllStatusWithDocMan({bool isBusinessMode = false}) async {
+  Future<void> _getAllStatusWithDocMan({
+    bool isBusinessMode = false,
+    void Function()? onProgress,
+  }) async {
+    final elapsed = Stopwatch()..start();
+    final index = StatusCacheIndex();
+    void publish(List<File> files) {
+      _getImages =
+          files
+              .where(
+                (file) => const [
+                  'jpg',
+                  'jpeg',
+                  'png',
+                  'webp',
+                  'gif',
+                  'heic',
+                ].contains(file.path.split('.').last.toLowerCase()),
+              )
+              .toList();
+      _getVideos =
+          files
+              .where(
+                (file) => const [
+                  'mp4',
+                  'mov',
+                  'mkv',
+                  'webm',
+                  '3gp',
+                ].contains(file.path.split('.').last.toLowerCase()),
+              )
+              .toList();
+      _isWhatsappAvailable = true;
+      onProgress?.call();
+    }
+
     try {
       _isLoading = true;
+      final warm = await index.read(isBusinessMode);
+      if (warm.isNotEmpty) {
+        publish(warm);
+        debugPrint(
+          '[statuses] cached_first_ms=${elapsed.elapsedMilliseconds} count=${warm.length}',
+        );
+      }
 
       print('Before Getting all DocMan Files -- getWhatsAppStatusWithDocMan ');
 
@@ -290,6 +349,7 @@ class StatusFileSystemDataSourceEngine {
       // If no folder access found break the function
       if (statusDir == null) {
         print('statusDir is null --> ${statusDir}');
+        clearAllStatus();
         _isWhatsappAvailable = false;
         _isLoading = false;
         return;
@@ -297,117 +357,82 @@ class StatusFileSystemDataSourceEngine {
 
       print('After getting statusDir --> ${statusDir.uri}');
 
-      List<DocumentFile> documents = await statusDir
-          .listDocuments(mimeTypes: ['image/*', 'video/*'])
-          .catchError((error) async {
-            print('Error listing documents: $error');
-
-            if (error.toString().contains('Cannot initialize document file') ||
-                error.toString().contains('uri is invalid') ||
-                error.toString().contains('Permission Denial')) {
-              print('Invalid URI - releasing permission');
-              await DocMan.perms.release(statusDir!.uri);
-            }
-
-            return <DocumentFile>[]; // must return a fallback list
-          });
-
-      print(
-        'After statusDir.listDocuments --> ${documents.map((d) => d.name).toList()}',
-      );
-
-      List<File> existingCachedFiles = [];
-
-      // Check DocMan cache directory
-      final docManCacheDir = Directory(
-        '/storage/emulated/0/Android/data/com.genrevibes.whatsappstorysaver/cache/docManMedia',
-      );
-      if (await docManCacheDir.exists()) {
-        List<FileSystemEntity> docManCacheContents =
-            await docManCacheDir.list().toList();
-        existingCachedFiles.addAll(
-          docManCacheContents.where((entity) => entity is File).cast<File>(),
-        );
-      }
-
-      existingCachedFiles = await deleteExistingMediaCache(
-        existingCachedFiles,
-      ); // Update the list to only contain files to keep
-
-      print(
-        'All Cached Files ${existingCachedFiles.length} - ${existingCachedFiles}',
-      );
-
-      List<String> alreadyCachedNames =
-          existingCachedFiles.map((file) => file.path.split('/').last).toList();
-
-      print('Already cached files: $alreadyCachedNames');
-
+      final documents = await StatusCacheIndex.list(statusDir);
       documents.sort((a, b) => b.lastModified.compareTo(a.lastModified));
-      // List<DocumentFile> recentDocuments = documents.take(20).toList(); // Only cache 20 newest
-      List<DocumentFile> recentDocuments = documents.toList();
-
-      List<File> cachedFiles = [];
-      // DocMan.dir.clearCache();
-
-      for (DocumentFile doc in recentDocuments) {
-        print('cached file: ${doc.name} ----- ');
-        if (alreadyCachedNames.contains(doc.name)) {
-          print('Skipping already cached file: ${doc.name}');
-
-          // Find the existing cached file and add it to cachedFiles
-          File? existingCachedFile = existingCachedFiles.firstWhere(
-            (file) => file.path.split('/').last == doc.name,
-          );
-
-          cachedFiles.add(existingCachedFile);
-          print('Added existing cached file: ${existingCachedFile.path}');
-
-          continue;
-        }
-
-        try {
-          File? cachedFile = await doc.cache();
-          if (cachedFile != null) {
-            print('During DocumentFile cachedFile -> ${cachedFile}');
-            cachedFiles.add(cachedFile);
-          }
-        } catch (e) {
-          print('Cache timeout: ${doc.name}');
+      debugPrint(
+        '[statuses] directory_ms=${elapsed.elapsedMilliseconds} count=${documents.length}',
+      );
+      final files = <String, File>{};
+      // Reconcile the warm index against the authoritative directory immediately.
+      for (final doc in documents) {
+        final old = index.entries[doc.uri];
+        if (old != null &&
+            old['modified'] == doc.lastModified &&
+            old['size'] == doc.size) {
+          files[doc.uri] = File(old['path'] as String);
         }
       }
-
-      print('After caching files -- ${cachedFiles.length}');
-
-      List<String> cachedFilesPath =
-          cachedFiles.map((file) => file.path).toList();
-
-      print('After getting cached file paths -- ${cachedFilesPath}');
-
-      _getVideos =
-          cachedFilesPath
-              .where((path) => path.endsWith('.mp4'))
-              .map((path) => File(path))
-              .toList();
-
-      _getImages =
-          cachedFilesPath
-              .where((path) => path.endsWith('.jpg') || path.endsWith('.jpeg'))
-              .map((path) => File(path))
-              .toList();
-
-      print(
-        'After Getting all DocMan Files -- getWhatsAppStatusWithDocMan --${_getVideos.length} --> ${_getVideos}',
+      publish([
+        for (final doc in documents)
+          if (files.containsKey(doc.uri)) files[doc.uri]!,
+      ]);
+      var failed = 0;
+      var firstBatch = files.isNotEmpty;
+      // Small bounded batches put the newest items on screen before the rest
+      // of the folder is copied. Never start one copy per file simultaneously.
+      final missing =
+          documents.where((doc) => !files.containsKey(doc.uri)).toList();
+      for (var offset = 0; offset < missing.length; offset += 3) {
+        await Future.wait(
+          missing.skip(offset).take(3).map((doc) async {
+            try {
+              final file = await index.cache(doc);
+              if (file != null) {
+                files[doc.uri] = file;
+                if (!firstBatch) {
+                  firstBatch = true;
+                  publish([
+                    for (final item in documents)
+                      if (files.containsKey(item.uri)) files[item.uri]!,
+                  ]);
+                  debugPrint(
+                    '[statuses] first_batch_ms=${elapsed.elapsedMilliseconds} count=${files.length}',
+                  );
+                }
+              } else {
+                failed++;
+              }
+            } catch (_) {
+              failed++;
+            }
+          }),
+        );
+        publish([
+          for (final doc in documents)
+            if (files.containsKey(doc.uri)) files[doc.uri]!,
+        ]);
+        if (!firstBatch && files.isNotEmpty) {
+          firstBatch = true;
+          debugPrint(
+            '[statuses] first_batch_ms=${elapsed.elapsedMilliseconds} count=${files.length}',
+          );
+        }
+      }
+      // An index write failure must not hide media already displayed.
+      try {
+        await index.save(documents);
+      } catch (_) {}
+      debugPrint(
+        '[statuses] complete_ms=${elapsed.elapsedMilliseconds} count=${files.length} failed=$failed',
       );
-      print('getWhatsAppStatusWithDocMan AllFiles --> ${_getImages}');
 
       _isWhatsappAvailable = true;
       _isLoading = false;
     } catch (e) {
       print('error in getWhatsAppStatusWithDocMan --> ${e}');
 
-      _isWhatsappAvailable = false;
       _isLoading = false;
+      rethrow;
     }
   }
 
