@@ -1,4 +1,5 @@
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_splash/genrevibes_splash.dart';
 
 import 'app_env.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
@@ -41,6 +42,9 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<AnalyticsPipeline>(runtime.analytics)
     ..registerSingleton<AdPolicyController>(runtime.adPolicy)
     ..registerSingleton<AdProvider>(runtime.ads)
+    ..registerSingleton<SplashAdRegistry>(
+      SplashAdRegistry({'appodeal': runtime.ads}),
+    )
     ..registerSingleton<IapProvider>(runtime.iap)
     ..registerSingleton<PushNotificationProvider>(runtime.push)
     ..registerSingleton<FeedbackProvider>(runtime.feedback)
@@ -52,9 +56,7 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<LinkOpener>(runtime.linkOpener)
     ..registerSingleton<RatingCoordinator>(runtime.rating)
     ..registerSingleton<StoreReviewProvider>(runtime.storeReview)
-    ..registerSingleton<LocalNotificationScheduler>(
-      runtime.localNotifications,
-    )
+    ..registerSingleton<LocalNotificationScheduler>(runtime.localNotifications)
     ..registerSingleton<AppEnv>(runtime.env)
     ..registerSingleton<OnboardingController>(runtime.onboarding)
     ..registerSingleton<NavigationBarController>(runtime.navigationBar);

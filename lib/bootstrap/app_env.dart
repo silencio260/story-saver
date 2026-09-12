@@ -20,33 +20,50 @@ abstract final class AppPlacements {
   static const banner = AdPlacement(id: 'banner', format: AdFormat.banner);
 
   /// Interstitial shown between full-screen media views.
-  static const interstitial =
-      AdPlacement(id: 'interstitial', format: AdFormat.interstitial);
+  static const interstitial = AdPlacement(
+    id: 'interstitial',
+    format: AdFormat.interstitial,
+  );
 
   /// Native ad shown under the onboarding pages.
-  static const onboardingNative =
-      AdPlacement(id: 'onboarding_native', format: AdFormat.native);
+  static const onboardingNative = AdPlacement(
+    id: 'onboarding_native',
+    format: AdFormat.native,
+  );
 
   /// Native ad in the exit prompt.
-  static const exitNative =
-      AdPlacement(id: 'exit_native', format: AdFormat.native);
+  static const exitNative = AdPlacement(
+    id: 'exit_native',
+    format: AdFormat.native,
+  );
 
   /// Interstitial after the splash loader, when `splash_ad_format` is
   /// `interstitial`.
-  static const splashInterstitial =
-      AdPlacement(id: 'splash_interstitial', format: AdFormat.interstitial);
+  static const splashInterstitial = AdPlacement(
+    id: 'splash_interstitial',
+    format: AdFormat.interstitial,
+  );
 
   /// Rewarded video after the splash loader, when `splash_ad_format` is
   /// `rewarded`.
-  static const splashRewarded =
-      AdPlacement(id: 'splash_rewarded', format: AdFormat.rewarded);
+  static const splashRewarded = AdPlacement(
+    id: 'splash_rewarded',
+    format: AdFormat.rewarded,
+  );
+
+  /// Dedicated launch placement for a future App Open provider.
+  static const splashAppOpen = AdPlacement(
+    id: 'splash_app_open',
+    format: AdFormat.appOpen,
+  );
 
   /// The splash placement for [format], or null when this app has none.
   static AdPlacement? splashFor(AdFormat format) => switch (format) {
-        AdFormat.interstitial => splashInterstitial,
-        AdFormat.rewarded => splashRewarded,
-        _ => null,
-      };
+    AdFormat.interstitial => splashInterstitial,
+    AdFormat.rewarded => splashRewarded,
+    AdFormat.appOpen => splashAppOpen,
+    _ => null,
+  };
 
   /// Placements the ads remote policy paces.
   ///
@@ -64,6 +81,7 @@ abstract final class AppPlacements {
     ...paced,
     splashInterstitial,
     splashRewarded,
+    splashAppOpen,
   ];
 }
 
@@ -108,26 +126,27 @@ final class AppEnv {
   factory AppEnv.fromDefines() {
     return const AppEnv(
       // Matches DevelopmentModeUtils: any of these flags means "not production".
-      isDevelopment: kDebugMode ||
+      isDevelopment:
+          kDebugMode ||
           bool.fromEnvironment('development_mode') ||
           bool.fromEnvironment('founders_version') ||
           bool.fromEnvironment('special_version_mode'),
-      revenueCatAndroidKey:
-          String.fromEnvironment('revenue_cat_api_key_android'),
+      revenueCatAndroidKey: String.fromEnvironment(
+        'revenue_cat_api_key_android',
+      ),
       oneSignalAppId: String.fromEnvironment('one_signal_app_id'),
       postHogApiKey: String.fromEnvironment('posthog_api_key'),
       feedbackNestApiKey: String.fromEnvironment('feed_back_nest_api_key'),
-      appodealAndroidAppKey:
-          String.fromEnvironment('appodeal_app_key_android'),
+      appodealAndroidAppKey: String.fromEnvironment('appodeal_app_key_android'),
       appodealIosAppKey: String.fromEnvironment('appodeal_app_key_ios'),
       forceSessionReplay: bool.fromEnvironment('posthog_session_replay'),
-      disableFirebaseAnalyticsInDebug:
-          bool.fromEnvironment('disabled_firebase_analytics_in_debug_mode'),
+      disableFirebaseAnalyticsInDebug: bool.fromEnvironment(
+        'disabled_firebase_analytics_in_debug_mode',
+      ),
       privacyPolicyUrl: String.fromEnvironment('privacy_policy_url'),
       termsUrl: String.fromEnvironment('terms_url'),
       developerPasscode: String.fromEnvironment('developer_passcode'),
-      developerDeviceHashes:
-          String.fromEnvironment('developer_device_hashes'),
+      developerDeviceHashes: String.fromEnvironment('developer_device_hashes'),
     );
   }
 
@@ -216,9 +235,10 @@ final class AppEnv {
       CrashReportingConfig(collectionEnabled: !isDevelopment);
 
   /// The Appodeal app key for the platform this build runs on.
-  String get appodealAppKey => defaultTargetPlatform == TargetPlatform.iOS
-      ? appodealIosAppKey
-      : appodealAndroidAppKey;
+  String get appodealAppKey =>
+      defaultTargetPlatform == TargetPlatform.iOS
+          ? appodealIosAppKey
+          : appodealAndroidAppKey;
 
   /// Appodeal configuration for every placement this app shows.
   ///
@@ -244,11 +264,11 @@ final class AppEnv {
   /// The remote list is not here; it is bound at runtime by
   /// `DeveloperAccessRemotePolicyBinder`.
   DeveloperAccessConfig get developerAccess => DeveloperAccessConfig(
-        isDevelopmentBuild: isDevelopment,
-        hardcodedDeviceHashes: AppDeveloperDevices.hashes,
-        environmentDeviceHashes: developerDeviceHashes,
-        passcode: developerPasscode,
-      );
+    isDevelopmentBuild: isDevelopment,
+    hardcodedDeviceHashes: AppDeveloperDevices.hashes,
+    environmentDeviceHashes: developerDeviceHashes,
+    passcode: developerPasscode,
+  );
 
   /// RevenueCat configuration.
   ///
@@ -256,10 +276,9 @@ final class AppEnv {
   /// provider report itself unconfigured rather than crashing on a null
   /// customer info, which the previous service did.
   RevenueCatConfiguration get revenueCat => RevenueCatConfiguration(
-        androidApiKey: Platform.isAndroid ? revenueCatAndroidKey : null,
-        logging:
-            isDevelopment ? RevenueCatLogging.debug : RevenueCatLogging.errors,
-      );
+    androidApiKey: Platform.isAndroid ? revenueCatAndroidKey : null,
+    logging: isDevelopment ? RevenueCatLogging.debug : RevenueCatLogging.errors,
+  );
 
   /// OneSignal configuration.
   GenRevibesOneSignalConfiguration get oneSignal =>
@@ -305,10 +324,8 @@ final class AppEnv {
   ///
   /// `debug` is still set unconditionally, so production builds log verbosely.
   /// That is a separate parity carry-over and is worth revisiting on its own.
-  GenRevibesPostHogConfiguration get postHog => GenRevibesPostHogConfiguration(
-        apiKey: postHogApiKey,
-        debug: true,
-      );
+  GenRevibesPostHogConfiguration get postHog =>
+      GenRevibesPostHogConfiguration(apiKey: postHogApiKey, debug: true);
 
   /// FeedbackNest configuration.
   FeedbackNestConfiguration get feedbackNest =>

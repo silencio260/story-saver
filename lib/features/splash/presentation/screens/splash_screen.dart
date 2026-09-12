@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_splash/genrevibes_splash.dart';
@@ -87,12 +86,23 @@ class _SplashScreenState extends State<SplashScreen> {
     if (firstLaunch && !_config.read(SplashAdPolicyKeys.onFirstLaunch)) {
       return null;
     }
-    final ads = sl<AdProvider>();
+    final providerId = _config.read(SplashAdPolicyKeys.provider).trim();
     final placement = AppPlacements.splashFor(format);
-    // Appodeal has no app open format, so `app_open` shows nothing here.
-    if (placement == null || !ads.supportedFormats.contains(format)) {
-      return null;
-    }
+    if (placement == null) return null;
+    final request = sl<SplashAdRegistry>().resolve(
+      providerId: providerId,
+      placement: placement,
+      canRequest:
+          () =>
+              mounted &&
+              !iap.state.isPremium &&
+              SubscriptionManager().adsAllowed &&
+              _config.read(AdsPolicyKeys.adsEnabled) &&
+              SplashAdPolicyKeys.formatOf(_config) == format &&
+              _config.read(SplashAdPolicyKeys.provider).trim() == providerId &&
+              (!firstLaunch || _config.read(SplashAdPolicyKeys.onFirstLaunch)),
+    );
+    if (request == null) return null;
 
     // Consent and the ad SDK start after the first frame, and an ad may not
     // be requested before consent has been gathered.
@@ -104,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final access = SubscriptionManager();
     await access.initialize();
     if (iap.state.isPremium || !access.adsAllowed) return null;
-    return SplashAdRequest(provider: ads, placement: placement);
+    return request.canRequest?.call() == false ? null : request;
   }
 
   static bool _entitlementsKnown(IapState state) =>
@@ -154,6 +164,7 @@ class _SplashScreenState extends State<SplashScreen> {
       prepare: _prepare,
       resolveAd: _resolveAd,
       adExpected:
+          _config.read(AdsPolicyKeys.adsEnabled) &&
           SplashAdPolicyKeys.formatOf(_config) != null &&
           !context.read<IapBloc>().state.isPremium,
       onFinished: _finished,
