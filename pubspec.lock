@@ -770,6 +770,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.2"
+  genrevibes_system_ui:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/system_ui/genrevibes_system_ui"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   get_it:
     dependency: "direct main"
     description:

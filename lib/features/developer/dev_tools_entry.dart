@@ -16,6 +16,7 @@ import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
+import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import '../../bootstrap/app_env.dart';
 import '../../bootstrap/app_runtime.dart';
@@ -59,6 +60,7 @@ DevToolsHost _host() {
     // an ad test device. The app's own identity never includes it.
     advertisingId: const PlatformAdvertisingIdSource(),
     developerAccess: sl<DeveloperAccessController>(),
+    navigationBar: sl<NavigationBarController>(),
     retention: sl<RetentionTracker>(),
     crash: sl<CrashCoordinator>(),
     feedback: sl<FeedbackProvider>(),
@@ -162,6 +164,15 @@ const _storageKeys = <DevStorageGroup>[
       DevStorageEntry(
         key: DeveloperAccessKeys.failedPasscodeAttempts,
         label: 'Wrong passcode attempts',
+      ),
+    ],
+  ),
+  DevStorageGroup(
+    title: 'Navigation bar',
+    entries: <DevStorageEntry>[
+      DevStorageEntry(
+        key: NavigationBarKeys.developerShowsEverywhere,
+        label: 'Developer: show on every screen',
       ),
     ],
   ),

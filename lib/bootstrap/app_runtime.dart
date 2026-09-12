@@ -17,6 +17,7 @@ import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
+import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import 'app_env.dart';
 
@@ -51,6 +52,7 @@ final class AppRuntime {
     required this.storeReview,
     required this.localNotifications,
     required this.onboarding,
+    required this.navigationBar,
     required this.env,
     this.eventLog,
     this.kitLog,
@@ -144,6 +146,9 @@ final class AppRuntime {
 
   /// Onboarding completion state.
   final OnboardingController onboarding;
+
+  /// Whether the system navigation bar shows on the screen on top.
+  final NavigationBarController navigationBar;
 
   /// Analytics deliveries captured in development, for the Lab's event log.
   final RecordingDeliveryObserver? eventLog;

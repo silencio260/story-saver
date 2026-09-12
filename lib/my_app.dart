@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import 'config/routes_manager.dart';
 import 'config/theme_manager.dart';
@@ -89,14 +90,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
       },
       child: AnalyticsScope(
-        child: MaterialApp(
-          title: AppStrings.appName,
-          debugShowCheckedModeBanner: false,
-          theme: ThemeManager.lightTheme,
-          initialRoute: Routes.splash,
-          onGenerateRoute: AppRouter.getRoute,
-          navigatorKey: myGlobalNavigatorKey,
-          navigatorObservers: AnalyticsScope.navigatorObservers,
+        // Hidden on every screen unless the screen shows it with
+        // NavigationBarVisibility; the observer tells it which screen is on top.
+        child: NavigationBarScope(
+          controller: sl<NavigationBarController>(),
+          child: MaterialApp(
+            title: AppStrings.appName,
+            debugShowCheckedModeBanner: false,
+            theme: ThemeManager.lightTheme,
+            initialRoute: Routes.splash,
+            onGenerateRoute: AppRouter.getRoute,
+            navigatorKey: myGlobalNavigatorKey,
+            navigatorObservers: <NavigatorObserver>[
+              ...AnalyticsScope.navigatorObservers,
+              sl<NavigationBarController>().observer,
+            ],
+          ),
         ),
       ),
     ),

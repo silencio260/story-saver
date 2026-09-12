@@ -39,6 +39,7 @@ import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:genrevibes_storage_shared_preferences/genrevibes_storage_shared_preferences.dart';
+import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import '../features/analytics/data/services/analytics_service.dart';
 import '../features/analytics/data/services/tracked_local_notifications.dart';
@@ -98,6 +99,9 @@ abstract final class AppModules {
 
   /// Whether the user has finished onboarding.
   static const onboarding = 'onboarding';
+
+  /// The system navigation bar, per screen.
+  static const navigationBar = 'system_ui.navigation_bar';
 
   /// Registered but disabled until their feature migrates.
   static const disabled = <String>[];
@@ -171,6 +175,10 @@ Future<AppRuntime> bootstrapApp(
     logger: logger,
   );
   await developerAccess.initialize();
+  // The phone's navigation bar is hidden on every screen unless the screen
+  // shows it with NavigationBarVisibility. Developers see it everywhere while
+  // the Lab's "Show on every screen" switch is on, through the listener below.
+  final navigationBar = NavigationBarController(store: store, logger: logger);
   final consentProvider =
       dependencies.consent ??
       AppodealConsentProvider(appKey: env.appodealAppKey, logger: logger);
@@ -428,6 +436,11 @@ Future<AppRuntime> bootstrapApp(
         create: () => developerAccess,
         isRequired: false,
       ),
+      StarterModuleRegistration.enabled(
+        moduleId: AppModules.navigationBar,
+        create: () => navigationBar,
+        isRequired: false,
+      ),
       // Consent and ads are deferred: they start after the first frame, in
       // this order, and nothing waits for them.
       //
@@ -639,6 +652,7 @@ Future<AppRuntime> bootstrapApp(
     if (ads case final AdTestModeProvider testable) {
       unawaited(testable.setTestMode(access.servesTestAds));
     }
+    navigationBar.setDeveloperMode(access.isGranted);
     unawaited(
       analytics.setUserProperties(<String, Object?>{
         'developer_access': access.reason.name,
@@ -745,6 +759,7 @@ Future<AppRuntime> bootstrapApp(
     storeReview: storeReview,
     localNotifications: localNotifications,
     onboarding: onboarding,
+    navigationBar: navigationBar,
     env: env,
     eventLog: eventLog,
     kitLog: kitLog,

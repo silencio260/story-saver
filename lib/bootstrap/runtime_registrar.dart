@@ -17,6 +17,7 @@ import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
+import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import '../container_injector.dart';
 import 'app_runtime.dart';
@@ -55,5 +56,6 @@ void registerRuntime(AppRuntime runtime) {
       runtime.localNotifications,
     )
     ..registerSingleton<AppEnv>(runtime.env)
-    ..registerSingleton<OnboardingController>(runtime.onboarding);
+    ..registerSingleton<OnboardingController>(runtime.onboarding)
+    ..registerSingleton<NavigationBarController>(runtime.navigationBar);
 }

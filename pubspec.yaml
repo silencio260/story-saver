@@ -105,6 +105,8 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage
   genrevibes_storage_shared_preferences:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
+  genrevibes_system_ui:
+    path: packages/genrevibes_starter_kit/modules/system_ui/genrevibes_system_ui
 
 
   # Clean Architecture foundations
@@ -270,6 +272,8 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage
   genrevibes_storage_shared_preferences:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
+  genrevibes_system_ui:
+    path: packages/genrevibes_starter_kit/modules/system_ui/genrevibes_system_ui
   device_info_plus: ^11.3.0
 #  image_gallery_saver:
 #    git:
