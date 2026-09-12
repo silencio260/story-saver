@@ -8,6 +8,7 @@ import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
+import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
 import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
@@ -22,6 +23,7 @@ import '../../bootstrap/app_env.dart';
 import '../../bootstrap/app_runtime.dart';
 import '../../container_injector.dart';
 import '../analytics/domain/entities/app_analytics_catalogue.dart';
+import '../home/presentation/widgets/home_exit_prompt.dart';
 
 /// Opens the Starter Kit Lab.
 ///
@@ -61,6 +63,15 @@ DevToolsHost _host() {
     advertisingId: const PlatformAdvertisingIdSource(),
     developerAccess: sl<DeveloperAccessController>(),
     navigationBar: sl<NavigationBarController>(),
+    // Every exit prompt style with this app's content, to check an A/B arm
+    // before it goes live.
+    exitPrompt:
+        (context, ExitPromptStyle style, ExitButtonEmphasis exitButton) =>
+            HomeExitPrompt.config(
+              context,
+              style: style,
+              exitButton: exitButton,
+            ),
     retention: sl<RetentionTracker>(),
     crash: sl<CrashCoordinator>(),
     feedback: sl<FeedbackProvider>(),

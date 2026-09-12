@@ -612,7 +612,8 @@ Future<AppRuntime> bootstrapApp(
     current: () => remoteConfig.current,
     changes: remoteConfig.changes,
     policy: adPolicy,
-    placements: AppPlacements.all,
+    // Not the splash placements, which no first-ad delay may hold back.
+    placements: AppPlacements.paced,
     logger: logger,
   );
   await adPolicyBinder.initialize();
@@ -719,7 +720,9 @@ Future<AppRuntime> bootstrapApp(
   // for native ads still arrives on ads.events above.
   if (ads is AppodealAdProvider) {
     AppodealNativeAds.instance
-        .adEvents(AppPlacements.onboardingNative)
+        // Once for every native placement — onboarding and the exit prompt —
+        // each callback attributed to the placement whose view took the ad.
+        .attributedAdEvents(fallback: AppPlacements.onboardingNative)
         .listen(trackAdEvent);
   }
 

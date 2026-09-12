@@ -27,8 +27,44 @@ abstract final class AppPlacements {
   static const onboardingNative =
       AdPlacement(id: 'onboarding_native', format: AdFormat.native);
 
-  /// Every placement, for policy configuration.
-  static const all = <AdPlacement>[banner, interstitial, onboardingNative];
+  /// Native ad in the exit prompt.
+  static const exitNative =
+      AdPlacement(id: 'exit_native', format: AdFormat.native);
+
+  /// Interstitial after the splash loader, when `splash_ad_format` is
+  /// `interstitial`.
+  static const splashInterstitial =
+      AdPlacement(id: 'splash_interstitial', format: AdFormat.interstitial);
+
+  /// Rewarded video after the splash loader, when `splash_ad_format` is
+  /// `rewarded`.
+  static const splashRewarded =
+      AdPlacement(id: 'splash_rewarded', format: AdFormat.rewarded);
+
+  /// The splash placement for [format], or null when this app has none.
+  static AdPlacement? splashFor(AdFormat format) => switch (format) {
+        AdFormat.interstitial => splashInterstitial,
+        AdFormat.rewarded => splashRewarded,
+        _ => null,
+      };
+
+  /// Placements the ads remote policy paces.
+  ///
+  /// The splash placements are left out: `time_before_first_insta_ad` would
+  /// hold back an ad meant for app launch.
+  static const paced = <AdPlacement>[
+    banner,
+    interstitial,
+    onboardingNative,
+    exitNative,
+  ];
+
+  /// Every placement, for policy configuration and premium discards.
+  static const all = <AdPlacement>[
+    ...paced,
+    splashInterstitial,
+    splashRewarded,
+  ];
 }
 
 /// Phones that always have the developer tools and test ads, in every build.
@@ -196,6 +232,9 @@ final class AppEnv {
           AppodealPlacement(placement: AppPlacements.banner),
           AppodealPlacement(placement: AppPlacements.interstitial),
           AppodealPlacement(placement: AppPlacements.onboardingNative),
+          AppodealPlacement(placement: AppPlacements.exitNative),
+          AppodealPlacement(placement: AppPlacements.splashInterstitial),
+          AppodealPlacement(placement: AppPlacements.splashRewarded),
         ],
         verboseLogging: isDevelopment,
       );

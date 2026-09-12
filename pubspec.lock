@@ -193,14 +193,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
-  double_tap_to_exit:
-    dependency: "direct main"
-    description:
-      name: double_tap_to_exit
-      sha256: d4069f8c90f0f16ca9b610d1fcfe96168ca1c463439be131158469943e3c1508
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.3"
   equatable:
     dependency: "direct main"
     description:
@@ -524,7 +516,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal_native"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.3"
   genrevibes_analytics:
     dependency: "direct main"
     description:
@@ -644,6 +636,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0-dev.1"
+  genrevibes_exit_prompt:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/exit_prompt/genrevibes_exit_prompt"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
   genrevibes_feedback:
     dependency: "direct main"
     description:
@@ -741,11 +740,18 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_policy"
       relative: true
     source: path
-    version: "0.1.0-dev.5"
+    version: "0.1.0-dev.6"
   genrevibes_settings:
     dependency: "direct main"
     description:
       path: "packages/genrevibes_starter_kit/modules/settings/genrevibes_settings"
+      relative: true
+    source: path
+    version: "0.1.0-dev.1"
+  genrevibes_splash:
+    dependency: "direct main"
+    description:
+      path: "packages/genrevibes_starter_kit/modules/splash/genrevibes_splash"
       relative: true
     source: path
     version: "0.1.0-dev.1"

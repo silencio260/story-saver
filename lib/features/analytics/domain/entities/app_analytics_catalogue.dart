@@ -690,6 +690,71 @@ abstract final class AppAnalyticsCatalogue {
           ),
         ],
       ),
+      DevEventSpec(
+        name: 'splash_ad_result',
+        group: 'Monetisation',
+        description:
+            'The splash screen finished, with what became of its ad. '
+            'splash_ad_format decides the format.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'status',
+            kind: DevParamKind.text,
+            example: 'shown',
+            description:
+                'notRequested, shown, timedOut, notReady, blocked, failed '
+                'or appInBackground.',
+          ),
+          DevParamSpec(
+            name: 'placement',
+            kind: DevParamKind.text,
+            example: 'splash_interstitial',
+          ),
+          DevParamSpec(
+            name: 'wait_ms',
+            kind: DevParamKind.number,
+            example: 3200,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'exit_prompt_shown',
+        group: 'Monetisation',
+        description:
+            'Back on home showed the exit prompt, or the double-tap hint. '
+            'exit_prompt_style decides the style.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'style',
+            kind: DevParamKind.text,
+            example: 'ad_sheet',
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'exit_prompt_action',
+        group: 'Monetisation',
+        description: 'What the user chose in the exit prompt.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'style',
+            kind: DevParamKind.text,
+            example: 'ad_sheet',
+          ),
+          DevParamSpec(
+            name: 'action',
+            kind: DevParamKind.text,
+            example: 'exit',
+            description: 'exit, stay, feature or offer.',
+          ),
+          DevParamSpec(
+            name: 'target',
+            kind: DevParamKind.text,
+            example: 'saved_gallery',
+            description: 'The feature or offer chosen, when there was one.',
+          ),
+        ],
+      ),
 
       // ------------------------------------------------------ support
       DevEventSpec(

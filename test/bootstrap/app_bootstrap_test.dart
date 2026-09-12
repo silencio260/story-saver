@@ -293,7 +293,12 @@ void main() {
       );
       expect(
         env.appodeal.formats,
-        <AdFormat>{AdFormat.banner, AdFormat.interstitial, AdFormat.native},
+        <AdFormat>{
+          AdFormat.banner,
+          AdFormat.interstitial,
+          AdFormat.native,
+          AdFormat.rewarded,
+        },
       );
     });
 

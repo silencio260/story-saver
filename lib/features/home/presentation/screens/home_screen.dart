@@ -1,12 +1,20 @@
-import 'package:double_tap_to_exit/double_tap_to_exit.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
+import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
+import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
+import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
+import '../../../../bootstrap/app_env.dart';
 import '../../../../config/routes_manager.dart';
+import '../../../../container_injector.dart';
 import '../../../../core/utils/legacy_custom_colors.dart';
-import '../../../monetization/presentation/bloc/ads_bloc/ads_bloc.dart';
+import '../../../analytics/data/services/analytics_service.dart';
+import '../../../monetization/data/services/subscription_service.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../../../monetization/presentation/widgets/banner_ad_widget.dart';
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
@@ -20,6 +28,7 @@ import '../../../statuses/domain/entities/status_media.dart';
 import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../../../statuses/presentation/widgets/status_grid.dart';
 import '../l10n/home_strings.dart';
+import '../widgets/home_exit_prompt.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,7 +63,9 @@ class _HomeScreenState extends State<HomeScreen>
       const PermissionsCheckRequested(isBusinessMode: false),
     );
     context.read<SavedMediaBloc>().add(const SavedMediaLoadRequested());
-    context.read<AdsBloc>().add(const InterstitialAdRequested());
+    // No interstitial on opening: the splash screen's ad is the launch ad, and
+    // an interstitial straight after it is one ad on top of another.
+    unawaited(_preloadExitAd());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -68,6 +79,25 @@ class _HomeScreenState extends State<HomeScreen>
     context.read<NavigationBloc>().add(
       NavigationTabSelected(_tabController.index),
     );
+  }
+
+  /// Loads the exit prompt's native ad before Back is pressed, so the prompt
+  /// opens with its ad rather than the placeholder.
+  Future<void> _preloadExitAd() async {
+    final style =
+        ExitPromptStyle.tryParse(
+          sl<RemoteConfigCoordinator>().current.read(
+            ExitPromptPolicyKeys.style,
+          ),
+        ) ??
+        ExitPromptStyle.featuresSheet;
+    // Only ad_sheet and ad_dialog carry an ad here; see HomeExitPrompt.
+    if (!style.needsAd) return;
+    await sl<GenRevibesStarterKit>().deferredStartupComplete;
+    final access = SubscriptionManager();
+    await access.initialize();
+    if (!mounted || !access.adsAllowed) return;
+    unawaited(sl<AdProvider>().load(AppPlacements.exitNative));
   }
 
   @override
@@ -123,126 +153,126 @@ class _HomeScreenState extends State<HomeScreen>
         },
       ),
     ],
-    child: DoubleTapToExit(
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          if (await _confirmExit(context) == true) {
-            await SystemChannels.platform.invokeMethod<void>(
-              'SystemNavigator.pop',
-            );
-          }
-        },
-        child: SafeArea(
-          top: false,
-          left: false,
-          child: BlocBuilder<StatusBloc, StatusState>(
-            buildWhen:
-                (previous, current) =>
-                    previous.isBusinessMode != current.isBusinessMode,
-            builder:
-                (context, statusState) => Scaffold(
-                  appBar: AppBar(
-                    title: Text(
-                      statusState.isBusinessMode
-                          ? HomeStrings.businessAppTitle
-                          : HomeStrings.appTitle,
-                    ),
-                    automaticallyImplyLeading: false,
-                    backgroundColor: const Color(CustomColors.AppBarColor),
-                    foregroundColor: Colors.white,
-                    bottom: TabBar(
-                      controller: _tabController,
-                      indicatorColor: Colors.white,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      tabs: const <Tab>[
-                        Tab(
-                          child: Text(
-                            HomeStrings.imageTab,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Tab(
-                          child: Text(
-                            HomeStrings.videoTab,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Tab(
-                          child: Text(
-                            HomeStrings.galleryTab,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    actions: <Widget>[
-                      IconButton(
-                        tooltip:
-                            statusState.isBusinessMode
-                                ? HomeStrings.personalMode
-                                : HomeStrings.businessMode,
-                        onPressed:
-                            () =>
-                                _switchBusinessMode(statusState.isBusinessMode),
-                        icon: SvgPicture.asset(
-                          statusState.isBusinessMode
-                              ? 'assets/icons/whatsapp.svg'
-                              : 'assets/icons/whatsapp-business.svg',
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          ),
+    // Back asks in the style remote config names; see HomeExitPrompt.
+    child: ExitGuard(
+      config:
+          (context) => HomeExitPrompt.config(
+            context,
+            openGallery: () => _tabController.animateTo(2),
+            openBusinessMode:
+                () => _switchBusinessMode(
+                  context.read<StatusBloc>().state.isBusinessMode,
+                ),
+          ),
+      onShown:
+          (style) => unawaited(
+            AnalyticsService.track('exit_prompt_shown', <String, Object?>{
+              'style': style.wireName,
+            }),
+          ),
+      onResult:
+          (result) => unawaited(
+            AnalyticsService.track('exit_prompt_action', <String, Object?>{
+              'style': result.style.wireName,
+              'action': result.action.name,
+              if (result.targetId case final target?) 'target': target,
+            }),
+          ),
+      child: SafeArea(
+        top: false,
+        left: false,
+        child: BlocBuilder<StatusBloc, StatusState>(
+          buildWhen:
+              (previous, current) =>
+                  previous.isBusinessMode != current.isBusinessMode,
+          builder:
+              (context, statusState) => Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    statusState.isBusinessMode
+                        ? HomeStrings.businessAppTitle
+                        : HomeStrings.appTitle,
+                  ),
+                  automaticallyImplyLeading: false,
+                  backgroundColor: const Color(CustomColors.AppBarColor),
+                  foregroundColor: Colors.white,
+                  bottom: TabBar(
+                    controller: _tabController,
+                    indicatorColor: Colors.white,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    tabs: const <Tab>[
+                      Tab(
+                        child: Text(
+                          HomeStrings.imageTab,
+                          style: TextStyle(fontSize: 14, color: Colors.white),
                         ),
                       ),
-                      IconButton(
-                        tooltip: HomeStrings.settings,
-                        onPressed:
-                            () => Navigator.pushNamed(context, Routes.settings),
-                        icon: const Icon(Icons.settings),
+                      Tab(
+                        child: Text(
+                          HomeStrings.videoTab,
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
-                      BlocBuilder<IapBloc, IapState>(
-                        buildWhen:
-                            (previous, current) =>
-                                previous.isPremium != current.isPremium,
-                        builder:
-                            (context, iapState) => IconButton(
-                              tooltip:
-                                  iapState.isPremium
-                                      ? HomeStrings.downloadAll
-                                      : HomeStrings.unlockPremium,
-                              onPressed:
-                                  iapState.isPremium
-                                      ? _downloadAll
-                                      : () => context.read<IapBloc>().add(
-                                        const IapPaywallRequested(),
-                                      ),
-                              icon: Icon(
-                                iapState.isPremium
-                                    ? Icons.download
-                                    : Icons.diamond_outlined,
-                              ),
-                            ),
+                      Tab(
+                        child: Text(
+                          HomeStrings.galleryTab,
+                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
-                  body: TabBarView(
-                    controller: _tabController,
-                    children: _pages,
-                  ),
-                  bottomNavigationBar: const BannerAdWidget(),
+                  actions: <Widget>[
+                    IconButton(
+                      tooltip:
+                          statusState.isBusinessMode
+                              ? HomeStrings.personalMode
+                              : HomeStrings.businessMode,
+                      onPressed:
+                          () => _switchBusinessMode(statusState.isBusinessMode),
+                      icon: SvgPicture.asset(
+                        statusState.isBusinessMode
+                            ? 'assets/icons/whatsapp.svg'
+                            : 'assets/icons/whatsapp-business.svg',
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: HomeStrings.settings,
+                      onPressed:
+                          () => Navigator.pushNamed(context, Routes.settings),
+                      icon: const Icon(Icons.settings),
+                    ),
+                    BlocBuilder<IapBloc, IapState>(
+                      buildWhen:
+                          (previous, current) =>
+                              previous.isPremium != current.isPremium,
+                      builder:
+                          (context, iapState) => IconButton(
+                            tooltip:
+                                iapState.isPremium
+                                    ? HomeStrings.downloadAll
+                                    : HomeStrings.unlockPremium,
+                            onPressed:
+                                iapState.isPremium
+                                    ? _downloadAll
+                                    : () => context.read<IapBloc>().add(
+                                      const IapPaywallRequested(),
+                                    ),
+                            icon: Icon(
+                              iapState.isPremium
+                                  ? Icons.download
+                                  : Icons.diamond_outlined,
+                            ),
+                          ),
+                    ),
+                  ],
                 ),
-          ),
+                body: TabBarView(controller: _tabController, children: _pages),
+                bottomNavigationBar: const BannerAdWidget(),
+              ),
         ),
       ),
     ),
@@ -281,23 +311,4 @@ class _HomeScreenState extends State<HomeScreen>
       context.read<SavedMediaBloc>().add(const SavedMediaLoadRequested());
     }
   }
-
-  Future<bool?> _confirmExit(BuildContext context) => showDialog<bool>(
-    context: context,
-    builder:
-        (context) => AlertDialog(
-          title: const Text(HomeStrings.exitTitle),
-          content: const Text(HomeStrings.exitMessage),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text(HomeStrings.no),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(HomeStrings.yes),
-            ),
-          ],
-        ),
-  );
 }

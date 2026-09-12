@@ -107,6 +107,10 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
   genrevibes_system_ui:
     path: packages/genrevibes_starter_kit/modules/system_ui/genrevibes_system_ui
+  genrevibes_splash:
+    path: packages/genrevibes_starter_kit/modules/splash/genrevibes_splash
+  genrevibes_exit_prompt:
+    path: packages/genrevibes_starter_kit/modules/exit_prompt/genrevibes_exit_prompt
 
 
   # Clean Architecture foundations
@@ -152,7 +156,6 @@ dependencies:
 
   smooth_page_indicator: ^1.2.0+3
   visibility_detector: ^0.4.0+2
-  double_tap_to_exit: ^1.0.2
   video_compress: ^3.1.4
   list_all_videos: ^1.2.0
   flutter_isolate: ^2.1.0
@@ -274,6 +277,10 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/storage/genrevibes_storage_shared_preferences
   genrevibes_system_ui:
     path: packages/genrevibes_starter_kit/modules/system_ui/genrevibes_system_ui
+  genrevibes_splash:
+    path: packages/genrevibes_starter_kit/modules/splash/genrevibes_splash
+  genrevibes_exit_prompt:
+    path: packages/genrevibes_starter_kit/modules/exit_prompt/genrevibes_exit_prompt
   device_info_plus: ^11.3.0
 #  image_gallery_saver:
 #    git:
