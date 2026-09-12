@@ -23,8 +23,12 @@ abstract final class AppPlacements {
   static const interstitial =
       AdPlacement(id: 'interstitial', format: AdFormat.interstitial);
 
+  /// Native ad shown under the onboarding pages.
+  static const onboardingNative =
+      AdPlacement(id: 'onboarding_native', format: AdFormat.native);
+
   /// Every placement, for policy configuration.
-  static const all = <AdPlacement>[banner, interstitial];
+  static const all = <AdPlacement>[banner, interstitial, onboardingNative];
 }
 
 /// Phones that always have the developer tools and test ads, in every build.
@@ -182,7 +186,7 @@ final class AppEnv {
 
   /// Appodeal configuration for every placement this app shows.
   ///
-  /// Both placements use the dashboard's `default` placement. Nothing here
+  /// Every placement uses the dashboard's `default` placement. Nothing here
   /// changes between live and test ads: test mode is a switch on the SDK, and
   /// `DeveloperAccessController` decides it when the provider starts.
   GenRevibesAppodealConfiguration get appodeal =>
@@ -191,6 +195,7 @@ final class AppEnv {
         placements: const <AppodealPlacement>[
           AppodealPlacement(placement: AppPlacements.banner),
           AppodealPlacement(placement: AppPlacements.interstitial),
+          AppodealPlacement(placement: AppPlacements.onboardingNative),
         ],
         verboseLogging: isDevelopment,
       );

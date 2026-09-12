@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
+import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
 import 'package:genrevibes_analytics_firebase/genrevibes_analytics_firebase.dart';
 import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
@@ -653,7 +654,7 @@ Future<AppRuntime> bootstrapApp(
   // widget would count the same impression twice. `value` and `currency` are
   // the parameters Firebase counts as ad revenue; `value_micros` keeps the
   // event comparable with the AdMob-era one.
-  ads.events.listen((event) {
+  void trackAdEvent(AdEvent event) {
     final revenue = event.revenue;
     final AnalyticsEvent? tracked = switch (event.type) {
       AdEventType.paid when revenue != null => AnalyticsEvent(
@@ -696,7 +697,17 @@ Future<AppRuntime> bootstrapApp(
       _ => null,
     };
     if (tracked != null) unawaited(analytics.track(tracked));
-  });
+  }
+
+  ads.events.listen(trackAdEvent);
+  // Native callbacks come from genrevibes_ads_appodeal_native, not the
+  // provider, which Appodeal's Flutter plugin never tells about them. Revenue
+  // for native ads still arrives on ads.events above.
+  if (ads is AppodealAdProvider) {
+    AppodealNativeAds.instance
+        .adEvents(AppPlacements.onboardingNative)
+        .listen(trackAdEvent);
+  }
 
   // Nothing else fetches. `initialize` only reads what a previous run
   // activated, so without this a rollout percentage set in Firebase would

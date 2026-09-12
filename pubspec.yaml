@@ -29,6 +29,8 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
   genrevibes_ads_appodeal:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal
+  genrevibes_ads_appodeal_native:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal_native
   genrevibes_analytics:
     path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:
@@ -196,6 +198,8 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads
   genrevibes_ads_appodeal:
     path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal
+  genrevibes_ads_appodeal_native:
+    path: packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal_native
   genrevibes_analytics:
     path: packages/genrevibes_starter_kit/modules/analytics/genrevibes_analytics
   genrevibes_analytics_firebase:

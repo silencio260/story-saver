@@ -278,7 +278,7 @@ void main() {
   });
 
   group('AppEnv', () {
-    test('configures Appodeal for both placements, under default', () {
+    test('configures Appodeal for every placement, under default', () {
       // Appodeal has no ad-unit IDs: the app key selects the app, and each
       // placement only picks dashboard rules. flutter_test reports Android.
       expect(env.appodeal.appKey, 'appodeal-key');
@@ -288,8 +288,12 @@ void main() {
         'default',
       );
       expect(
+        env.appodeal.placementFor(AppPlacements.onboardingNative)?.name,
+        'default',
+      );
+      expect(
         env.appodeal.formats,
-        <AdFormat>{AdFormat.banner, AdFormat.interstitial},
+        <AdFormat>{AdFormat.banner, AdFormat.interstitial, AdFormat.native},
       );
     });
 
