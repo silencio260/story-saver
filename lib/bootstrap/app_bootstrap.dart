@@ -597,8 +597,9 @@ Future<AppRuntime> bootstrapApp(
             'currency': revenue.currencyCode,
           },
         ),
+      // Not `ad_click`: Firebase reserves it and refuses the event.
       AdEventType.clicked => AnalyticsEvent(
-          name: 'ad_click',
+          name: 'custom_ad_click',
           properties: <String, Object?>{'ad_type': event.format.name},
         ),
       _ => null,

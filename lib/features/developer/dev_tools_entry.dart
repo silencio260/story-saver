@@ -5,6 +5,7 @@ import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
+import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 import 'package:genrevibes_engagement/genrevibes_engagement.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
@@ -54,6 +55,9 @@ DevToolsHost _host() {
     // Analytics-name overrides are left out: this app does not rename events
     // remotely, and their forty-two keys buried the three it does configure.
     identity: sl<DeviceIdentityResolver>(),
+    // Read only when the developer access page asks, to register this phone as
+    // an ad test device. The app's own identity never includes it.
+    advertisingId: const PlatformAdvertisingIdSource(),
     developerAccess: sl<DeveloperAccessController>(),
     retention: sl<RetentionTracker>(),
     crash: sl<CrashCoordinator>(),

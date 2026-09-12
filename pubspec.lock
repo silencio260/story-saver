@@ -622,7 +622,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/device_identity/genrevibes_device_identity_platform"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.3"
   genrevibes_devtools:
     dependency: "direct main"
     description:
@@ -734,7 +734,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/remote_config/genrevibes_remote_policy"
       relative: true
     source: path
-    version: "0.1.0-dev.3"
+    version: "0.1.0-dev.4"
   genrevibes_settings:
     dependency: "direct main"
     description:

@@ -9,6 +9,8 @@ import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
+import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
+import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
 
 import '../../../../container_injector.dart';
@@ -275,6 +277,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onTap: _copyDeveloperDeviceHash,
     ),
     const SizedBox(height: 12),
+    // What an ad network recognises a test device by. Read only on tap, and
+    // never kept.
+    _settingsItem(
+      icon: Icons.ads_click,
+      label: SettingsStrings.copyAdvertisingId,
+      onTap: _copyAdvertisingId,
+    ),
+    const SizedBox(height: 12),
     // The only way to see on device that every starter-kit module started. A
     // degraded module is designed not to crash the application, so without
     // this a capability can be silently dead and nothing says so.
@@ -438,6 +448,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     await Clipboard.setData(ClipboardData(text: hash));
     _showMessage(SettingsStrings.developerDeviceHashCopied);
+  }
+
+  /// Google's advertising ID on Android, the IDFA on iOS. Only asked for when
+  /// tracking is authorized, so a user's opt-out is honoured.
+  Future<void> _copyAdvertisingId() async {
+    const source = PlatformAdvertisingIdSource();
+    try {
+      final authorized =
+          await source.authorization() == TrackingAuthorization.authorized;
+      final id = authorized ? await source.advertisingId() : null;
+      if (id == null) {
+        _showMessage(SettingsStrings.advertisingIdUnavailable);
+        return;
+      }
+      await Clipboard.setData(ClipboardData(text: id));
+      _showMessage(SettingsStrings.advertisingIdCopied);
+    } on Object {
+      _showMessage(SettingsStrings.advertisingIdUnavailable);
+    }
   }
 
   Future<void> _showOneSignalUser() async {

@@ -249,9 +249,10 @@ abstract final class AppAnalyticsCatalogue {
             ],
           ),
           DevEventSpec(
-            name: 'ad_click',
+            name: 'custom_ad_click',
             group: 'Monetisation',
-            description: 'An ad was clicked, on any placement.',
+            description: 'An ad was clicked, on any placement. Not ad_click, '
+                'which Firebase reserves and refuses.',
             parameters: <DevParamSpec>[
               DevParamSpec(
                 name: 'ad_type',
