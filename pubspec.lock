@@ -524,7 +524,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/ads/genrevibes_ads_appodeal_native"
       relative: true
     source: path
-    version: "0.1.0-dev.1"
+    version: "0.1.0-dev.2"
   genrevibes_analytics:
     dependency: "direct main"
     description:
@@ -706,7 +706,7 @@ packages:
       path: "packages/genrevibes_starter_kit/modules/onboarding/genrevibes_onboarding"
       relative: true
     source: path
-    version: "0.1.0-dev.2"
+    version: "0.1.0-dev.3"
   genrevibes_permissions:
     dependency: "direct main"
     description:
