@@ -45,7 +45,9 @@ class RevenueCatService {
   }) async {
     await AnalyticsService.logViewPaywall();
 
-    final result = await _iap.presentPaywall(requiredEntitlementId: entitlementId);
+    final result = await _iap.presentPaywall(
+      requiredEntitlementId: entitlementId,
+    );
     return result.fold(
       onSuccess: (purchase) {
         switch (purchase.status) {
@@ -63,18 +65,30 @@ class RevenueCatService {
             );
             return PaywallOutcome.cancelled;
           case PurchaseStatus.pending:
+            AnalyticsService.track('purchase_pending');
+            return PaywallOutcome.notPresented;
           case PurchaseStatus.notPurchased:
+            AnalyticsService.track('paywall_not_presented');
             return PaywallOutcome.notPresented;
         }
       },
-      onFailure: (_) => PaywallOutcome.notPresented,
+      onFailure: (error) {
+        AnalyticsService.track('paywall_failed', {
+          'error_code': error.code.name,
+        });
+        return PaywallOutcome.notPresented;
+      },
     );
   }
 
   /// Shows RevenueCat's customer centre.
   Future<void> PresentRevenueCatCustomerCenter() async {
-    await _iap.presentCustomerCenter();
-    AnalyticsService.logCustomCustomerCenterViewed();
+    final result = await _iap.presentCustomerCenter();
+    await AnalyticsService.track(
+      result.isSuccess
+          ? 'custom_customer_center_viewed'
+          : 'customer_center_failed',
+    );
   }
 
   /// The latest entitlement snapshot, refreshed from the provider.
@@ -91,13 +105,18 @@ class RevenueCatService {
 
   /// Restores previous purchases.
   Future<void> restorePurchases() async {
+    await AnalyticsService.track('restore_purchases_requested');
     final result = await _iap.restorePurchases();
     result.fold(
       onSuccess: (snapshot) {
         _snapshot = snapshot;
         AnalyticsService.logCustomPurchasesRestored(entitlementId: 'Pro');
       },
-      onFailure: (_) {},
+      onFailure: (error) {
+        AnalyticsService.track('restore_purchases_failed', {
+          'error_code': error.code.name,
+        });
+      },
     );
   }
 

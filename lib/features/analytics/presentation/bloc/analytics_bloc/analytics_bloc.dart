@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
@@ -45,17 +47,34 @@ class AnalyticsBloc extends Bloc<AnalyticsBlocEvent, AnalyticsState> {
     final result = await _pipeline.track(
       AnalyticsEvent(
         name: event.event.name,
-        properties: event.event.parameters,
+        properties: {
+          'platform': Platform.operatingSystem,
+          ...event.event.parameters,
+        },
       ),
     );
     result.fold(
-      onSuccess: (_) => emit(const AnalyticsState(status: AnalyticsViewStatus.ready)),
-      onFailure: (error) => emit(
-        AnalyticsState(
-          status: AnalyticsViewStatus.failure,
-          message: error.message,
-        ),
-      ),
+      onSuccess:
+          (report) => emit(
+            AnalyticsState(
+              status:
+                  report.isCompleteSuccess
+                      ? AnalyticsViewStatus.ready
+                      : AnalyticsViewStatus.failure,
+              message:
+                  report.isCompleteSuccess
+                      ? null
+                      : 'Analytics delivery incomplete: ${report.failures.keys.join(", ")}'
+                          '${report.suppressedByConsent ? " (consent suppressed)" : ""}',
+            ),
+          ),
+      onFailure:
+          (error) => emit(
+            AnalyticsState(
+              status: AnalyticsViewStatus.failure,
+              message: error.message,
+            ),
+          ),
     );
   }
 }

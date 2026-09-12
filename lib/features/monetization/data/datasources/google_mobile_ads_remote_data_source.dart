@@ -43,6 +43,8 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
 
   @override
   Future<void> loadInterstitial() async {
+    await _subscriptionManager.initialize();
+    if (!_subscriptionManager.adsAllowed) return;
     _adsDisabled = false;
     if (_isLoading || _ads.isReady(AppPlacements.interstitial)) return;
 
@@ -52,7 +54,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     await sl<GenRevibesStarterKit>().deferredStartupComplete;
 
     await _subscriptionManager.initialize();
-    if (_subscriptionManager.isPremium) return;
+    if (!_subscriptionManager.adsAllowed) return;
 
     _isLoading = true;
     if (!_initialDelayApplied) {
@@ -63,14 +65,14 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
         ),
       );
     }
-    if (_adsDisabled || _subscriptionManager.isPremium) {
+    if (_adsDisabled || !_subscriptionManager.adsAllowed) {
       _isLoading = false;
       return;
     }
 
     final result = await _ads.load(AppPlacements.interstitial);
     _isLoading = false;
-    if (_adsDisabled || _subscriptionManager.isPremium) {
+    if (_adsDisabled || !_subscriptionManager.adsAllowed) {
       await _ads.discard(AppPlacements.interstitial);
       return;
     }
@@ -85,7 +87,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
   Future<bool> showInterstitial() async {
     if (_adsDisabled) return false;
     await _subscriptionManager.initialize();
-    if (_subscriptionManager.isPremium) {
+    if (!_subscriptionManager.adsAllowed) {
       await dispose();
       return false;
     }
@@ -104,6 +106,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     await Future<void>.delayed(
       Duration(seconds: _config.read(AdsPolicyKeys.minInterstitialInterval)),
     );
+    if (_adsDisabled || !_subscriptionManager.adsAllowed) return;
     try {
       await loadInterstitial();
     } on Object {

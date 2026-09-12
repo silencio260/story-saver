@@ -1,5 +1,7 @@
+import '../../../data/services/subscription_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../core/usecase/base_usecase.dart';
 import '../../../domain/usecases/dispose_ads_usecase.dart';
@@ -34,11 +36,14 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   final AdSuppressionManager _adSuppressionManager;
 
   Future<void> _onStarted(AdsStarted event, Emitter<AdsState> emit) async {
-    if (_adSuppressionManager.areAdsSuppressed) {
+    if (!SubscriptionManager().adsAllowed ||
+        _adSuppressionManager.areAdsSuppressed) {
       emit(const AdsState(status: AdsViewStatus.disabled));
       return;
     }
+    AnalyticsService.track('interstitial_load_requested');
     final result = await _loadInterstitial(NoParams.instance);
+    if (result.isLeft()) AnalyticsService.track('interstitial_load_failed');
     result.fold(
       (failure) => emit(
         AdsState(status: AdsViewStatus.failure, message: failure.message),
@@ -51,8 +56,20 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
     InterstitialAdRequested event,
     Emitter<AdsState> emit,
   ) async {
-    if (_adSuppressionManager.areAdsSuppressed) return;
+    if (!SubscriptionManager().adsAllowed) return;
+    AnalyticsService.track('interstitial_show_requested');
+    if (_adSuppressionManager.areAdsSuppressed) {
+      AnalyticsService.track('interstitial_show_skipped', {
+        'reason': 'suppressed',
+      });
+      return;
+    }
     final result = await _showInterstitial(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('interstitial_show_failed'),
+      (shown) =>
+          AnalyticsService.track('interstitial_show_result', {'shown': shown}),
+    );
     result.fold(
       (failure) => emit(
         AdsState(status: AdsViewStatus.failure, message: failure.message),

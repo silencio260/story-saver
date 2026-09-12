@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 
@@ -46,6 +47,7 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
     _index = widget.arguments.initialIndex;
     _lastAllowedIndex = widget.arguments.initialIndex;
     _pageController = PageController(initialPage: _index);
+    _trackViewed();
     context.read<AdsBloc>().add(const InterstitialAdRequested());
   }
 
@@ -79,7 +81,15 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
       _showPremiumModal();
     } else {
       _lastAllowedIndex = index;
+      _trackViewed();
     }
+  }
+
+  void _trackViewed() {
+    AnalyticsService.track('media_viewed', {
+      'source': widget.arguments.allowSave ? 'statuses' : 'saved_media',
+      'index': _index,
+    });
   }
 
   Future<void> _showPremiumModal() async {

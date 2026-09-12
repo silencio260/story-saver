@@ -1,7 +1,11 @@
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../container_injector.dart';
 
@@ -23,22 +27,119 @@ abstract final class AnalyticsService {
 
   /// Carried over verbatim: every event in this app reported the platform.
   static Map<String, Object?> _base([Map<String, Object?> extra = const {}]) {
-    return <String, Object?>{
-      'platform': Platform.operatingSystem,
-      ...extra,
-    };
+    return <String, Object?>{'platform': Platform.operatingSystem, ...extra};
   }
 
-  static void _track(String name, [Map<String, Object?> extra = const {}]) {
-    // Fire and forget, as the previous implementation did. A failed delivery
-    // is recorded on the pipeline's own health; it must never interrupt the
-    // user action that triggered it.
-    unawaited(
-      sl<AnalyticsPipeline>().track(
-        AnalyticsEvent(name: name, properties: _base(extra)),
+  static AnalyticsPipeline? _pipeline;
+  static bool _draining = false;
+
+  static void bind(AnalyticsPipeline pipeline) => _pipeline = pipeline;
+
+  /// Never let diagnostics interrupt an operation. Background isolates persist
+  /// one file per event, avoiding shared-preference read/modify/write races.
+  static Future<void> track(
+    String name, [
+    Map<String, Object?> properties = const {},
+  ]) async {
+    final record = <String, Object?>{
+      'name': name,
+      'properties': _base(properties),
+      'occurred_at': DateTime.now().toUtc().toIso8601String(),
+    };
+    try {
+      final pipeline =
+          _pipeline ??
+          (sl.isRegistered<AnalyticsPipeline>()
+              ? sl<AnalyticsPipeline>()
+              : null);
+      if (pipeline != null && pipeline.consent != AnalyticsConsent.granted)
+        return;
+      if (pipeline != null && pipeline.health.isOperational) {
+        if (await _deliver(pipeline, record)) return;
+        // Consent suppression is intentional, never queue it for later replay.
+        if (pipeline.consent != AnalyticsConsent.granted) return;
+      }
+      final directory = await _queueDirectory();
+      final id =
+          '${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(1 << 32)}';
+      final temporary = File('${directory.path}/$id.tmp');
+      await temporary.writeAsString(jsonEncode(record), flush: true);
+      await temporary.rename('${directory.path}/$id.json');
+    } catch (error) {
+      debugPrint('Analytics event $name could not be recorded: $error');
+    }
+  }
+
+  static Future<Directory> _queueDirectory() async {
+    final base = await getApplicationSupportDirectory();
+    return Directory('${base.path}/analytics_pending').create(recursive: true);
+  }
+
+  static Future<bool> _deliver(
+    AnalyticsPipeline pipeline,
+    Map<String, dynamic> record,
+  ) async {
+    final result = await pipeline.track(
+      AnalyticsEvent(
+        name: record['name'] as String,
+        properties: {
+          ...Map<String, Object?>.from(record['properties'] as Map),
+          'event_occurred_at': record['occurred_at'] as String,
+        },
+        occurredAt: DateTime.parse(record['occurred_at'] as String),
       ),
     );
+    return result.fold(
+      onSuccess: (report) {
+        if (!report.isCompleteSuccess) {
+          debugPrint(
+            'Analytics ${record['name']}: delivered=${report.successfulSinks}, '
+            'failed=${report.failures.keys}, suppressed=${report.suppressedByConsent}',
+          );
+        }
+        // Do not replay to successful providers after a partial failure.
+        return report.wasDelivered || report.suppressedByConsent;
+      },
+      onFailure: (error) {
+        debugPrint('Analytics ${record['name']} failed: ${error.message}');
+        return false;
+      },
+    );
   }
+
+  /// Called at launch and resume. Records retain their original occurrence time.
+  static Future<void> drainPending() async {
+    final pipeline = _pipeline;
+    if (_draining || pipeline == null || !pipeline.health.isOperational) return;
+    _draining = true;
+    try {
+      final directory = await _queueDirectory();
+      await for (final entry in directory.list()) {
+        if (entry is! File || !entry.path.endsWith('.json')) continue;
+        if (DateTime.now().difference((await entry.stat()).modified).inDays >=
+            7) {
+          await entry.delete();
+          continue;
+        }
+        try {
+          final record =
+              jsonDecode(await entry.readAsString()) as Map<String, dynamic>;
+          if (await _deliver(pipeline, record)) await entry.delete();
+        } on FormatException {
+          await entry.delete();
+        }
+      }
+    } catch (error) {
+      debugPrint('Analytics queue drain failed: $error');
+    } finally {
+      _draining = false;
+    }
+  }
+
+  static Future<void> _track(
+    String name, [
+    Map<String, Object?> extra = const {},
+  ]) => track(name, extra);
 
   /// A status was saved.
   ///
@@ -61,7 +162,8 @@ abstract final class AnalyticsService {
       _track('grant_android_media_folder_permission');
 
   /// The rating prompt was postponed.
-  static Future<void> logRatingMaybeLater() async => _track('rating_maybe_later');
+  static Future<void> logRatingMaybeLater() async =>
+      _track('rating_maybe_later');
 
   /// The rating prompt was declined permanently.
   static Future<void> logRatingNever() async => _track('rating_never');
@@ -77,7 +179,8 @@ abstract final class AnalyticsService {
   static Future<void> logRating5Stars() async => _track('rating_5_stars');
 
   /// The in-app paywall modal was shown.
-  static Future<void> logViewPaywallModal() async => _track('view_paywall_modal');
+  static Future<void> logViewPaywallModal() async =>
+      _track('view_paywall_modal');
 
   /// The paywall was shown.
   static Future<void> logViewPaywall() async => _track('view_paywall');
@@ -92,7 +195,7 @@ abstract final class AnalyticsService {
     required String productId,
     required String entitlementId,
   }) async {
-    _track('custom_purchase', <String, Object?>{
+    await _track('custom_purchase', <String, Object?>{
       'currency': currency,
       'value': price,
       'item_id': productId,
@@ -105,7 +208,7 @@ abstract final class AnalyticsService {
   static Future<void> logCustomPaywallCancelled({
     required String entitlementId,
   }) async {
-    _track('custom_paywall_cancelled', <String, Object?>{
+    await _track('custom_paywall_cancelled', <String, Object?>{
       'entitlement_id': entitlementId,
     });
   }
@@ -114,12 +217,12 @@ abstract final class AnalyticsService {
   static Future<void> logCustomPurchasesRestored({
     required String entitlementId,
   }) async {
-    _track('custom_purchases_restored', <String, Object?>{
+    await _track('custom_purchases_restored', <String, Object?>{
       'entitlement_id': entitlementId,
     });
   }
 
   /// The customer centre was opened.
   static Future<void> logCustomCustomerCenterViewed() async =>
-      _track('custom_customer_center_viewed');
+      await _track('custom_customer_center_viewed');
 }

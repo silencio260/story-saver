@@ -4,8 +4,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
 import '../../../../config/routes_manager.dart';
-import '../../../analytics/domain/entities/analytics_event.dart';
-import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
 import '../bloc/permissions_bloc/permissions_bloc.dart';
 import '../l10n/permission_strings.dart';
 
@@ -28,15 +26,8 @@ class _StatusFolderPermissionScreenState
     setState(() => _requestInProgress = true);
     _overlayContext = overlayContext;
     overlayContext.loaderOverlay.show();
-    _log('request_whatsapp_folder_permission');
     context.read<PermissionsBloc>().add(
       StatusFolderPermissionRequested(isBusinessMode: widget.isBusinessMode),
-    );
-  }
-
-  void _log(String name) {
-    context.read<AnalyticsBloc>().add(
-      AnalyticsEventLogged(AnalyticsEventEntity(name: name)),
     );
   }
 
@@ -55,25 +46,8 @@ class _StatusFolderPermissionScreenState
         isBusinessMode: widget.isBusinessMode,
       );
       if (state.status == PermissionViewStatus.ready && granted) {
-        _log(
-          widget.isBusinessMode
-              ? 'grant_business_folder_permission'
-              : 'grant_whatsapp_folder_permission',
-        );
         Navigator.pushNamedAndRemoveUntil(context, Routes.home, (_) => false);
       } else {
-        // A refusal and a broken picker are different problems and were two
-        // events before the migration: one is the user saying no, the other is
-        // the flow failing to ask. Collapsing them hid every SAF failure
-        // inside the denial rate.
-        if (state.status == PermissionViewStatus.failure) {
-          _log('app_error_operation_failed');
-        }
-        _log(
-          widget.isBusinessMode
-              ? 'denied_business_folder_permission'
-              : 'denied_whatsapp_folder_permission',
-        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(state.errorMessage ?? PermissionStrings.denied),

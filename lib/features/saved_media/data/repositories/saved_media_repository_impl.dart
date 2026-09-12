@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../core/error/error_handler.dart';
 import '../../../../core/error/failure.dart';
@@ -21,6 +22,10 @@ class SavedMediaRepo implements SavedMediaBaseRepo {
   }) async {
     try {
       final page = await _localDataSource.load(reset: reset);
+      await AnalyticsService.track('saved_media_loaded', {
+        'count': page.items.length,
+        'reset': reset,
+      });
       return Right(
         SavedMediaPageResult(
           items: page.items.map((model) => model.toDomain()).toList(),
@@ -28,6 +33,7 @@ class SavedMediaRepo implements SavedMediaBaseRepo {
         ),
       );
     } catch (error) {
+      await AnalyticsService.track('saved_media_load_failed');
       return Left(ErrorHandler.handle(error));
     }
   }
@@ -41,16 +47,18 @@ class SavedMediaRepo implements SavedMediaBaseRepo {
       _guard(() => _localDataSource.loadThumbnail(id));
 
   @override
-  Future<Either<Failure, Unit>> delete(String id) =>
-      _guardUnit(() => _localDataSource.delete(id));
+  Future<Either<Failure, Unit>> delete(String id) => _guardUnit(
+    () => _localDataSource.delete(id),
+    event: 'delete_saved_media',
+  );
 
   @override
   Future<Either<Failure, Unit>> deleteAll() =>
-      _guardUnit(_localDataSource.deleteAll);
+      _guardUnit(_localDataSource.deleteAll, event: 'delete_all_saved_media');
 
   @override
   Future<Either<Failure, bool>> saveStatus(String sourcePath) =>
-      _guard(() => _localDataSource.saveStatus(sourcePath));
+      _saveTracked(sourcePath);
 
   @override
   Future<Either<Failure, bool>> isStatusSaved(String sourcePath) =>
@@ -58,7 +66,19 @@ class SavedMediaRepo implements SavedMediaBaseRepo {
 
   @override
   Future<Either<Failure, Unit>> share(String path) =>
-      _guardUnit(() => _localDataSource.share(path));
+      _guardUnit(() => _localDataSource.share(path), event: 'share_media');
+
+  Future<Either<Failure, bool>> _saveTracked(String path) async {
+    await AnalyticsService.track('save_status_requested', {'source': 'manual'});
+    final result = await _guard(() => _localDataSource.saveStatus(path));
+    await AnalyticsService.track(
+      result.fold((_) => false, (saved) => saved)
+          ? 'save_status'
+          : 'save_status_failed',
+      {'source': 'manual'},
+    );
+    return result;
+  }
 
   Future<Either<Failure, T>> _guard<T>(Future<T> Function() operation) async {
     try {
@@ -69,12 +89,16 @@ class SavedMediaRepo implements SavedMediaBaseRepo {
   }
 
   Future<Either<Failure, Unit>> _guardUnit(
-    Future<void> Function() operation,
-  ) async {
+    Future<void> Function() operation, {
+    required String event,
+  }) async {
+    await AnalyticsService.track("${event}_requested");
     try {
       await operation();
+      await AnalyticsService.track(event);
       return const Right(unit);
     } catch (error) {
+      await AnalyticsService.track("${event}_failed");
       return Left(ErrorHandler.handle(error));
     }
   }

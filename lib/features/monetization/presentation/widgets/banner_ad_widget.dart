@@ -1,3 +1,4 @@
+import '../../data/services/subscription_service.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,10 +28,38 @@ class BannerAdWidget extends StatefulWidget {
 class _BannerAdWidgetState extends State<BannerAdWidget> {
   /// Whether the deferred startup work that ads depend on has finished.
   bool _startupComplete = false;
+  final _access = SubscriptionManager();
+  bool _bannerRequested = false;
+  bool _bannerLoaded = false;
+
+  void _accessChanged() {
+    if (!_access.adsAllowed) {
+      _bannerRequested = false;
+      _bannerLoaded = false;
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadBanner(AppodealAdProvider ads) async {
+    final result = await ads.load(AppPlacements.banner);
+    if (!mounted || !_access.adsAllowed) return;
+    setState(
+      () =>
+          _bannerLoaded =
+              result.isSuccess && ads.canShowInline(AppPlacements.banner),
+    );
+  }
+
+  @override
+  void dispose() {
+    _access.removeListener(_accessChanged);
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _access.addListener(_accessChanged);
     unawaited(_awaitStartup());
   }
 
@@ -49,34 +78,43 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     if (ads is! AppodealAdProvider) return const SizedBox.shrink();
 
     return BlocBuilder<IapBloc, IapState>(
-      buildWhen: (previous, current) =>
-          previous.isPremium != current.isPremium ||
-          previous.status != current.status,
-      builder: (context, iap) => BlocBuilder<AdsBloc, AdsState>(
-        buildWhen: (previous, current) => previous.status != current.status,
-        builder: (context, adsState) {
-          // Every reason this app has for not showing a banner, in one
-          // expression. The kit view adds the provider's own: not before the
-          // SDK has initialized, and not while a test-mode change waits for a
-          // relaunch — so a developer phone recognised mid-session never shows
-          // a live banner.
-          final enabled = _startupComplete &&
-              !iap.isPremium &&
-              iap.status == IapViewStatus.ready &&
-              adsState.status != AdsViewStatus.disabled;
+      buildWhen:
+          (previous, current) =>
+              previous.isPremium != current.isPremium ||
+              previous.status != current.status,
+      builder:
+          (context, iap) => BlocBuilder<AdsBloc, AdsState>(
+            buildWhen: (previous, current) => previous.status != current.status,
+            builder: (context, adsState) {
+              // Every reason this app has for not showing a banner, in one
+              // expression. The kit view adds the provider's own: not before the
+              // SDK has initialized, and not while a test-mode change waits for a
+              // relaunch — so a developer phone recognised mid-session never shows
+              // a live banner.
+              final enabled =
+                  _startupComplete &&
+                  _access.adsAllowed &&
+                  !iap.isPremium &&
+                  iap.status == IapViewStatus.ready &&
+                  adsState.status != AdsViewStatus.disabled;
 
-          if (!enabled) return const SizedBox.shrink();
+              if (!enabled) return const SizedBox.shrink();
 
-          return SafeArea(
-            top: false,
-            child: AppodealBannerView(
-              provider: ads,
-              placement: AppPlacements.banner,
-              enabled: enabled,
-            ),
-          );
-        },
-      ),
+              if (!_bannerRequested) {
+                _bannerRequested = true;
+                unawaited(_loadBanner(ads));
+              }
+              if (!_bannerLoaded) return const SizedBox.shrink();
+              return SafeArea(
+                top: false,
+                child: AppodealBannerView(
+                  provider: ads,
+                  placement: AppPlacements.banner,
+                  enabled: enabled,
+                ),
+              );
+            },
+          ),
     );
   }
 }

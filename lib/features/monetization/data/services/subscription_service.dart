@@ -1,7 +1,7 @@
+import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:flutter/foundation.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:storysaver/container_injector.dart';
-import 'package:storysaver/features/monetization/data/services/revenue_cat_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionManager extends ChangeNotifier {
@@ -12,6 +12,19 @@ class SubscriptionManager extends ChangeNotifier {
 
   bool _isPremium = false;
   bool _isInitialized = false;
+  bool _preferencesLoaded = false;
+
+  /// Unknown subscription/override state must never request inventory.
+  bool get adsAllowed => _preferencesLoaded && _isInitialized && !isPremium;
+
+  void updatePremiumAccess(bool premium) {
+    _isPremium = premium;
+    _isInitialized = true;
+    _lastChecked = DateTime.now();
+    notifyListeners();
+  }
+
+  void refreshAccessPolicy() => notifyListeners();
   DateTime? _lastChecked;
 
   // Debug override - simulates a premium user. Honoured only while this device
@@ -41,9 +54,16 @@ class SubscriptionManager extends ChangeNotifier {
 
   /// Initialize and check subscription status
   Future<void> initialize() async {
-    // Load debug override state
-    final prefs = await SharedPreferences.getInstance();
-    debugOverridePremium = prefs.getBool(_debugPremiumKey) ?? false;
+    // Load once so a concurrent initialize cannot overwrite a just-toggled
+    // in-memory premium override with an older preference value.
+    if (!_preferencesLoaded) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!_preferencesLoaded) {
+        debugOverridePremium = prefs.getBool(_debugPremiumKey) ?? false;
+        _preferencesLoaded = true;
+        notifyListeners();
+      }
+    }
 
     if (_isInitialized && _lastChecked != null) {
       // If checked within last 5 minutes, use cached value
@@ -62,6 +82,8 @@ class SubscriptionManager extends ChangeNotifier {
   /// Toggle debug premium override
   Future<void> toggleDebugPremium(bool value) async {
     debugOverridePremium = value;
+    _preferencesLoaded = true;
+    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_debugPremiumKey, value);
     notifyListeners();
@@ -72,23 +94,27 @@ class SubscriptionManager extends ChangeNotifier {
   Future<void> checkSubscriptionStatus() async {
     try {
       print('SubscriptionManager: Checking subscription status...');
-      final hasActiveSubscription =
-          await RevenueCatService.checkSubscriptionStatus();
-
-      _isPremium = hasActiveSubscription;
-      _isInitialized = true;
-      _lastChecked = DateTime.now();
-      notifyListeners();
+      final result = await sl<IapProvider>().getEntitlements();
+      result.fold(
+        onSuccess:
+            (snapshot) =>
+                updatePremiumAccess(snapshot.activeEntitlementIds.isNotEmpty),
+        onFailure: (_) {
+          // Keep known premium access, but do not authorize requests on error.
+          _isInitialized = false;
+          _lastChecked = null;
+          notifyListeners();
+        },
+      );
 
       print(
         'SubscriptionManager: Subscription status updated - isPremium: $_isPremium',
       );
     } catch (e) {
       print('SubscriptionManager: Error checking subscription status: $e');
-      // On error, assume not premium to show ads
-      _isPremium = false;
-      _isInitialized = true;
-      _lastChecked = DateTime.now();
+      // A failed lookup is not proof of free access.
+      _isInitialized = false;
+      _lastChecked = null;
       notifyListeners();
     }
   }

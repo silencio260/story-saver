@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../core/usecase/base_usecase.dart';
 import '../../../domain/usecases/check_status_folder_permission_usecase.dart';
@@ -86,7 +87,14 @@ class PermissionsBloc extends Bloc<PermissionsEvent, PermissionsState> {
     Emitter<PermissionsState> emit,
   ) async {
     emit(state.copyWith(status: PermissionViewStatus.requesting));
+    await AnalyticsService.track('storage_permission_requested');
     final result = await _requestStorage(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('storage_permission_failed'),
+      (granted) => AnalyticsService.track('storage_permission_result', {
+        'granted': granted,
+      }),
+    );
     result.fold(
       (failure) => emit(
         state.copyWith(
@@ -110,16 +118,42 @@ class PermissionsBloc extends Bloc<PermissionsEvent, PermissionsState> {
   ) async {
     emit(state.copyWith(status: PermissionViewStatus.requesting));
     final params = PermissionCheckParams(isBusinessMode: event.isBusinessMode);
+    await AnalyticsService.track('request_whatsapp_folder_permission', {
+      'business_mode': event.isBusinessMode,
+    });
     final requestResult = await _requestStatusFolder(params);
+    Future<void> recordOutcome(bool granted, {bool failed = false}) async {
+      if (failed)
+        await AnalyticsService.track('app_error_operation_failed', {
+          'operation': 'folder_permission',
+        });
+      final name =
+          event.isBusinessMode
+              ? (granted
+                  ? 'grant_business_folder_permission'
+                  : 'denied_business_folder_permission')
+              : (granted
+                  ? 'grant_whatsapp_folder_permission'
+                  : 'denied_whatsapp_folder_permission');
+      await AnalyticsService.track(name);
+    }
+
     await requestResult.fold(
-      (failure) async => emit(
-        state.copyWith(
-          status: PermissionViewStatus.failure,
-          errorMessage: failure.message,
-        ),
-      ),
+      (failure) async {
+        await recordOutcome(false, failed: true);
+        emit(
+          state.copyWith(
+            status: PermissionViewStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+      },
       (_) async {
         final checkResult = await _checkStatusFolder(params);
+        await checkResult.fold(
+          (_) => recordOutcome(false, failed: true),
+          (granted) => recordOutcome(granted),
+        );
         checkResult.fold(
           (failure) => emit(
             state.copyWith(

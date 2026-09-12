@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 /// Forwards bloc failures to the crash reporter.
 ///
@@ -21,6 +22,13 @@ class AppBlocObserver extends BlocObserver {
 
   @override
   void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
+    if (bloc.runtimeType.toString() != 'AnalyticsBloc') {
+      unawaited(
+        AnalyticsService.track('app_bloc_failed', {
+          'bloc': bloc.runtimeType.toString(),
+        }),
+      );
+    }
     if (kDebugMode) debugPrint('${bloc.runtimeType}: $error');
     unawaited(
       _crash.report(

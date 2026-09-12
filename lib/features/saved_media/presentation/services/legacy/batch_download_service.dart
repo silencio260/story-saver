@@ -61,6 +61,10 @@ class BatchDownloadService {
     // Process downloads
     for (String path in allPaths) {
       bool success = await saveStatusSilent(context, path);
+      await AnalyticsService.track(
+        success ? 'save_status' : 'save_status_failed',
+        {'source': 'bulk'},
+      );
       if (success) {
         successCount++;
         // Update the cache and notify listeners
@@ -75,6 +79,11 @@ class BatchDownloadService {
       await Future.delayed(Duration.zero);
     }
 
+    await AnalyticsService.track('download_all_completed', {
+      'total_count': total,
+      'saved_count': successCount,
+      'failed_count': failCount,
+    });
     // Close the progress dialog
     Navigator.of(context, rootNavigator: true).pop();
 

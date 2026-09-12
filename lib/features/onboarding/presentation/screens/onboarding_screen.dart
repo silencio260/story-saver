@@ -4,8 +4,6 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../config/routes_manager.dart';
 import '../../../../core/utils/legacy_custom_colors.dart';
-import '../../../analytics/domain/entities/analytics_event.dart';
-import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../bloc/onboarding_bloc/onboarding_bloc.dart';
 import '../l10n/onboarding_strings.dart';
@@ -197,11 +195,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       // Preserve the original behavior: onboarding continues if IAP times out.
     }
     if (!mounted) return;
-    context.read<AnalyticsBloc>().add(
-      const AnalyticsEventLogged(
-        AnalyticsEventEntity(name: 'onboarding_complete'),
-      ),
-    );
     context.read<OnboardingBloc>().add(const OnboardingCompleted());
   }
 }

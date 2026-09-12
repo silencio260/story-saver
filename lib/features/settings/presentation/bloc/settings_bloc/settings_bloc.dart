@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../core/usecase/base_usecase.dart';
 import '../../../domain/entities/app_settings.dart';
@@ -70,6 +71,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     Emitter<SettingsState> emit,
   ) async {
     final result = await _setAutoSave(event.enabled);
+    await result.fold(
+      (_) => AnalyticsService.track('auto_save_setting_failed', {
+        'enabled': event.enabled,
+      }),
+      (_) => AnalyticsService.track(
+        event.enabled ? 'auto_save_enabled' : 'auto_save_disabled',
+      ),
+    );
     result.fold(
       (failure) => emit(state.copyWith(message: failure.message)),
       (settings) => emit(

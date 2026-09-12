@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../core/usecase/base_usecase.dart';
 import '../../../domain/usecases/complete_onboarding_usecase.dart';
@@ -15,9 +16,12 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   }) : _completeOnboarding = completeOnboardingUseCase,
        _resetOnboarding = resetOnboardingUseCase,
        super(const OnboardingState()) {
-    on<OnboardingPageChanged>(
-      (event, emit) => emit(state.copyWith(pageIndex: event.index)),
-    );
+    on<OnboardingPageChanged>((event, emit) {
+      AnalyticsService.track('onboarding_page_viewed', {
+        'page_index': event.index,
+      });
+      emit(state.copyWith(pageIndex: event.index));
+    });
     on<OnboardingCompleted>(_onCompleted);
     on<OnboardingResetRequested>(_onResetRequested);
   }
@@ -31,6 +35,10 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   ) async {
     emit(state.copyWith(status: OnboardingViewStatus.saving));
     final result = await _completeOnboarding(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('onboarding_complete_failed'),
+      (_) => AnalyticsService.track('onboarding_complete'),
+    );
     result.fold(
       (failure) => emit(
         state.copyWith(
@@ -47,6 +55,10 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     Emitter<OnboardingState> emit,
   ) async {
     final result = await _resetOnboarding(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('onboarding_reset_failed'),
+      (_) => AnalyticsService.track('onboarding_reset'),
+    );
     result.fold(
       (failure) => emit(
         state.copyWith(

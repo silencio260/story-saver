@@ -1,12 +1,13 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../core/usecase/base_usecase.dart';
 import '../../../domain/entities/status_collection.dart';
 import '../../../domain/entities/status_media.dart';
 import '../../../domain/usecases/clear_status_cache_usecase.dart';
-import '../../../domain/usecases/get_business_mode_usecase.dart';
 import '../../../domain/usecases/generate_status_thumbnail_usecase.dart';
+import '../../../domain/usecases/get_business_mode_usecase.dart';
 import '../../../domain/usecases/load_statuses_usecase.dart';
 import '../../../domain/usecases/set_business_mode_usecase.dart';
 
@@ -43,7 +44,16 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
     Emitter<StatusState> emit,
   ) async {
     emit(state.copyWith(status: StatusViewStatus.loading, clearMessage: true));
+    AnalyticsService.track('statuses_load_requested');
     final result = await _loadStatuses(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('statuses_load_failed'),
+      (collection) => AnalyticsService.track('statuses_loaded', {
+        'image_count': collection.images.length,
+        'video_count': collection.videos.length,
+        'business_mode': collection.isBusinessMode,
+      }),
+    );
     result.fold(
       (failure) => emit(
         state.copyWith(
@@ -69,6 +79,14 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
         event.enabled == null
             ? await _getBusinessMode(NoParams.instance)
             : await _setBusinessMode(event.enabled!);
+    if (event.enabled != null) {
+      await result.fold(
+        (_) => AnalyticsService.track('business_mode_change_failed'),
+        (enabled) => AnalyticsService.track(
+          enabled ? 'switch_to_business_mode' : 'switch_to_normal_mode',
+        ),
+      );
+    }
     result.fold((failure) => emit(state.copyWith(message: failure.message)), (
       isBusinessMode,
     ) {
@@ -93,6 +111,10 @@ class StatusBloc extends Bloc<StatusEvent, StatusState> {
     Emitter<StatusState> emit,
   ) async {
     final result = await _clearStatusCache(NoParams.instance);
+    await result.fold(
+      (_) => AnalyticsService.track('status_cache_clear_failed'),
+      (_) => AnalyticsService.track('status_cache_cleared'),
+    );
     result.fold(
       (failure) => emit(state.copyWith(message: failure.message)),
       (_) => emit(

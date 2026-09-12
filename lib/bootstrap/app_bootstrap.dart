@@ -1,9 +1,8 @@
+import '../features/monetization/data/services/subscription_service.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-
-import '../features/monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_analytics/genrevibes_analytics.dart';
@@ -29,8 +28,8 @@ import 'package:genrevibes_iap_revenuecat/genrevibes_iap_revenuecat.dart';
 import 'package:genrevibes_iap_revenuecat_ui/genrevibes_iap_revenuecat_ui.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
-import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_notifications_onesignal/genrevibes_notifications_onesignal.dart';
+import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_permissions_handler/genrevibes_permissions_handler.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
@@ -40,6 +39,9 @@ import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:genrevibes_storage_shared_preferences/genrevibes_storage_shared_preferences.dart';
 
+import '../features/analytics/data/services/analytics_service.dart';
+import '../features/analytics/data/services/tracked_local_notifications.dart';
+import '../features/monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import 'app_env.dart';
 import 'app_runtime.dart';
 
@@ -126,8 +128,7 @@ Future<AppRuntime> bootstrapApp(
   // set — so an application that wants to watch its own events during
   // development has to keep that record itself. Null in release, so nothing is
   // retained and no history exists to leak.
-  final eventLog =
-      env.isDevelopment ? RecordingDeliveryObserver() : null;
+  final eventLog = env.isDevelopment ? RecordingDeliveryObserver() : null;
   final kitLog = env.isDevelopment ? RecordingKitLogger() : null;
 
   final store = MigratingKeyValueStore(
@@ -152,8 +153,7 @@ Future<AppRuntime> bootstrapApp(
 
   final identity = DeviceIdentityResolver(
     store: store,
-    advertising:
-        dependencies.advertising ?? const AttAdvertisingIdSource(),
+    advertising: dependencies.advertising ?? const AttAdvertisingIdSource(),
     vendor: dependencies.vendor ?? const DeviceInfoVendorIdSource(),
   );
   // Who gets the developer tools and test ads. Settled before the ad provider
@@ -170,7 +170,8 @@ Future<AppRuntime> bootstrapApp(
     logger: logger,
   );
   await developerAccess.initialize();
-  final consentProvider = dependencies.consent ??
+  final consentProvider =
+      dependencies.consent ??
       AppodealConsentProvider(appKey: env.appodealAppKey, logger: logger);
   final consent = ConsentGate(provider: consentProvider);
   // Remote configuration is built before analytics, because the pipeline
@@ -180,7 +181,8 @@ Future<AppRuntime> bootstrapApp(
   final remoteConfigSchema = PortfolioRemoteConfigSchema.build();
   final remoteConfig = RemoteConfigCoordinator(
     schema: remoteConfigSchema,
-    provider: dependencies.remoteConfig ??
+    provider:
+        dependencies.remoteConfig ??
         GenRevibesFirebaseRemoteConfigProvider(schema: remoteConfigSchema),
     logger: logger,
   );
@@ -197,14 +199,15 @@ Future<AppRuntime> bootstrapApp(
   // indefinitely; on timeout the controller resolves against schema defaults,
   // which is the behaviour of an app that has never fetched anything.
   await remoteConfig.initialize().timeout(
-        moduleTimeout,
-        onTimeout: () => const KitFailure<void>(
+    moduleTimeout,
+    onTimeout:
+        () => const KitFailure<void>(
           KitError(
             code: KitErrorCode.timeout,
             message: 'Remote config did not initialize in time.',
           ),
         ),
-      );
+  );
 
   // Who records, and what their recording shows. The controller draws this
   // install's rollout bucket once and keeps it, so lowering the percentage
@@ -224,7 +227,8 @@ Future<AppRuntime> bootstrapApp(
     // application, not something an ad-consent dialog decides. See the note
     // further down for why it used to be wired to UMP and why that was wrong.
     initialConsent: AnalyticsConsent.granted,
-    sinks: dependencies.analyticsSinks ??
+    sinks:
+        dependencies.analyticsSinks ??
         <AnalyticsSink>[
           FirebaseAnalyticsSink(
             collectionEnabled: env.firebaseAnalyticsCollectionEnabled,
@@ -236,6 +240,7 @@ Future<AppRuntime> bootstrapApp(
     names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
     observer: eventLog,
   );
+  AnalyticsService.bind(analytics);
   // Retention milestones are analytics events, so the tracker reports through
   // the pipeline rather than reaching for a sink of its own.
   final permissions = dependencies.permissions ?? PermissionHandlerProvider();
@@ -243,6 +248,7 @@ Future<AppRuntime> bootstrapApp(
     store: store,
     observer: AnalyticsEngagementObserver(analytics),
   );
+  final subscriptionAccess = SubscriptionManager();
   final adPolicy = AdPolicyController(
     placements: <String, AdPlacementPolicy>{
       for (final placement in AppPlacements.all)
@@ -254,20 +260,44 @@ Future<AppRuntime> bootstrapApp(
   // access listener further down has normally applied the identity and the
   // remote list. A device recognised later — or, rarely, before consent
   // finishes — gets no ads until relaunch rather than live ones.
-  final ads = dependencies.ads ??
+  final ads =
+      dependencies.ads ??
       AppodealAdProvider(
         configuration: env.appodeal,
         testMode: developerAccess.current.servesTestAds,
+        canRequestAds: () => subscriptionAccess.adsAllowed,
+        client: DefaultAppodealClient(manualBannerCaching: true),
         logger: logger,
       );
-  final iap = dependencies.iap ??
+  final iap =
+      dependencies.iap ??
       RevenueCatIapProvider(
         configuration: env.revenueCat,
         uiPresenter: const RevenueCatUiAdapter(),
       );
-  final push = dependencies.push ??
-      OneSignalPushProvider(configuration: env.oneSignal);
-  final feedback = dependencies.feedback ??
+  // Subscribe before IAP initialization so its first entitlement snapshot is
+  // observed. The persisted premium override remains a separate startup gate.
+  iap.entitlementChanges.listen((snapshot) {
+    subscriptionAccess.updatePremiumAccess(
+      snapshot.activeEntitlementIds.isNotEmpty,
+    );
+  });
+  subscriptionAccess.addListener(() {
+    adPolicy.setPremium(!subscriptionAccess.adsAllowed);
+    if (!subscriptionAccess.adsAllowed) {
+      for (final placement in AppPlacements.all) {
+        unawaited(ads.discard(placement));
+      }
+    }
+  });
+  adPolicy.setPremium(true);
+  developerAccess.changes.listen(
+    (_) => subscriptionAccess.refreshAccessPolicy(),
+  );
+  final push =
+      dependencies.push ?? OneSignalPushProvider(configuration: env.oneSignal);
+  final feedback =
+      dependencies.feedback ??
       FeedbackNestFeedbackProvider(configuration: env.feedbackNest);
   final linkOpener = dependencies.linkOpener ?? UrlLauncherLinkOpener();
 
@@ -278,7 +308,8 @@ Future<AppRuntime> bootstrapApp(
   // of a button that does nothing in a shipped build.
   final appLinksConfig = AppLinksConfig(
     appName: 'Story Saver',
-    playStoreUrl: 'https://play.google.com/store/apps/details'
+    playStoreUrl:
+        'https://play.google.com/store/apps/details'
         '?id=com.genrevibes.whatsappstorysaver',
     supportEmail: 'support@genrevibes.com',
     privacyPolicyUrl: env.privacyPolicyUrl,
@@ -291,7 +322,8 @@ Future<AppRuntime> bootstrapApp(
     observer: _AnalyticsAppLinkObserver(analytics),
   );
 
-  final storeReview = dependencies.storeReview ??
+  final storeReview =
+      dependencies.storeReview ??
       InAppReviewStoreProvider(
         configuration: InAppReviewConfiguration(
           androidStoreUrl: appLinksConfig.playStoreUrl,
@@ -311,24 +343,63 @@ Future<AppRuntime> bootstrapApp(
   final timeZone = await FlutterTimezone.getLocalTimezone()
       .timeout(const Duration(seconds: 2))
       .catchError((Object _) => 'UTC');
-  final localNotifications = dependencies.localNotifications ??
-      PersistentLocalNotificationScheduler(
-        configuration: GenRevibesLocalNotificationsConfiguration(
-          // The drawable the auto-save notification already used.
-          androidDefaultIcon: 'ic_stat_download',
-          timeZoneName: timeZone,
+  final localNotifications = TrackedLocalNotifications(
+    dependencies.localNotifications ??
+        PersistentLocalNotificationScheduler(
+          configuration: GenRevibesLocalNotificationsConfiguration(
+            // The drawable the auto-save notification already used.
+            androidDefaultIcon: 'ic_stat_download',
+            timeZoneName: timeZone,
+          ),
         ),
-      );
+  );
+
+  push.events.listen((event) {
+    switch (event) {
+      case PushMessageReceived(:final message):
+        unawaited(
+          AnalyticsService.track('push_received', {
+            'provider': 'onesignal',
+            'notification_id': message.messageId,
+            'app_state': 'foreground',
+          }),
+        );
+      case PushMessageOpened(:final message):
+        unawaited(
+          AnalyticsService.track('push_opened', {
+            'provider': 'onesignal',
+            'notification_id': message.messageId,
+            if (message.title != null) 'notification_title': message.title,
+            if (message.body != null) 'notification_body': message.body,
+            'notification_payload': message.additionalData,
+            if (message.additionalData['value'] != null)
+              'notification_value': message.additionalData['value'],
+            if (message.actionId != null) 'action_id': message.actionId,
+          }),
+        );
+      case PushStateChanged(:final reason, :final state):
+        unawaited(
+          AnalyticsService.track('push_state_changed', {
+            'provider': state.providerId,
+            'reason': reason,
+            'permission': state.permission.name,
+            'opted_in': state.optedIn,
+            'deliverable': state.isDeliverable,
+          }),
+        );
+    }
+  });
 
   final onboarding = OnboardingController(store: store);
 
   final rating = RatingCoordinator(
     store: store,
     observer: _AnalyticsRatingObserver(analytics),
-    suppressionHook: (action) => AdSuppressionManager().withAdsSuppressed<void>(
-      reason: 'rating_dialog',
-      action: action,
-    ),
+    suppressionHook:
+        (action) => AdSuppressionManager().withAdsSuppressed<void>(
+          reason: 'rating_dialog',
+          action: action,
+        ),
   );
 
   final kit = GenRevibesStarterKit(
@@ -485,14 +556,15 @@ Future<AppRuntime> bootstrapApp(
   // Name the user on crash reports. Tracking is deliberately not prompted here:
   // an out-of-context ATT prompt at launch is an App Store rejection.
   final resolved = await identity.resolve().timeout(
-        moduleTimeout,
-        onTimeout: () => const KitFailure<DeviceIdentity>(
+    moduleTimeout,
+    onTimeout:
+        () => const KitFailure<DeviceIdentity>(
           KitError(
             code: KitErrorCode.timeout,
             message: 'Device identity did not resolve in time.',
           ),
         ),
-      );
+  );
   await resolved.fold(
     onSuccess: (value) async {
       // Developer devices are listed under a hash of the vendor ID. This is
@@ -549,10 +621,10 @@ Future<AppRuntime> bootstrapApp(
   // activated, and again whenever a fetch changes it.
   final developerAccessBinder =
       DeveloperAccessRemotePolicyBinder.forCoordinator(
-    remoteConfig,
-    controller: developerAccess,
-    logger: logger,
-  );
+        remoteConfig,
+        controller: developerAccess,
+        logger: logger,
+      );
   await developerAccessBinder.initialize();
 
   // Ads follow developer access for the life of the process. A phone that
@@ -585,34 +657,42 @@ Future<AppRuntime> bootstrapApp(
     final revenue = event.revenue;
     final AnalyticsEvent? tracked = switch (event.type) {
       AdEventType.paid when revenue != null => AnalyticsEvent(
-          name: 'ad_impression',
-          properties: <String, Object?>{
-            'ad_platform': revenue.provider,
-            if (revenue.mediationNetwork case final network?)
-              'ad_source': network,
-            'ad_format': event.format.name,
-            if (revenue.adUnitName case final unit?) 'ad_unit_name': unit,
-            'value': revenue.value,
-            'value_micros': revenue.valueMicros,
-            'currency': revenue.currencyCode,
-          },
-        ),
+        name: 'ad_impression',
+        properties: <String, Object?>{
+          'ad_platform': revenue.provider,
+          if (revenue.mediationNetwork case final network?)
+            'ad_source': network,
+          'ad_format': event.format.name,
+          if (revenue.adUnitName case final unit?) 'ad_unit_name': unit,
+          'value': revenue.value,
+          'value_micros': revenue.valueMicros,
+          'currency': revenue.currencyCode,
+        },
+      ),
       // Every ad shown, from any network, test ads included. `ad_impression`
       // fires only when the winning network reports revenue, which test ads
       // and many networks never do, so this is what counts impressions.
       AdEventType.impression => AnalyticsEvent(
-          name: 'ad_show',
-          properties: <String, Object?>{
-            'ad_platform': event.provider,
-            'ad_format': event.format.name,
-            'placement': event.placement.id,
-          },
-        ),
+        name: 'ad_show',
+        properties: <String, Object?>{
+          'ad_platform': event.provider,
+          'ad_format': event.format.name,
+          'placement': event.placement.id,
+        },
+      ),
       // Not `ad_click`: Firebase reserves it and refuses the event.
       AdEventType.clicked => AnalyticsEvent(
-          name: 'custom_ad_click',
-          properties: <String, Object?>{'ad_type': event.format.name},
-        ),
+        name: 'custom_ad_click',
+        properties: <String, Object?>{'ad_type': event.format.name},
+      ),
+      AdEventType.loaded || AdEventType.dismissed => AnalyticsEvent(
+        name: event.type == AdEventType.loaded ? 'ad_loaded' : 'ad_dismissed',
+        properties: {
+          'ad_platform': event.provider,
+          'ad_format': event.format.name,
+          'placement': event.placement.id,
+        },
+      ),
       _ => null,
     };
     if (tracked != null) unawaited(analytics.track(tracked));
@@ -629,16 +709,6 @@ Future<AppRuntime> bootstrapApp(
   // Not awaited for its result: a storage failure degrades the module and must
   // not delay the first frame.
   unawaited(retention.recordAppOpen());
-
-  // The single premium source of truth for the kit's ad policy. The two
-  // existing bridges (my_app.dart's BlocListener and
-  // BannerAdWidget._syncSubscription) stay until the ads migration, because
-  // AdsBloc still reads SubscriptionManager rather than this controller.
-  iap.entitlementChanges.listen(
-    (snapshot) => adPolicy.setPremium(
-      snapshot.activeEntitlementIds.isNotEmpty,
-    ),
-  );
 
   return AppRuntime(
     kit: kit,
@@ -684,10 +754,13 @@ final class _AnalyticsRatingObserver implements RatingObserver {
   final AnalyticsPipeline _analytics;
 
   @override
-  void onEvaluated(RatingDecision decision) {}
+  void onEvaluated(RatingDecision decision) => _fire('rating_evaluated', {
+    'allowed': decision.isAllowed,
+    if (decision.blockReason != null) 'reason': decision.blockReason!.name,
+  });
 
   @override
-  void onPrompted() {}
+  void onPrompted() => _fire('rating_prompted');
 
   @override
   void onOutcome(RatingOutcome outcome, {int? rating}) {
@@ -697,10 +770,9 @@ final class _AnalyticsRatingObserver implements RatingObserver {
       case RatingOutcome.never:
         _fire('rating_never');
       case RatingOutcome.submitted:
-        _fire(
-          'rating_submitted',
-          <String, Object?>{if (rating != null) 'star_count': rating},
-        );
+        _fire('rating_submitted', <String, Object?>{
+          if (rating != null) 'star_count': rating,
+        });
         if (rating == 4) _fire('rating_4_stars');
         if (rating == 5) _fire('rating_5_stars');
     }
@@ -716,9 +788,7 @@ final class _AnalyticsRatingObserver implements RatingObserver {
 /// Sends link actions to analytics under the app's own event names.
 ///
 /// The kit reports a neutral action — `share`, `store`, `support`, `privacy`,
-/// `terms` — and this maps the two the app already measures onto the names its
-/// dashboards are built on. Unmapped actions are not invented as new events;
-/// an event nobody defined is noise.
+/// `terms` — and this maps each action and its failure to the app catalogue.
 final class _AnalyticsAppLinkObserver implements AppLinkObserver {
   const _AnalyticsAppLinkObserver(this._analytics);
 
@@ -727,14 +797,20 @@ final class _AnalyticsAppLinkObserver implements AppLinkObserver {
   static const _events = <String, String>{
     'share': 'share_app',
     'store': 'goto_app_store_page',
+    'support': 'contact_support',
+    'privacy': 'view_privacy_policy',
+    'terms': 'view_terms',
   };
 
   @override
   void onAction(String action, {required bool succeeded}) {
-    if (!succeeded) return;
     final name = _events[action];
     if (name == null) return;
-    unawaited(_analytics.track(AnalyticsEvent(name: name)));
+    unawaited(
+      _analytics.track(
+        AnalyticsEvent(name: succeeded ? name : '${name}_failed'),
+      ),
+    );
   }
 }
 
@@ -831,7 +907,9 @@ final class BootstrapLogger implements KitLogger {
   }) {
     if (!kDebugMode) return;
     final where = moduleId == null ? '' : ' [$moduleId]';
-    debugPrint('[genrevibes:${level.name}]$where $message'
-        '${error == null ? '' : ' error=$error'}');
+    debugPrint(
+      '[genrevibes:${level.name}]$where $message'
+      '${error == null ? '' : ' error=$error'}',
+    );
   }
 }

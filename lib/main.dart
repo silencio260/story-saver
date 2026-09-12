@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
 import 'package:genrevibes_crash_crashlytics/genrevibes_crash_crashlytics.dart';
 import 'package:media_store_plus/media_store_plus.dart';
@@ -14,6 +14,7 @@ import 'bootstrap/app_bootstrap.dart';
 import 'bootstrap/app_env.dart';
 import 'bootstrap/runtime_registrar.dart';
 import 'container_injector.dart';
+import 'features/analytics/data/services/analytics_service.dart';
 import 'features/saved_media/data/services/auto_save_service.dart';
 import 'my_app.dart';
 
@@ -79,6 +80,7 @@ void main() {
     // than queued, which is the honest trade for not buffering crashes.
     CrashHooks.install(crash);
     registerRuntime(runtime);
+    unawaited(AnalyticsService.drainPending());
     initAppDependencies();
 
     // App-owned initialization the kit does not yet cover.
@@ -112,8 +114,10 @@ Future<void> _startupStep(
   try {
     await step().timeout(timeout);
   } on TimeoutException {
-    debugPrint('[genrevibes] startup step "$name" timed out after '
-        '${timeout.inSeconds}s; continuing.');
+    debugPrint(
+      '[genrevibes] startup step "$name" timed out after '
+      '${timeout.inSeconds}s; continuing.',
+    );
   } on Object catch (error, stackTrace) {
     debugPrint('[genrevibes] startup step "$name" failed: $error');
     FlutterError.reportError(

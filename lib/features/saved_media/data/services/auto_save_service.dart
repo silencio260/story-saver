@@ -1,21 +1,24 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:docman/docman.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:storysaver/core/utils/legacy_app_constants.dart';
-import 'package:storysaver/features/saved_media/data/datasources/local/saved_media_cache.dart';
-import 'package:storysaver/features/saved_media/data/datasources/local/media_file_operations.dart';
-import 'package:workmanager/workmanager.dart';
-
 import 'package:storysaver/container_injector.dart';
+import 'package:storysaver/core/utils/legacy_app_constants.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
+import 'package:storysaver/features/analytics/data/services/tracked_local_notifications.dart';
+import 'package:storysaver/features/saved_media/data/datasources/local/media_file_operations.dart';
+import 'package:storysaver/features/saved_media/data/datasources/local/saved_media_cache.dart';
+import 'package:workmanager/workmanager.dart';
 
 class AutoSaveService {
   static const String taskName = "autoSaveTask";
   static const String devTaskName = "devAutoSaveTask";
+
   /// This isolate's notification scheduler.
   ///
   /// Deliberately not taken from the service locator. `executeBackgroundTask`
@@ -38,10 +41,15 @@ class AutoSaveService {
     final timeZone = await FlutterTimezone.getLocalTimezone()
         .timeout(const Duration(seconds: 2))
         .catchError((Object _) => 'UTC');
-    final scheduler = PersistentLocalNotificationScheduler(
-      configuration: GenRevibesLocalNotificationsConfiguration(
-        androidDefaultIcon: 'ic_stat_download',
-        timeZoneName: timeZone,
+    final scheduler = TrackedLocalNotifications(
+      PersistentLocalNotificationScheduler(
+        client: DefaultFlutterLocalNotificationsClient(
+          captureLaunchInteraction: false,
+        ),
+        configuration: GenRevibesLocalNotificationsConfiguration(
+          androidDefaultIcon: 'ic_stat_download',
+          timeZoneName: timeZone,
+        ),
       ),
     );
     await scheduler.initialize();
@@ -117,6 +125,7 @@ class AutoSaveService {
   }
 
   static Future<void> _checkAndSaveNewStatuses({bool isDevMode = false}) async {
+    await AnalyticsService.track('auto_save_started', {'dev_mode': isDevMode});
     try {
       // 1. Check if feature is enabled (double check for background)
       final prefs = await SharedPreferences.getInstance();
@@ -233,6 +242,7 @@ class AutoSaveService {
       // 3. Compare with SavedMediaManager
       final mediaManager = SavedMediaManager();
       int savedCount = 0;
+      int failedCount = 0;
 
       for (File file in allStatusFiles) {
         // Check if already saved
@@ -242,6 +252,11 @@ class AutoSaveService {
 
           // 4. Save the file
           bool success = await saveStatusBackground(file.path);
+          await AnalyticsService.track(
+            success ? 'save_status' : 'save_status_failed',
+            {'source': 'auto_save'},
+          );
+          if (!success) failedCount++;
           if (success) {
             // Update cache so we don't save it again next time
             await mediaManager.saveMedia(file.path);
@@ -250,6 +265,12 @@ class AutoSaveService {
         }
       }
 
+      await AnalyticsService.track('auto_save_completed', {
+        'found_count': allStatusFiles.length,
+        'saved_count': savedCount,
+        'failed_count': failedCount,
+        'dev_mode': isDevMode,
+      });
       // 5. Notify User
       if (savedCount > 0) {
         await _showNotification(savedCount);
@@ -257,6 +278,7 @@ class AutoSaveService {
         print("AutoSaveService: No new files to save.");
       }
     } catch (e) {
+      await AnalyticsService.track('auto_save_failed', {'dev_mode': isDevMode});
       print("AutoSaveService Error: $e");
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
+import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 
 import '../../../../../container_injector.dart';
 
@@ -15,6 +16,7 @@ Future<void> shareToWhatsApp(
   String? filePath,
   required BuildContext context,
 }) async {
+  await AnalyticsService.track('share_whatsapp_requested');
   final opener = sl<LinkOpener>();
   final whatsapp = Uri.parse(
     'whatsapp://send?text=${Uri.encodeComponent(message)}',
@@ -24,6 +26,7 @@ Future<void> shareToWhatsApp(
   final ok = launched.fold(onSuccess: (_) => true, onFailure: (_) => false);
 
   if (ok) {
+    await AnalyticsService.track('share_whatsapp_opened');
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
@@ -32,5 +35,8 @@ Future<void> shareToWhatsApp(
     return;
   }
 
-  await opener.share(text: message);
+  final result = await opener.share(text: message);
+  await AnalyticsService.track('share_whatsapp_fallback', {
+    'success': result.isSuccess,
+  });
 }

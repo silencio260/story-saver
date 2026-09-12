@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../../config/routes_manager.dart';
-import '../../../../bootstrap/app_runtime.dart';
-import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
 import 'package:genrevibes_app_rating/genrevibes_app_rating.dart';
+import 'package:genrevibes_consent/genrevibes_consent.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_device_identity/genrevibes_device_identity.dart';
 import 'package:genrevibes_device_identity_platform/genrevibes_device_identity_platform.dart';
 import 'package:genrevibes_devtools/genrevibes_devtools.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../bootstrap/app_runtime.dart';
+import '../../../../config/routes_manager.dart';
 import '../../../../container_injector.dart';
 import '../../../analytics/domain/entities/analytics_event.dart';
 import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
+import '../../../developer/dev_tools_entry.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
 import '../../../onboarding/presentation/bloc/onboarding_bloc/onboarding_bloc.dart';
@@ -23,12 +23,10 @@ import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc
 import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../bloc/settings_bloc/settings_bloc.dart';
 import '../l10n/settings_strings.dart';
-import '../../../developer/dev_tools_entry.dart';
-import 'module_health_screen.dart';
-
 import '../services/legacy/developer_options_service.dart';
 import '../services/legacy/feedback_helper.dart';
 import '../widgets/legacy/help_modal.dart';
+import 'module_health_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -163,8 +161,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _settingsItem(
                               icon: Icons.privacy_tip_outlined,
                               label: SettingsStrings.privacyPolicy,
-                              onTap: () =>
-                                  sl<AppLinkActions>().openPrivacyPolicy(),
+                              onTap:
+                                  () =>
+                                      sl<AppLinkActions>().openPrivacyPolicy(),
                             ),
                             const SizedBox(height: 12),
                             _settingsItem(
@@ -291,11 +290,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _settingsItem(
       icon: Icons.monitor_heart_outlined,
       label: SettingsStrings.moduleHealth,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => ModuleHealthScreen(runtime: sl<AppRuntime>()),
-        ),
-      ),
+      onTap:
+          () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ModuleHealthScreen(runtime: sl<AppRuntime>()),
+            ),
+          ),
     ),
     const SizedBox(height: 12),
     // Exercises every kit capability against live services, which is the only
@@ -415,7 +415,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!mounted) return;
-    _log(enabled ? 'auto_save_enabled' : 'auto_save_disabled');
     context.read<SettingsBloc>().add(AutoSaveChanged(enabled));
     _showMessage(
       enabled
