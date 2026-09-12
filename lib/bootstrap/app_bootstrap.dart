@@ -597,6 +597,17 @@ Future<AppRuntime> bootstrapApp(
             'currency': revenue.currencyCode,
           },
         ),
+      // Every ad shown, from any network, test ads included. `ad_impression`
+      // fires only when the winning network reports revenue, which test ads
+      // and many networks never do, so this is what counts impressions.
+      AdEventType.impression => AnalyticsEvent(
+          name: 'ad_show',
+          properties: <String, Object?>{
+            'ad_platform': event.provider,
+            'ad_format': event.format.name,
+            'placement': event.placement.id,
+          },
+        ),
       // Not `ad_click`: Firebase reserves it and refuses the event.
       AdEventType.clicked => AnalyticsEvent(
           name: 'custom_ad_click',

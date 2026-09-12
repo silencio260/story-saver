@@ -249,6 +249,31 @@ abstract final class AppAnalyticsCatalogue {
             ],
           ),
           DevEventSpec(
+            name: 'ad_show',
+            group: 'Monetisation',
+            description: 'An ad was shown, on any placement and from any '
+                'network, test ads included. ad_impression fires only when '
+                'the winning network reports revenue.',
+            parameters: <DevParamSpec>[
+              DevParamSpec(
+                name: 'ad_platform',
+                kind: DevParamKind.text,
+                example: 'appodeal',
+              ),
+              DevParamSpec(
+                name: 'ad_format',
+                kind: DevParamKind.text,
+                example: 'banner',
+              ),
+              DevParamSpec(
+                name: 'placement',
+                kind: DevParamKind.text,
+                example: 'banner',
+                description: 'App placement ID: banner or interstitial.',
+              ),
+            ],
+          ),
+          DevEventSpec(
             name: 'custom_ad_click',
             group: 'Monetisation',
             description: 'An ad was clicked, on any placement. Not ad_click, '
