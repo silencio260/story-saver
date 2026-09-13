@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
@@ -37,12 +38,17 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
 
   AdProvider get _ads => sl<AdProvider>();
 
+  /// False when a developer turned interstitials off in the Starter Kit Lab.
+  bool get _developerAllows =>
+      sl<DeveloperAdSwitches>().allows(AdFormat.interstitial);
+
   bool _isLoading = false;
   bool _initialDelayApplied = false;
   bool _adsDisabled = false;
 
   @override
   Future<void> loadInterstitial() async {
+    if (!_developerAllows) return;
     await _subscriptionManager.initialize();
     if (!_subscriptionManager.adsAllowed) return;
     _adsDisabled = false;
@@ -85,7 +91,7 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
 
   @override
   Future<bool> showInterstitial() async {
-    if (_adsDisabled) return false;
+    if (_adsDisabled || !_developerAllows) return false;
     await _subscriptionManager.initialize();
     if (!_subscriptionManager.adsAllowed) {
       await dispose();

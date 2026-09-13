@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
@@ -200,7 +201,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     OnboardingPolicyKeys.adsEnabled,
                   ) &&
                   !iap.isPremium &&
-                  AppodealNativeAds.instance.isSupported;
+                  AppodealNativeAds.instance.isSupported &&
+                  // Off on this developer phone in the Starter Kit Lab.
+                  sl<DeveloperAdSwitches>().allows(AdFormat.native);
               // Every reason this app has for not showing an ad right
               // now, the same ones the banner uses. The kit view adds the
               // provider's own: initialization, consent and test mode.

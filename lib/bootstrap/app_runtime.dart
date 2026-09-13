@@ -53,6 +53,7 @@ final class AppRuntime {
     required this.localNotifications,
     required this.onboarding,
     required this.navigationBar,
+    required this.developerAdSwitches,
     required this.env,
     this.eventLog,
     this.kitLog,
@@ -149,6 +150,9 @@ final class AppRuntime {
 
   /// Whether the system navigation bar shows on the screen on top.
   final NavigationBarController navigationBar;
+
+  /// Ad formats a developer turned off on this phone.
+  final DeveloperAdSwitches developerAdSwitches;
 
   /// Analytics deliveries captured in development, for the Lab's event log.
   final RecordingDeliveryObserver? eventLog;

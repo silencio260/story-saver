@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
@@ -16,7 +18,7 @@ import '../../../../core/utils/legacy_custom_colors.dart';
 import '../../../analytics/data/services/analytics_service.dart';
 import '../../../monetization/data/services/subscription_service.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
-import '../../../monetization/presentation/widgets/banner_ad_widget.dart';
+import '../../../monetization/presentation/widgets/native_ad_slot.dart';
 import '../../../monetization/presentation/widgets/legacy/premium_upgrade_modal.dart';
 import '../../../navigation/presentation/bloc/navigation_bloc/navigation_bloc.dart';
 import '../../../permissions/presentation/bloc/permissions_bloc/permissions_bloc.dart';
@@ -29,6 +31,27 @@ import '../../../statuses/presentation/bloc/status_bloc/status_bloc.dart';
 import '../../../statuses/presentation/widgets/status_grid.dart';
 import '../l10n/home_strings.dart';
 import '../widgets/home_exit_prompt.dart';
+
+/// The native ad under the status grid: the small card at normal size, without
+/// media, on a light card that matches the grid, with the app color on its
+/// button.
+const AppodealNativeAdStyle _homeAdStyle = AppodealNativeAdStyle(
+  layout: AppodealNativeAdLayout.small,
+  backgroundColor: Color(0xFFF1F3F5),
+  titleColor: Color(0xFF1F1F1F),
+  bodyColor: Color(0xFF3C4043),
+  callToActionColor: Color(CustomColors.AppBarColor),
+  attributionColor: Color(CustomColors.AppBarColor),
+  cornerRadius: 12,
+  callToActionCornerRadius: 22,
+  padding: 10,
+  spacing: 6,
+  iconSize: 44,
+  callToActionHeight: 44,
+  titleFontSize: 15,
+  bodyFontSize: 13,
+  callToActionFontSize: 16,
+);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -100,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen>
         ) ??
         ExitPromptStyle.featuresSheet;
     // Only ad_sheet and ad_dialog carry an ad here; see HomeExitPrompt.
-    if (!style.needsAd) return;
+    if (!style.needsAd ||
+        !sl<DeveloperAdSwitches>().allows(AdFormat.native)) {
+      return;
+    }
     await sl<GenRevibesStarterKit>().deferredStartupComplete;
     final access = SubscriptionManager();
     await access.initialize();
@@ -279,7 +305,14 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 ),
                 body: TabBarView(controller: _tabController, children: _pages),
-                bottomNavigationBar: const BannerAdWidget(),
+                // A native ad under the grid instead of a banner. Its space is
+                // kept, so the grid never jumps when it loads.
+                bottomNavigationBar: const NativeAdSlot(
+                  placement: AppPlacements.homeNative,
+                  style: _homeAdStyle,
+                  padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  preloadNext: true,
+                ),
               ),
         ),
       ),

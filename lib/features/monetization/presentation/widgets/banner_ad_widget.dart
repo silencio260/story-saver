@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
 import '../../../../bootstrap/app_env.dart';
@@ -50,9 +51,13 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     );
   }
 
+  final DeveloperAdSwitches _switches = sl<DeveloperAdSwitches>();
+  StreamSubscription<void>? _switchChanges;
+
   @override
   void dispose() {
     _access.removeListener(_accessChanged);
+    unawaited(_switchChanges?.cancel());
     super.dispose();
   }
 
@@ -60,6 +65,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   void initState() {
     super.initState();
     _access.addListener(_accessChanged);
+    _switchChanges = _switches.changes.listen((_) => _accessChanged());
     unawaited(_awaitStartup());
   }
 
@@ -94,6 +100,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
               final enabled =
                   _startupComplete &&
                   _access.adsAllowed &&
+                  _switches.allows(AdFormat.banner) &&
                   !iap.isPremium &&
                   iap.status == IapViewStatus.ready &&
                   adsState.status != AdsViewStatus.disabled;

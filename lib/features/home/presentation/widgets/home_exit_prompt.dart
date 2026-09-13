@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
@@ -56,7 +57,8 @@ abstract final class HomeExitPrompt {
         !isPremium &&
         SubscriptionManager().adsAllowed &&
         remote.read(AdsPolicyKeys.adsEnabled) &&
-        AppodealNativeAds.instance.isSupported;
+        AppodealNativeAds.instance.isSupported &&
+        sl<DeveloperAdSwitches>().allows(AdFormat.native);
 
     final requested =
         style ??

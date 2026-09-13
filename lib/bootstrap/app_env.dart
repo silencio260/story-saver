@@ -37,6 +37,18 @@ abstract final class AppPlacements {
     format: AdFormat.native,
   );
 
+  /// Native ad under the status and saved-media grids on home.
+  static const homeNative = AdPlacement(
+    id: 'home_native',
+    format: AdFormat.native,
+  );
+
+  /// Native ad under a status in the media viewer.
+  static const viewerNative = AdPlacement(
+    id: 'viewer_native',
+    format: AdFormat.native,
+  );
+
   /// Interstitial after the splash loader, when `splash_ad_format` is
   /// `interstitial`.
   static const splashInterstitial = AdPlacement(
@@ -74,6 +86,8 @@ abstract final class AppPlacements {
     interstitial,
     onboardingNative,
     exitNative,
+    homeNative,
+    viewerNative,
   ];
 
   /// Every placement, for policy configuration and premium discards.
@@ -253,6 +267,8 @@ final class AppEnv {
           AppodealPlacement(placement: AppPlacements.interstitial),
           AppodealPlacement(placement: AppPlacements.onboardingNative),
           AppodealPlacement(placement: AppPlacements.exitNative),
+          AppodealPlacement(placement: AppPlacements.homeNative),
+          AppodealPlacement(placement: AppPlacements.viewerNative),
           AppodealPlacement(placement: AppPlacements.splashInterstitial),
           AppodealPlacement(placement: AppPlacements.splashRewarded),
         ],

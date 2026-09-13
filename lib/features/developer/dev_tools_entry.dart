@@ -62,6 +62,8 @@ DevToolsHost _host() {
     // an ad test device. The app's own identity never includes it.
     advertisingId: const PlatformAdvertisingIdSource(),
     developerAccess: sl<DeveloperAccessController>(),
+    // Ads → Developer switches: turn interstitials off on this phone.
+    developerAdSwitches: sl<DeveloperAdSwitches>(),
     navigationBar: sl<NavigationBarController>(),
     // Every exit prompt style with this app's content, to check an A/B arm
     // before it goes live.

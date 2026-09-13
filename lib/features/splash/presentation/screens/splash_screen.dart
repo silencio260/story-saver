@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_splash/genrevibes_splash.dart';
@@ -91,7 +92,8 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     if (!_config.read(AdsPolicyKeys.adsEnabled) ||
         !_config.read(OnboardingPolicyKeys.adsEnabled) ||
-        !AppodealNativeAds.instance.isSupported)
+        !AppodealNativeAds.instance.isSupported ||
+        !sl<DeveloperAdSwitches>().allows(AdFormat.native))
       return;
     final iap = context.read<IapBloc>();
     _preloadingOnboarding = true;
@@ -114,6 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
           !access.adsAllowed ||
           !_config.read(AdsPolicyKeys.adsEnabled) ||
           !_config.read(OnboardingPolicyKeys.adsEnabled) ||
+          !sl<DeveloperAdSwitches>().allows(AdFormat.native) ||
           AdSuppressionManager().areAdsSuppressed)
         return;
       final ads = sl<AdProvider>();
@@ -142,6 +145,9 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!SubscriptionManager().hasStatusFolderAccess) return null;
     final format = SplashAdPolicyKeys.formatOf(_config);
     if (format == null || !_config.read(AdsPolicyKeys.adsEnabled)) return null;
+    // A developer can turn this format off for their own phone in the Lab.
+    final developerSwitches = sl<DeveloperAdSwitches>();
+    if (!developerSwitches.allows(format)) return null;
     if (firstLaunch && !_config.read(SplashAdPolicyKeys.onFirstLaunch)) {
       return null;
     }
@@ -157,6 +163,7 @@ class _SplashScreenState extends State<SplashScreen> {
               !iap.state.isPremium &&
               SubscriptionManager().adsAllowed &&
               !AdSuppressionManager().areAdsSuppressed &&
+              developerSwitches.allows(format) &&
               _config.read(AdsPolicyKeys.adsEnabled) &&
               SplashAdPolicyKeys.formatOf(_config) == format &&
               _config.read(SplashAdPolicyKeys.provider).trim() == providerId &&

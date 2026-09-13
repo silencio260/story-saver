@@ -175,6 +175,14 @@ Future<AppRuntime> bootstrapApp(
     logger: logger,
   );
   await developerAccess.initialize();
+  // Ad formats a developer turned off on this phone in the Starter Kit Lab.
+  // They apply only while developer access is granted.
+  final developerAdSwitches = DeveloperAdSwitches(
+    store: store,
+    access: developerAccess,
+    logger: logger,
+  );
+  await developerAdSwitches.load();
   // The phone's navigation bar is hidden on every screen unless the screen
   // shows it with NavigationBarVisibility. Developers see it everywhere while
   // the Lab's "Show on every screen" switch is on, through the listener below.
@@ -767,6 +775,7 @@ Future<AppRuntime> bootstrapApp(
     localNotifications: localNotifications,
     onboarding: onboarding,
     navigationBar: navigationBar,
+    developerAdSwitches: developerAdSwitches,
     env: env,
     eventLog: eventLog,
     kitLog: kitLog,

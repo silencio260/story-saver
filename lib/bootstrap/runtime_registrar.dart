@@ -38,6 +38,7 @@ void registerRuntime(AppRuntime runtime) {
     ..registerSingleton<CrashCoordinator>(runtime.crash)
     ..registerSingleton<DeviceIdentityResolver>(runtime.identity)
     ..registerSingleton<DeveloperAccessController>(runtime.developerAccess)
+    ..registerSingleton<DeveloperAdSwitches>(runtime.developerAdSwitches)
     ..registerSingleton<ConsentGate>(runtime.consent)
     ..registerSingleton<AnalyticsPipeline>(runtime.analytics)
     ..registerSingleton<AdPolicyController>(runtime.adPolicy)
