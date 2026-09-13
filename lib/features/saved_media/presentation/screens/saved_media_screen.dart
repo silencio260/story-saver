@@ -52,11 +52,36 @@ class _SavedMediaScreenState extends State<SavedMediaScreen>
           );
         }
       },
-      child: BlocBuilder<PermissionsBloc, PermissionsState>(
+      child: BlocConsumer<PermissionsBloc, PermissionsState>(
+        listenWhen:
+            (before, after) =>
+                !before.hasStoragePermission && after.hasStoragePermission,
+        listener:
+            (context, _) => context.read<SavedMediaBloc>().add(
+              const SavedMediaLoadRequested(),
+            ),
         builder: (context, permissions) {
           if (!permissions.hasStoragePermission) {
-            return const Center(
-              child: Text(SavedMediaStrings.noStoragePermission),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'Allow photo and video access to browse your saved statuses.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  FilledButton(
+                    onPressed:
+                        () => context.read<PermissionsBloc>().add(
+                          const StoragePermissionRequested(),
+                        ),
+                    child: const Text('Show saved statuses'),
+                  ),
+                ],
+              ),
             );
           }
           return BlocBuilder<SavedMediaBloc, SavedMediaState>(

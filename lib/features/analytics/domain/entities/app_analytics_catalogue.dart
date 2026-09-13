@@ -25,6 +25,209 @@ abstract final class AppAnalyticsCatalogue {
     alwaysAttached: alwaysAttached,
     events: const <DevEventSpec>[
       DevEventSpec(
+        name: 'onboarding_native_preload_requested',
+        group: 'Monetisation',
+        description:
+            'Splash requested native inventory for onboarding after consent and entitlement checks.',
+      ),
+      DevEventSpec(
+        name: 'onboarding_native_preload_result',
+        group: 'Monetisation',
+        description: 'Native preload completed.',
+        parameters: [
+          DevParamSpec(
+            name: 'ready',
+            kind: DevParamKind.boolean,
+            example: true,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'onboarding_native_preload_failed',
+        group: 'Monetisation',
+        description: 'Onboarding native preload encountered an exception.',
+      ),
+      DevEventSpec(
+        name: 'status_connection_viewed',
+        group: 'Status setup',
+        description:
+            'Connection funnel: viewed. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_picker_opened',
+        group: 'Status setup',
+        description:
+            'Connection funnel: picker opened. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_granted',
+        group: 'Status setup',
+        description:
+            'Connection funnel: granted. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_failed',
+        group: 'Status setup',
+        description:
+            'Connection funnel: failed. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_cancelled',
+        group: 'Status setup',
+        description:
+            'Connection funnel: cancelled. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_skipped',
+        group: 'Status setup',
+        description:
+            'Connection funnel: skipped. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_help_opened',
+        group: 'Status setup',
+        description:
+            'Connection funnel: help opened. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_open_whatsapp',
+        group: 'Status setup',
+        description:
+            'Connection funnel: open whatsapp. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_first_status_displayed',
+        group: 'Status setup',
+        description:
+            'Connection funnel: first status displayed. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
+        name: 'status_connection_first_save',
+        group: 'Status setup',
+        description:
+            'Connection funnel: first save. Timings are from setup in the current session when available.',
+        parameters: <DevParamSpec>[
+          DevParamSpec(
+            name: 'business_mode',
+            kind: DevParamKind.boolean,
+            example: false,
+          ),
+          DevParamSpec(
+            name: 'elapsed_ms',
+            kind: DevParamKind.number,
+            example: 2400,
+          ),
+        ],
+      ),
+      DevEventSpec(
         name: 'rating_evaluated',
         group: 'Rating',
         description:

@@ -258,6 +258,7 @@ Future<AppRuntime> bootstrapApp(
     observer: AnalyticsEngagementObserver(analytics),
   );
   final subscriptionAccess = SubscriptionManager();
+  await subscriptionAccess.loadPreferences();
   final adPolicy = AdPolicyController(
     placements: <String, AdPlacementPolicy>{
       for (final placement in AppPlacements.all)
@@ -274,7 +275,10 @@ Future<AppRuntime> bootstrapApp(
       AppodealAdProvider(
         configuration: env.appodeal,
         testMode: developerAccess.current.servesTestAds,
-        canRequestAds: () => subscriptionAccess.adsAllowed,
+        canRequestAds:
+            () =>
+                subscriptionAccess.adsAllowed &&
+                !AdSuppressionManager().areAdsSuppressed,
         client: DefaultAppodealClient(manualBannerCaching: true),
         logger: logger,
       );

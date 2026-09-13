@@ -1,3 +1,4 @@
+import 'package:storysaver/features/permissions/data/datasources/app_storage_permission.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'status_cache_index.dart';
@@ -246,105 +247,9 @@ class StatusFileSystemDataSourceEngine {
 
       print('Before Getting all DocMan Files -- getWhatsAppStatusWithDocMan ');
 
-      List<PersistedPermission> accessiblePath = await DocMan.perms.list(
-        files: false,
-        directories: true,
+      final statusDir = await AppStoragePermission().resolveStatusDirectory(
+        isBusinessMode: isBusinessMode,
       );
-
-      print(
-        'After DocMan.perms.list  --> ${accessiblePath.map((p) => p.uri).toList()}',
-      );
-
-      DocumentFile? statusDir;
-
-      // Future<DocumentFile?> getStatusDir(PersistedPermission permission) async {
-      final getStatusDir = (PersistedPermission permission) async {
-        return await DocumentFile.fromUri(permission.uri).catchError((
-          error,
-        ) async {
-          print('Error listing documents: $error ${permission.uri}');
-
-          await DocMan.dir.clearCache();
-
-          if (error.toString().contains('Cannot initialize document file') ||
-              error.toString().contains('uri is invalid') ||
-              error.toString().contains('Permission Denial')) {
-            print('Invalid URI - releasing permission');
-            await DocMan.perms.releaseAll();
-          }
-
-          return null;
-        });
-      };
-
-      // First check if we already have direct .Statuses access (for both regular WhatsApp and Business)
-      for (final permission in accessiblePath) {
-        final decodedUri = Uri.decodeFull(permission.uri);
-        print('Checking URI: ${decodedUri}');
-
-        if (decodedUri.contains(".Statuses")) {
-          // Check for regular WhatsApp
-          if (isBusinessMode == false &&
-              (decodedUri.contains("com.whatsapp") &&
-                  !decodedUri.contains("w4b"))) {
-            print('Found direct WhatsApp .Statuses access: ${decodedUri}');
-            statusDir = await getStatusDir(permission);
-          }
-
-          //Check for WhatsApp Business
-          if (isBusinessMode == true &&
-              (decodedUri.contains("com.whatsapp.w4b"))) {
-            print(
-              'Found direct Business WhatsApp .Statuses access: ${decodedUri}',
-            );
-            statusDir = await getStatusDir(permission);
-          }
-
-          if (statusDir != null && await statusDir.exists) {
-            print('Successfully found direct status directory access');
-            break;
-          } else {
-            statusDir = null;
-          }
-        }
-      }
-
-      // If no direct .Statuses access, look for Android/media access and navigate
-      if (statusDir == null) {
-        print(
-          'No direct .Statuses access found, checking for Android/media access',
-        );
-
-        for (final permission in accessiblePath) {
-          final decodedUri = Uri.decodeFull(permission.uri);
-
-          if (decodedUri.contains("Android") &&
-              decodedUri.contains("media") &&
-              !decodedUri.contains("whatsapp")) {
-            // print('Found Android/media permission: ${decodedUri}');
-
-            DocumentFile? androidMediaDir = await DocumentFile.fromUri(
-              permission.uri,
-            );
-
-            if (androidMediaDir != null && await androidMediaDir.exists) {
-              // Try WhatsApp Business first, then regular WhatsApp
-
-              statusDir = await _navigateToWhatsAppStatusFolder(
-                androidMediaDir: androidMediaDir,
-                isBusinessMode: isBusinessMode,
-              );
-
-              // statusDir = await _navigateToWhatsAppStatus(androidMediaDir);
-
-              if (statusDir != null) {
-                print('Successfully navigated to WhatsApp status folder');
-                break;
-              }
-            }
-          }
-        }
-      }
 
       // If no folder access found break the function
       if (statusDir == null) {

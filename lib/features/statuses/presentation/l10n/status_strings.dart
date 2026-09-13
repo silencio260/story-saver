@@ -6,14 +6,16 @@ class StatusStrings {
   static const String loading = 'Loading Statuses...';
   static const String noImages = 'No images available';
   static const String noVideos = 'No videos available';
-  static const String noImagesFound = 'No images Found';
-  static const String noVideosFound = 'No Videos Found';
+  static const String noImagesFound =
+      'No image statuses yet. View a status in WhatsApp, then come back.';
+  static const String noVideosFound =
+      'No video statuses yet. View a video status in WhatsApp, then come back.';
   static const String noStoragePermission = 'No Storage Permission';
-  static const String grantPermission = 'Grant Permission';
+  static const String grantPermission = 'Connect WhatsApp';
   static const String grantAndroidMedia =
-      'Grant Access To Android/Media Folder\nor The Whatsapp .Statuses Folder.';
+      'Connect WhatsApp to show statuses you have viewed.';
   static const String grantBusinessStatuses =
-      'Grant Access To Business Whatsapp .Statuses Folder.';
+      'Connect WhatsApp Business to show statuses you have viewed.';
   static const String whatsAppUnavailable = 'Whatsapp not available';
   static const String businessWhatsAppUnavailable = 'WB Whatsapp not available';
   static const String clickToRefresh = 'Click to refresh';

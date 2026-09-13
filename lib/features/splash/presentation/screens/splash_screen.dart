@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
@@ -16,6 +18,7 @@ import '../../../analytics/data/services/analytics_service.dart';
 import '../../../analytics/domain/entities/analytics_event.dart';
 import '../../../analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart';
 import '../../../monetization/data/services/subscription_service.dart';
+import '../../../monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../../../saved_media/presentation/bloc/saved_media_bloc/saved_media_bloc.dart';
 import '../bloc/splash_bloc/splash_bloc.dart';
@@ -51,6 +54,17 @@ class _SplashScreenState extends State<SplashScreen> {
     progressColor: _accent,
   );
 
+  bool _preloadingOnboarding = false;
+  bool _handingOffToOnboarding = false;
+
+  @override
+  void dispose() {
+    if (_preloadingOnboarding && !_handingOffToOnboarding) {
+      SubscriptionManager().setOnboardingActive(false);
+    }
+    super.dispose();
+  }
+
   RemoteConfigSnapshot get _config => sl<RemoteConfigCoordinator>().current;
 
   @override
@@ -68,10 +82,54 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Where to go next is known once the bloc answers.
   Future<void> _prepare() async {
     final bloc = context.read<SplashBloc>();
-    if (bloc.state.destination != SplashDestination.pending) return;
-    await bloc.stream.firstWhere(
-      (state) => state.destination != SplashDestination.pending,
-    );
+    if (bloc.state.destination == SplashDestination.pending) {
+      await bloc.stream.firstWhere(
+        (state) => state.destination != SplashDestination.pending,
+      );
+    }
+    if (!mounted || bloc.state.destination != SplashDestination.onboarding)
+      return;
+    if (!_config.read(AdsPolicyKeys.adsEnabled) ||
+        !_config.read(OnboardingPolicyKeys.adsEnabled) ||
+        !AppodealNativeAds.instance.isSupported)
+      return;
+    final iap = context.read<IapBloc>();
+    _preloadingOnboarding = true;
+    SubscriptionManager().setOnboardingActive(true);
+    unawaited(_preloadOnboardingNative(iap));
+  }
+
+  Future<void> _preloadOnboardingNative(IapBloc iap) async {
+    try {
+      await sl<GenRevibesStarterKit>().deferredStartupComplete;
+      if (!mounted) return;
+      if (!_entitlementsKnown(iap.state)) {
+        await iap.stream.firstWhere(_entitlementsKnown);
+      }
+      if (!mounted) return;
+      final access = SubscriptionManager();
+      await access.initialize();
+      if (!mounted ||
+          iap.state.isPremium ||
+          !access.adsAllowed ||
+          !_config.read(AdsPolicyKeys.adsEnabled) ||
+          !_config.read(OnboardingPolicyKeys.adsEnabled) ||
+          AdSuppressionManager().areAdsSuppressed)
+        return;
+      final ads = sl<AdProvider>();
+      // load() coalesces this request with the onboarding view's request and
+      // reuses ready native inventory rather than starting a second auction.
+      unawaited(AnalyticsService.track('onboarding_native_preload_requested'));
+      final result = await ads.load(AppPlacements.onboardingNative);
+      unawaited(
+        AnalyticsService.track('onboarding_native_preload_result', {
+          'ready':
+              result.isSuccess && ads.isReady(AppPlacements.onboardingNative),
+        }),
+      );
+    } catch (_) {
+      unawaited(AnalyticsService.track('onboarding_native_preload_failed'));
+    }
   }
 
   /// The ad for this launch, or null for none.
@@ -81,6 +139,7 @@ class _SplashScreenState extends State<SplashScreen> {
         SplashDestination.onboarding;
     final iap = context.read<IapBloc>();
 
+    if (!SubscriptionManager().hasStatusFolderAccess) return null;
     final format = SplashAdPolicyKeys.formatOf(_config);
     if (format == null || !_config.read(AdsPolicyKeys.adsEnabled)) return null;
     if (firstLaunch && !_config.read(SplashAdPolicyKeys.onFirstLaunch)) {
@@ -97,6 +156,7 @@ class _SplashScreenState extends State<SplashScreen> {
               mounted &&
               !iap.state.isPremium &&
               SubscriptionManager().adsAllowed &&
+              !AdSuppressionManager().areAdsSuppressed &&
               _config.read(AdsPolicyKeys.adsEnabled) &&
               SplashAdPolicyKeys.formatOf(_config) == format &&
               _config.read(SplashAdPolicyKeys.provider).trim() == providerId &&
@@ -145,6 +205,7 @@ class _SplashScreenState extends State<SplashScreen> {
     analytics.add(
       const AnalyticsEventLogged(AnalyticsEventEntity(name: 'goto_home_page')),
     );
+    _handingOffToOnboarding = state.destination == SplashDestination.onboarding;
     Navigator.pushNamedAndRemoveUntil(
       context,
       state.destination == SplashDestination.home
@@ -164,6 +225,7 @@ class _SplashScreenState extends State<SplashScreen> {
       prepare: _prepare,
       resolveAd: _resolveAd,
       adExpected:
+          SubscriptionManager().hasStatusFolderAccess &&
           _config.read(AdsPolicyKeys.adsEnabled) &&
           SplashAdPolicyKeys.formatOf(_config) != null &&
           !context.read<IapBloc>().state.isPremium,

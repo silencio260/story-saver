@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen>
     unawaited(_preloadExitAd());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && SubscriptionManager().hasReachedFirstStatus) {
         RatingPrompt.showIfEligible(context);
       }
     });
@@ -76,9 +76,17 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onTabChanged() {
     if (!mounted || _tabController.indexIsChanging) return;
-    context.read<NavigationBloc>().add(
-      NavigationTabSelected(_tabController.index),
-    );
+    final navigation = context.read<NavigationBloc>();
+    if (navigation.state.currentIndex == _tabController.index) return;
+    navigation.add(NavigationTabSelected(_tabController.index));
+    if (_tabController.index == 2) {
+      // A save can grant gallery access while the status tab is visible.
+      context.read<PermissionsBloc>().add(
+        PermissionsCheckRequested(
+          isBusinessMode: context.read<StatusBloc>().state.isBusinessMode,
+        ),
+      );
+    }
   }
 
   /// Loads the exit prompt's native ad before Back is pressed, so the prompt
@@ -126,7 +134,6 @@ class _HomeScreenState extends State<HomeScreen>
           final isBusinessMode =
               context.read<StatusBloc>().state.isBusinessMode;
           if (permissions.status == PermissionViewStatus.ready &&
-              permissions.hasStoragePermission &&
               permissions.hasStatusFolderPermission(
                 isBusinessMode: isBusinessMode,
               )) {

@@ -1,3 +1,4 @@
+import 'package:storysaver/features/permissions/data/services/status_connection_journey.dart';
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
@@ -154,7 +155,10 @@ class SavedMediaBloc extends Bloc<SavedMediaEvent, SavedMediaState> {
                 saved ? SavedMediaStrings.saved : SavedMediaStrings.notSaved,
           ),
         );
-        if (saved) add(const SavedMediaLoadRequested());
+        if (saved) {
+          await StatusConnectionJourney.instance.saved();
+          add(const SavedMediaLoadRequested());
+        }
         if (saved) {
           emit(
             state.copyWith(

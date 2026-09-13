@@ -32,9 +32,14 @@ class SavedMediaLocalDataSource implements SavedMediaBaseLocalDataSource {
       _album = null;
     }
 
-    final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) {
-      throw StateError('Storage permission is required.');
+    final permission = await PhotoManager.getPermissionState(
+      requestOption: const PermissionRequestOption(),
+    );
+    if (!permission.hasAccess) {
+      return const SavedMediaDataPage(
+        items: <SavedMediaModel>[],
+        hasMore: false,
+      );
     }
 
     final album = _album ??= await _findAlbum();
@@ -99,6 +104,8 @@ class SavedMediaLocalDataSource implements SavedMediaBaseLocalDataSource {
 
   @override
   Future<bool> saveStatus(String sourcePath) async {
+    final permission = await PhotoManager.requestPermissionExtend();
+    if (!permission.hasAccess) return false;
     final saved = await legacy_save.saveStatusBackground(sourcePath);
     if (saved) await _cacheManager.saveMedia(sourcePath);
     return saved;

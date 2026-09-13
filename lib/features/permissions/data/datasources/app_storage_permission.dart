@@ -1,363 +1,177 @@
-import 'dart:io';
-
+import 'package:flutter/services.dart';
 import 'package:docman/docman.dart';
-// import 'package:file_picker/file_picker.dart';
-import 'package:genrevibes_permissions/genrevibes_permissions.dart' as kit;
 import 'package:photo_manager/photo_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:storysaver/core/utils/legacy_app_constants.dart';
-import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
-import 'package:genrevibes_core/genrevibes_core.dart';
-import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 
-import '../../../../container_injector.dart';
-// import 'package:saf/saf.dart';
-
+/// Folder access and gallery access are separate. Checking either never prompts.
 class AppStoragePermission {
-  // Request storage permission
-  Future<bool> getStoragePermission() async {
-    // final status = await Permission.storage.request();
-    final status = await forceRequestAllPermissions();
-    // print('status.isGranted ${status.isGranted}');
-    if (status) {
-      return true;
-    } else {
-      final storagePermission = await _permissions.request(
-        kit.PermissionKind.manageExternalStorage,
-      );
-      if (_granted(storagePermission)) {
-        return true;
-      } else {
-        // Prompt the user to grant it manually.
-        await _permissions.openSettings();
-        return false;
-      }
-    }
+  Future<bool> getStoragePermission() async =>
+      (await PhotoManager.requestPermissionExtend()).hasAccess;
+
+  Future<bool> checkIfWeHaveStoragePermission() =>
+      checkForStoragePermissionOnly();
+
+  Future<bool> checkForStoragePermissionOnly() async =>
+      (await PhotoManager.getPermissionState(
+        requestOption: const PermissionRequestOption(),
+      )).hasAccess;
+
+  // Kept for legacy explicit gallery actions; never requests notifications or
+  // all-files access. SAF browsing needs neither of these permissions.
+  Future<bool> forceRequestAllPermissions() => getStoragePermission();
+
+  static String statusPath(bool business) =>
+      business
+          ? 'Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses'
+          : 'Android/media/com.whatsapp/WhatsApp/Media/.Statuses';
+
+  static String? _treeId(String rawUri) {
+    final uri = Uri.tryParse(rawUri);
+    if (uri?.authority != 'com.android.externalstorage.documents') return null;
+    final parts = uri!.pathSegments;
+    final tree = parts.indexOf('tree');
+    return tree >= 0 && tree + 1 < parts.length ? parts[tree + 1] : null;
   }
 
-  Future<bool> checkIfWeHaveStoragePermission() async {
-    // final status = await Permission.storage.request();
-    final status = await forceRequestAllPermissions();
-
-    if (status) {
-      return true;
-    } else {
-      final storagePermission = await _permissions.request(
-        kit.PermissionKind.manageExternalStorage,
-      );
-      return _granted(storagePermission);
-    }
-
-    return false;
-  }
-
-  Future<bool> checkForStoragePermissionOnly() async {
-    // final status = await Permission.storage.request();
-    final status = await forceRequestAllPermissions();
-
-    if (status) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  kit.PermissionProvider get _permissions => sl<kit.PermissionProvider>();
-
-  bool _granted(KitResult<kit.PermissionState> result) {
-    return result.fold(
-      onSuccess: (state) =>
-          state == kit.PermissionState.granted || state == kit.PermissionState.limited,
-      onFailure: (_) => false,
-    );
-  }
-
-  Future<bool> forceRequestAllPermissions() async {
-    if (Platform.isAndroid) {
-      // The Android 13 split between photos/videos/audio and the older single
-      // storage permission is the adapter's job now. This used to read the SDK
-      // level itself and pick the permission list, which every application in
-      // the portfolio then copied.
-      await _permissions.request(kit.PermissionKind.storage);
-
-      await sl<PushNotificationProvider>().requestPermission();
-
-      // App-specific: the gallery library keeps its own permission handshake.
-      final ps = await PhotoManager.requestPermissionExtend();
-      return ps.isAuth;
-    }
-    return false;
+  static bool _coversStatuses(String rawUri, bool business) {
+    final id = _treeId(rawUri);
+    if (id == null || !id.contains(':')) return false;
+    final path = id.substring(id.indexOf(':') + 1);
+    final expected = statusPath(business);
+    // Accept the exact folder or a relevant ancestor, never a sibling,
+    // a similarly named package, or an arbitrary broad storage root.
+    return path == expected ||
+        (path.startsWith('Android/media') && expected.startsWith('$path/'));
   }
 
   Future<bool> isWhatsAppStatusFolderPermissionAvailable({
     bool isBusinessMode = false,
   }) async {
-    // String statusFolder = isBusinessMode == false
-    //     ? "Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
-    //     : "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses";
-
-    String androidMediaFolder = "Android/media";
-
-    // // Extract base docId ("primary:Android/media")
-    // final baseDocId = Uri.decodeComponent(
-    //   androidMediaDir.toString().split('/tree/').last.split('/document/').first,
-    // );
-    //
-    // // Build the full docId with the relative path
-    // final fullDocId = "$baseDocId/$relativePath";
-    //
-    // // Encode and build final content:// URI
-    // final fullUri =
-    //     "content://com.android.externalstorage.documents/tree/${Uri.encodeComponent(baseDocId)}/document/${Uri.encodeComponent(fullDocId)}";
-
-    List<PersistedPermission> permissions = await DocMan.perms.list(
+    final permissions = await DocMan.perms.list(
       files: false,
       directories: true,
     );
-
-    print(
-      "accessiblePath in isWhatsAppStatusFolderPermissionAvailable ${permissions.map((p) => p.uri).toList()}",
-    );
-
-    bool isGranted = false;
-
     for (final permission in permissions) {
-      final decodedUri = Uri.decodeFull(permission.uri);
-
-      final baseDocId = Uri.decodeComponent(
-        permission.uri.toString().split('media').first,
-      );
-
-      print(
-        '_getBusinessWhatsAppStatusFolderPermission -> decodedUri.endsWith("androidMediaFolder") - ${decodedUri.endsWith("$androidMediaFolder")} - ${decodedUri}',
-      );
-      if (decodedUri.endsWith("$androidMediaFolder")) {
-        print(
-          '_getBusinessWhatsAppStatusFolderPermission 2 -> ${decodedUri} - ${baseDocId}',
+      if (!_coversStatuses(permission.uri, isBusinessMode)) {
+        final folders = await _discover(
+          permission.uri,
+          business: isBusinessMode,
         );
-        isGranted = true;
-        break;
-      } else if (isBusinessMode == true &&
-          (decodedUri.contains('whatsapp.w4b') &&
-              decodedUri.contains('.Statuses'))) {
-        isGranted = true;
-        break;
-      } else if (isBusinessMode == false &&
-          ((decodedUri.contains("com.whatsapp") &&
-                  !decodedUri.contains("w4b")) &&
-              decodedUri.contains('.Statuses'))) {
-        isGranted = true;
-        break;
+        if (folders.containsKey(isBusinessMode ? 'business' : 'regular'))
+          return true;
+        continue;
+      }
+      try {
+        final folder = await DocumentFile.fromUri(permission.uri);
+        if (folder != null && folder.canRead && await folder.exists)
+          return true;
+      } catch (_) {
+        // A revoked/missing grant should lead back to setup, not a crash.
       }
     }
-
-    // if (decodedUri.contains(androidMediaFolder) ||
-    //     (isBusinessMode && decodedUri.contains('whatsapp.w4b') && decodedUri.contains('.Statuses')) ||
-    //     (!isBusinessMode && decodedUri.contains('com.whatsapp') && decodedUri.contains('.Statuses'))) {
-    //   isGranted = true;
-    //   break;
-    // }
-
-    return isGranted;
+    return false;
   }
 
-  // Future<void> pickWhatsAppStatusFolder({bool isBusinessMode = false}) async {
-  //   final folderPath = isBusinessMode == false ?
-  //   "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/" :
-  //   "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses/";
-  //
-  //   print("Expected folder path: $folderPath");
-  //
-  //   DocumentFile? statusDir = await DocMan.pick.directory(initDir: folderPath);
-  //
-  //   print("isGranted ${statusDir}");
-  //
-  //   if (statusDir != null && await statusDir.exists) {
-  //     // Validate that the correct WhatsApp folder was selected
-  //     String expectedPath = isBusinessMode ? "whatsapp.w4b" : "com.whatsapp";
-  //
-  //     if (statusDir.uri.contains(expectedPath) && statusDir.uri.contains(".Statuses")) {
-  //       final prefs = await SharedPreferences.getInstance();
-  //
-  //       // Set different permission keys based on mode
-  //       if (isBusinessMode) {
-  //         await prefs.setBool(AppConstants().IS_BUSINESS_MODE, true);
-  //       } else {
-  //         await prefs.setBool(AppConstants().IS_WHATSAPP_STATUS_PERMISSION, true);
-  //       }
-  //
-  //       print("Permission granted for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}");
-  //       print("Selected correct path: ${statusDir.uri}");
-  //
-  //       // Rest of your existing code...
-  //       List<PersistedPermission> permissions = await DocMan.perms.list(files: false, directories: true);
-  //
-  //       List<DocumentFile> documents = await statusDir.listDocuments(
-  //         mimeTypes: ['image/*', 'video/*'],
-  //       );
-  //
-  //       List<File> cachedFiles = [];
-  //       for (DocumentFile doc in documents) {
-  //         File? cachedFile = await doc.cache();
-  //         if (cachedFile != null) {
-  //           cachedFiles.add(cachedFile);
-  //         }
-  //       }
-  //
-  //       List<String> cachedFilesPath = cachedFiles.map((file) => file.path).toList();
-  //
-  //       print('saf_info ${cachedFiles.length}');
-  //       print('object ${cachedFilesPath}');
-  //
-  //       print('saf_accessiblePath ${permissions.map((p) => p.uri).toList()} - ${documents.map((d) => d.uri).toList()}');
-  //
-  //       if (permissions.isNotEmpty) {
-  //         final actualUri = permissions.first.uri;
-  //
-  //         DocumentFile? directory = await DocumentFile.fromUri(actualUri);
-  //
-  //         print('saf_accessiblePath_directory ${directory?.uri} ${await directory?.exists ?? false}');
-  //
-  //         if (directory != null && await directory.exists) {
-  //           List<DocumentFile> items = await directory.listDocuments();
-  //           print('------ saf_items -> ${items.map((item) => item.name).toList()}');
-  //         }
-  //       }
-  //     } else {
-  //       print("Wrong folder selected!");
-  //       print("Expected path containing: $expectedPath and .Statuses");
-  //       print("Selected path: ${statusDir.uri}");
-  //       print("Please navigate to: $folderPath");
-  //     }
-  //   }
-  // }
+  /// Resolves a status child under a persisted ancestor without walking every
+  /// directory. A missing .Statuses folder is a valid connected-but-empty state.
+  Future<DocumentFile?> resolveStatusDirectory({
+    required bool isBusinessMode,
+  }) async {
+    final permissions = await DocMan.perms.list(
+      files: false,
+      directories: true,
+    );
+    for (final permission in permissions) {
+      final folders = await _discover(permission.uri, business: isBusinessMode);
+      final uri = folders[isBusinessMode ? 'business' : 'regular'];
+      if (uri == null) continue;
+      try {
+        // DocMan.fromUri uses fromTreeUri, which resolves the grant root even
+        // when a child document ID is supplied. Query the child directly.
+        final metadata = await const MethodChannel(
+          'story_saver/status_directory',
+        ).invokeMapMethod<String, dynamic>('stat', {'uri': uri});
+        if (metadata != null) return DocumentFile.fromMap(metadata);
+      } catch (_) {
+        // Try another valid grant, without releasing unrelated permissions.
+      }
+    }
+    return null;
+  }
+
+  static final Map<String, Future<Map<String, String>>> _searches = {};
+
+  Future<Map<String, String>> _discover(
+    String uri, {
+    bool business = false,
+  }) async {
+    final key = "$uri:$business";
+    // Coalesce mode checks and status loads sharing a grant.
+    final active = _searches[key];
+    if (active != null) {
+      try {
+        return await active;
+      } on PlatformException {
+        return {};
+      }
+    }
+    final search = const MethodChannel('story_saver/status_directory')
+        .invokeMapMethod<String, String>('discover', {
+          'uri': uri,
+          'business': business,
+        })
+        .then((value) => value ?? <String, String>{});
+    _searches[key] = search;
+    try {
+      return await search;
+    } on PlatformException {
+      return {};
+    } finally {
+      _searches.remove(key);
+    }
+  }
 
   Future<void> pickWhatsAppStatusFolder({bool isBusinessMode = false}) async {
-    final initDirUri =
-        isBusinessMode == false
-            ? "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses"
-            : "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses";
-
-    DocumentFile? androidMediaDir = await DocMan.pick.directory(
-      initDir:
-          "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia",
-    );
-
-    print("Selected directory: ${androidMediaDir?.uri}");
-
-    if (androidMediaDir != null && await androidMediaDir.exists) {
-      // Validate this is the Android/media directory
-      if (androidMediaDir.uri.contains("Android") &&
-          androidMediaDir.uri.contains("media")) {
-        print("Correct Android/media directory selected");
-
-        // Now look for existing WhatsApp permissions or navigate to WhatsApp folders
-        List<PersistedPermission> permissions = await DocMan.perms.list(
-          files: false,
-          directories: true,
+    final target = Uri.encodeComponent('primary:Android/media');
+    // DocMan's directory picker always takes a persistable URI grant.
+    DocumentFile? selected;
+    try {
+      selected = await DocMan.pick.directory(
+        initDir:
+            'content://com.android.externalstorage.documents/document/$target',
+      );
+    } catch (_) {
+      // Keep the fallback explicit too: omitting the initial location would
+      // let DocumentsUI restore a previously visited unrelated folder.
+      try {
+        final android = Uri.encodeComponent('primary:Android');
+        selected = await DocMan.pick.directory(
+          initDir:
+              'content://com.android.externalstorage.documents/document/$android',
         );
-
-        String expectedPath = isBusinessMode ? "whatsapp.w4b" : "com.whatsapp";
-        DocumentFile? statusDir;
-
-        // Check if we already have permission to the specific WhatsApp status folder
-        for (final permission in permissions) {
-          final decodedUri = Uri.decodeFull(permission.uri);
-          if (decodedUri.toLowerCase().endsWith("android/media") ||
-              (decodedUri.contains(expectedPath) &&
-                  decodedUri.contains(".Statuses"))) {
-            print("Found existing WhatsApp permission: $decodedUri");
-            statusDir = await DocumentFile.fromUri(permission.uri);
-
-            if (statusDir != null &&
-                await statusDir.exists &&
-                statusDir.canRead) {
-              if (decodedUri.toLowerCase().endsWith("android/media")) {
-                AnalyticsService.logGrantAndroidMediaFolderPermission();
-              }
-
-              print("statusDir is active and can read");
-              break;
-            } else {
-              await DocMan.perms.release(permission.uri);
-              statusDir = null;
-            }
-          }
-        }
-
-        // If no existing valid permission, user needs to navigate manually to specific folder
-        if (statusDir == null) {
-          print(
-            "No existing permission found for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}",
-          );
-          print(
-            "You now have access to Android/media. Please navigate to the specific folder:",
-          );
-          // print(folderPath);
-          return;
-        }
-
-        // Continue with existing logic if we found valid statusDir
-        final prefs = await SharedPreferences.getInstance();
-
-        if (isBusinessMode) {
-          await prefs.setBool(AppConstants().IS_BUSINESS_MODE, true);
-        } else {
-          await prefs.setBool(
-            AppConstants().IS_WHATSAPP_STATUS_PERMISSION,
-            true,
-          );
-        }
-
-        print(
-          "Permission granted for WhatsApp ${isBusinessMode ? 'Business' : 'Regular'}",
+      } catch (_) {
+        throw PlatformException(
+          code: 'folder_picker_unavailable',
+          message: 'Folder chooser unavailable. Please try again.',
         );
-        print("Using status directory: ${statusDir.uri}");
-
-        List<DocumentFile> documents = await statusDir.listDocuments(
-          mimeTypes: ['image/*', 'video/*'],
-        );
-
-        List<File> cachedFiles = [];
-        for (DocumentFile doc in documents) {
-          File? cachedFile = await doc.cache();
-          if (cachedFile != null) {
-            cachedFiles.add(cachedFile);
-          }
-        }
-
-        List<String> cachedFilesPath =
-            cachedFiles.map((file) => file.path).toList();
-
-        print('saf_info ${cachedFiles.length}');
-        print('object ${cachedFilesPath}');
-
-        print(
-          'saf_accessiblePath ${permissions.map((p) => p.uri).toList()} - ${documents.map((d) => d.uri).toList()}',
-        );
-
-        if (permissions.isNotEmpty) {
-          final actualUri = permissions.first.uri;
-
-          DocumentFile? directory = await DocumentFile.fromUri(actualUri);
-
-          print(
-            'saf_accessiblePath_directory ${directory?.uri} ${await directory?.exists ?? false}',
-          );
-
-          if (directory != null && await directory.exists) {
-            List<DocumentFile> items = await directory.listDocuments();
-            print(
-              '------ saf_items -> ${items.map((item) => item.name).toList()}',
-            );
-          }
-        }
-      } else {
-        print("Please select the Android/media folder specifically");
-        print("Selected: ${androidMediaDir.uri}");
       }
-    } else {
-      print("No directory selected or Android/media folder doesn't exist");
     }
+    if (selected == null) return; // Cancellation is not an error.
+    if (!_coversStatuses(selected.uri, false) &&
+        !_coversStatuses(selected.uri, true)) {
+      final folders = await _discover(selected.uri, business: isBusinessMode);
+      if (folders.isEmpty)
+        throw PlatformException(
+          code: 'wrong_status_folder',
+          message: 'Wrong folder. Choose Android → media and try again.',
+        );
+    }
+    if (!selected.canRead || !await selected.exists) {
+      throw PlatformException(
+        code: 'unreadable_status_folder',
+        message: 'Access not allowed. Try again and tap Allow.',
+      );
+    }
+    // The picker persists the grant. Loading and copying belong to StatusBloc,
+    // so permission success returns immediately.
   }
 }

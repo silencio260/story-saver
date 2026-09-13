@@ -1,15 +1,13 @@
 class PermissionStrings {
   const PermissionStrings._();
-
-  static const String screenTitle = 'Storage Permission Request';
-  static const String explanation =
-      'Allow permission Status Saver for Whatsapp Download to Access your photos and media from the .Statuses Folder.';
-  static const String steps = 'Steps';
-  static const String regularStepOne = '1. Click on Allow Storage permission.';
-  static const String businessStepOne =
-      '1. Click on Allow Storage permission. -';
-  static const String stepTwo = '2. Use .Statuses Folder.';
-  static const String stepThree = '3. Allow To Folder Permission.';
-  static const String allowPermission = 'Allow Permission';
-  static const String denied = 'Permission denied ❌. Please try again.';
+  static const screenTitle = 'Connect WhatsApp';
+  static const explanation =
+      'Choose the WhatsApp folder so we can show statuses you have viewed.';
+  static const allowPermission = 'Connect WhatsApp';
+  static const denied = 'No folder selected. Try again.';
+  static const steps = 'Two quick taps in Android';
+  static const regularStepOne = 'Tap Use this folder.';
+  static const businessStepOne = 'Tap Use this folder.';
+  static const stepTwo = 'Then tap Allow.';
+  static const stepThree = 'Your statuses will appear here.';
 }

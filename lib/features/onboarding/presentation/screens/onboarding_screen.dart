@@ -118,24 +118,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   /// Records completion through the bloc, which also reports it. The listener
   /// in [build] goes home once it succeeds; a failure keeps the user here.
-  static final OnboardingAction _completeOnboarding = OnboardingAction(
-    (context) async {
-      final bloc = context.read<OnboardingBloc>();
-      final outcome = bloc.stream.firstWhere(
-        (state) =>
-            state.status == OnboardingViewStatus.completed ||
-            state.status == OnboardingViewStatus.failure,
+  static final OnboardingAction _completeOnboarding = OnboardingAction((
+    context,
+  ) async {
+    final bloc = context.read<OnboardingBloc>();
+    final outcome = bloc.stream.firstWhere(
+      (state) =>
+          state.status == OnboardingViewStatus.completed ||
+          state.status == OnboardingViewStatus.failure,
+    );
+    bloc.add(const OnboardingCompleted());
+    final state = await outcome;
+    if (state.status == OnboardingViewStatus.failure) {
+      throw OnboardingActionException(
+        state.message ?? 'Onboarding could not be saved.',
       );
-      bloc.add(const OnboardingCompleted());
-      final state = await outcome;
-      if (state.status == OnboardingViewStatus.failure) {
-        throw OnboardingActionException(
-          state.message ?? 'Onboarding could not be saved.',
-        );
-      }
-    },
-    name: 'complete_onboarding',
-  );
+    }
+  }, name: 'complete_onboarding');
 
   final SubscriptionManager _access = SubscriptionManager();
   bool _startupComplete = false;
@@ -144,12 +143,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     _access.addListener(_accessChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _access.setOnboardingActive(true);
+    });
     unawaited(_awaitStartup());
   }
 
   @override
   void dispose() {
     _access.removeListener(_accessChanged);
+    _access.setOnboardingActive(false);
     super.dispose();
   }
 
@@ -165,107 +168,103 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      BlocListener<OnboardingBloc, OnboardingState>(
-        listener: (context, state) {
-          if (state.status == OnboardingViewStatus.completed) {
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              Routes.home,
-              (_) => false,
-            );
-          } else if (state.status == OnboardingViewStatus.failure &&
-              state.message != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message!)));
-          }
-        },
-        child: BlocBuilder<IapBloc, IapState>(
-          buildWhen:
-              (previous, current) =>
-                  previous.isPremium != current.isPremium ||
-                  previous.status != current.status,
-          builder:
-              (context, iap) => BlocBuilder<AdsBloc, AdsState>(
-                buildWhen:
-                    (previous, current) => previous.status != current.status,
-                builder: (context, adsState) {
-                  final ads = sl<AdProvider>();
-                  // The remote switch, premium, and whether native ads render
-                  // on this platform at all pick the presentation. An ad
-                  // screen keeps its ad's space, so it is only chosen where an
-                  // ad can fill it.
-                  final withAds =
-                      sl<RemoteConfigCoordinator>().current.read(
-                        OnboardingPolicyKeys.adsEnabled,
-                      ) &&
-                      !iap.isPremium &&
-                      AppodealNativeAds.instance.isSupported;
-                  // Every reason this app has for not showing an ad right
-                  // now, the same ones the banner uses. The kit view adds the
-                  // provider's own: initialization, consent and test mode.
-                  final adAllowed =
-                      _startupComplete &&
-                      _access.adsAllowed &&
-                      !iap.isPremium &&
-                      iap.status == IapViewStatus.ready &&
-                      adsState.status != AdsViewStatus.disabled;
-                  return Scaffold(
-                    backgroundColor: Colors.white,
-                    body: OnboardingFlow(
-                      pages: _pagesFor(withAds: withAds),
-                      controlsLayout:
-                          withAds
-                              ? OnboardingControlsLayout.stacked
-                              : OnboardingControlsLayout.row,
-                      skipBehavior:
-                          withAds
-                              ? OnboardingSkipBehavior.hidden
-                              : OnboardingSkipBehavior.jumpToLastPage,
-                      adSlot:
-                          withAds && ads is AppodealAdProvider
-                              ? OnboardingAdSlot(
-                                // The ad's space is part of every ad screen
-                                // from its first frame, so nothing moves when
-                                // the ad loads.
-                                reservedHeight: _adStyle.resolvedHeight,
-                                builder:
-                                    (context, _) => AppodealNativeAdView(
-                                      provider: ads,
-                                      placement: AppPlacements.onboardingNative,
-                                      enabled: adAllowed,
-                                      style: _adStyle,
-                                      placeholder:
-                                          const AppodealNativeAdPlaceholder(
-                                            style: _adStyle,
-                                          ),
-                                      // The full-screen page between the two
-                                      // ad screens is when the next ad loads.
-                                      preloadNext: true,
-                                    ),
-                              )
-                              : null,
-                      labels: const OnboardingLabels(
-                        next: OnboardingStrings.next,
-                        skip: OnboardingStrings.skip,
-                        finish: OnboardingStrings.start,
+  Widget build(
+    BuildContext context,
+  ) => BlocListener<OnboardingBloc, OnboardingState>(
+    listener: (context, state) {
+      if (state.status == OnboardingViewStatus.completed) {
+        Navigator.pushNamedAndRemoveUntil(context, Routes.home, (_) => false);
+      } else if (state.status == OnboardingViewStatus.failure &&
+          state.message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.message!)));
+      }
+    },
+    child: BlocBuilder<IapBloc, IapState>(
+      buildWhen:
+          (previous, current) =>
+              previous.isPremium != current.isPremium ||
+              previous.status != current.status,
+      builder:
+          (context, iap) => BlocBuilder<AdsBloc, AdsState>(
+            buildWhen: (previous, current) => previous.status != current.status,
+            builder: (context, adsState) {
+              final ads = sl<AdProvider>();
+              // The remote switch, premium, and whether native ads render
+              // on this platform at all pick the presentation. An ad
+              // screen keeps its ad's space, so it is only chosen where an
+              // ad can fill it.
+              final withAds =
+                  sl<RemoteConfigCoordinator>().current.read(
+                    OnboardingPolicyKeys.adsEnabled,
+                  ) &&
+                  !iap.isPremium &&
+                  AppodealNativeAds.instance.isSupported;
+              // Every reason this app has for not showing an ad right
+              // now, the same ones the banner uses. The kit view adds the
+              // provider's own: initialization, consent and test mode.
+              final adAllowed =
+                  _startupComplete &&
+                  _access.adsAllowed &&
+                  !iap.isPremium &&
+                  iap.status == IapViewStatus.ready &&
+                  adsState.status != AdsViewStatus.disabled;
+              return Scaffold(
+                backgroundColor: Colors.white,
+                body: OnboardingFlow(
+                  pages: _pagesFor(withAds: withAds),
+                  controlsLayout:
+                      withAds
+                          ? OnboardingControlsLayout.stacked
+                          : OnboardingControlsLayout.row,
+                  skipBehavior:
+                      withAds
+                          ? OnboardingSkipBehavior.hidden
+                          : OnboardingSkipBehavior.jumpToLastPage,
+                  adSlot:
+                      withAds && ads is AppodealAdProvider
+                          ? OnboardingAdSlot(
+                            // The ad's space is part of every ad screen
+                            // from its first frame, so nothing moves when
+                            // the ad loads.
+                            reservedHeight: _adStyle.resolvedHeight,
+                            builder:
+                                (context, _) => AppodealNativeAdView(
+                                  provider: ads,
+                                  placement: AppPlacements.onboardingNative,
+                                  enabled: adAllowed,
+                                  style: _adStyle,
+                                  placeholder:
+                                      const AppodealNativeAdPlaceholder(
+                                        style: _adStyle,
+                                      ),
+                                  // The full-screen page between the two
+                                  // ad screens is when the next ad loads.
+                                  preloadNext: true,
+                                ),
+                          )
+                          : null,
+                  labels: const OnboardingLabels(
+                    next: OnboardingStrings.next,
+                    skip: OnboardingStrings.skip,
+                    finish: OnboardingStrings.start,
+                  ),
+                  style: _style(withAds: withAds),
+                  onPageChanged:
+                      (index) => context.read<OnboardingBloc>().add(
+                        OnboardingPageChanged(index),
                       ),
-                      style: _style(withAds: withAds),
-                      onPageChanged:
-                          (index) => context.read<OnboardingBloc>().add(
-                            OnboardingPageChanged(index),
-                          ),
-                      finishActions: <OnboardingAction>[
-                        _openPaywall,
-                        _completeOnboarding,
-                      ],
-                    ),
-                  );
-                },
-              ),
-        ),
-      );
+                  finishActions: <OnboardingAction>[
+                    _openPaywall,
+                    _completeOnboarding,
+                  ],
+                ),
+              );
+            },
+          ),
+    ),
+  );
 
   static OnboardingFlowStyle _style({required bool withAds}) =>
       OnboardingFlowStyle(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:genrevibes_notifications/genrevibes_notifications.dart';
+import '../../../permissions/data/datasources/app_storage_permission.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_app_links/genrevibes_app_links.dart';
@@ -415,6 +417,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     if (!mounted) return;
+    if (enabled) {
+      // Ask only when the user enables the feature that saves to the gallery
+      // and reports background completions. Notification denial is optional.
+      if (!await AppStoragePermission().getStoragePermission()) {
+        if (mounted)
+          _showMessage(
+            'Photo and video access is needed to auto-save statuses.',
+          );
+        return;
+      }
+      await sl<PushNotificationProvider>().requestPermission();
+      if (!mounted) return;
+    }
     context.read<SettingsBloc>().add(AutoSaveChanged(enabled));
     _showMessage(
       enabled

@@ -13,9 +13,42 @@ class SubscriptionManager extends ChangeNotifier {
   bool _isPremium = false;
   bool _isInitialized = false;
   bool _preferencesLoaded = false;
+  bool _hasReachedFirstStatus = false;
+  bool _hasStatusFolderAccess = false;
+  bool _onboardingActive = false;
+  bool get hasStatusFolderAccess => _hasStatusFolderAccess;
+
+  void setOnboardingActive(bool active) {
+    if (_onboardingActive == active) return;
+    _onboardingActive = active;
+    notifyListeners();
+  }
+
+  Future<void> markStatusFolderGranted() async {
+    if (_hasStatusFolderAccess) return;
+    _hasStatusFolderAccess = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('status_folder_granted_once', true);
+  }
+
+  bool get hasReachedFirstStatus => _hasReachedFirstStatus;
+
+  /// Analytics milestone, independent of ad eligibility.
+  Future<void> markFirstStatusReached() async {
+    if (_hasReachedFirstStatus) return;
+    _hasReachedFirstStatus = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('status_connection_first_display', true);
+  }
 
   /// Unknown subscription/override state must never request inventory.
-  bool get adsAllowed => _preferencesLoaded && _isInitialized && !isPremium;
+  bool get adsAllowed =>
+      _preferencesLoaded &&
+      _isInitialized &&
+      !isPremium &&
+      (_hasStatusFolderAccess || _onboardingActive);
 
   void updatePremiumAccess(bool premium) {
     _isPremium = premium;
@@ -52,19 +85,29 @@ class SubscriptionManager extends ChangeNotifier {
 
   static const String _debugPremiumKey = "debug_premium_override";
 
-  /// Initialize and check subscription status
-  Future<void> initialize() async {
+  Future<void> loadPreferences() async {
     // Load once so a concurrent initialize cannot overwrite a just-toggled
     // in-memory premium override with an older preference value.
     if (!_preferencesLoaded) {
       final prefs = await SharedPreferences.getInstance();
       if (!_preferencesLoaded) {
         debugOverridePremium = prefs.getBool(_debugPremiumKey) ?? false;
+        _hasReachedFirstStatus =
+            _hasReachedFirstStatus ||
+            (prefs.getBool('status_connection_first_display') ?? false);
+        _hasStatusFolderAccess =
+            _hasStatusFolderAccess ||
+            _hasReachedFirstStatus ||
+            (prefs.getBool('status_folder_granted_once') ?? false);
         _preferencesLoaded = true;
         notifyListeners();
       }
     }
+  }
 
+  /// Initialize and check subscription status.
+  Future<void> initialize() async {
+    await loadPreferences();
     if (_isInitialized && _lastChecked != null) {
       // If checked within last 5 minutes, use cached value
       final difference = DateTime.now().difference(_lastChecked!);

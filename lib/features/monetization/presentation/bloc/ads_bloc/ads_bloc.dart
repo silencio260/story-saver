@@ -28,12 +28,24 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
     on<AdsDisabled>(_onDisabled);
     on<AdsSuppressionChanged>(_onSuppressionChanged);
     _adSuppressionManager.addListener(_onLegacySuppressionChanged);
+    _lastAdsAllowed = SubscriptionManager().adsAllowed;
+    SubscriptionManager().addListener(_onAccessChanged);
   }
 
   final LoadInterstitialAdUseCase _loadInterstitial;
   final ShowInterstitialAdUseCase _showInterstitial;
   final DisposeAdsUseCase _disposeAds;
   final AdSuppressionManager _adSuppressionManager;
+  bool _lastAdsAllowed = false;
+
+  void _onAccessChanged() {
+    final allowed = SubscriptionManager().adsAllowed;
+    if (isClosed || allowed == _lastAdsAllowed) return;
+    _lastAdsAllowed = allowed;
+    add(
+      AdsSuppressionChanged(!allowed || _adSuppressionManager.areAdsSuppressed),
+    );
+  }
 
   Future<void> _onStarted(AdsStarted event, Emitter<AdsState> emit) async {
     if (!SubscriptionManager().adsAllowed ||
@@ -41,8 +53,19 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
       emit(const AdsState(status: AdsViewStatus.disabled));
       return;
     }
+    if (!SubscriptionManager().hasStatusFolderAccess) {
+      // Onboarding may show native ads; regular interstitial loading waits
+      // until a status-folder grant has succeeded.
+      emit(const AdsState(status: AdsViewStatus.ready));
+      return;
+    }
     AnalyticsService.track('interstitial_load_requested');
     final result = await _loadInterstitial(NoParams.instance);
+    if (!SubscriptionManager().adsAllowed ||
+        _adSuppressionManager.areAdsSuppressed) {
+      emit(const AdsState(status: AdsViewStatus.disabled));
+      return;
+    }
     if (result.isLeft()) AnalyticsService.track('interstitial_load_failed');
     result.fold(
       (failure) => emit(
@@ -56,7 +79,9 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
     InterstitialAdRequested event,
     Emitter<AdsState> emit,
   ) async {
-    if (!SubscriptionManager().adsAllowed) return;
+    if (!SubscriptionManager().adsAllowed ||
+        !SubscriptionManager().hasStatusFolderAccess)
+      return;
     AnalyticsService.track('interstitial_show_requested');
     if (_adSuppressionManager.areAdsSuppressed) {
       AnalyticsService.track('interstitial_show_skipped', {
@@ -104,6 +129,7 @@ class AdsBloc extends Bloc<AdsEvent, AdsState> {
   @override
   Future<void> close() {
     _adSuppressionManager.removeListener(_onLegacySuppressionChanged);
+    SubscriptionManager().removeListener(_onAccessChanged);
     return super.close();
   }
 }

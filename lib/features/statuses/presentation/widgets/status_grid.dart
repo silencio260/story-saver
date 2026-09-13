@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 import '../../../../config/routes_manager.dart';
+import '../../../permissions/data/services/status_connection_journey.dart';
+import '../../../navigation/presentation/bloc/navigation_bloc/navigation_bloc.dart';
 import '../../../monetization/presentation/bloc/ads_bloc/ads_bloc.dart';
 import '../../../monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
 import '../../../monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
@@ -28,8 +30,42 @@ class StatusGrid extends StatefulWidget {
 }
 
 class _StatusGridState extends State<StatusGrid>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final RefreshController _refreshController = RefreshController();
+
+  bool _openingWhatsApp = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _openingWhatsApp && mounted) {
+      _openingWhatsApp = false;
+      context.read<StatusBloc>().add(const StatusLoadRequested());
+    }
+  }
+
+  Future<void> _openWhatsApp(bool business) async {
+    _openingWhatsApp = true;
+    final opened = await StatusConnectionJourney.openWhatsApp(
+      business: business,
+    );
+    if (!opened) {
+      _openingWhatsApp = false;
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not open WhatsApp. Open it from your home screen.',
+            ),
+          ),
+        );
+    }
+  }
 
   bool get _isVideo => widget.type == StatusMediaType.video;
 
@@ -38,6 +74,7 @@ class _StatusGridState extends State<StatusGrid>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshController.dispose();
     super.dispose();
   }
@@ -70,15 +107,6 @@ class _StatusGridState extends State<StatusGrid>
           (context, permissions) => BlocBuilder<StatusBloc, StatusState>(
             builder: (context, statusState) {
               final isBusinessMode = statusState.isBusinessMode;
-              if (!permissions.hasStoragePermission) {
-                return _PermissionPrompt(
-                  message: StatusStrings.noStoragePermission,
-                  onPressed:
-                      () => context.read<PermissionsBloc>().add(
-                        const StoragePermissionRequested(),
-                      ),
-                );
-              }
               if (!permissions.hasStatusFolderPermission(
                 isBusinessMode: isBusinessMode,
               )) {
@@ -99,9 +127,8 @@ class _StatusGridState extends State<StatusGrid>
                   !statusState.isLoading) {
                 return _RefreshMessage(
                   message:
-                      isBusinessMode
-                          ? StatusStrings.businessWhatsAppUnavailable
-                          : StatusStrings.whatsAppUnavailable,
+                      'View a status in ${isBusinessMode ? 'WhatsApp Business' : 'WhatsApp'}, then come back.',
+                  onOpen: () => _openWhatsApp(isBusinessMode),
                 );
               }
               final items = _isVideo ? statusState.videos : statusState.images;
@@ -114,6 +141,7 @@ class _StatusGridState extends State<StatusGrid>
                       _isVideo
                           ? StatusStrings.noVideosFound
                           : StatusStrings.noImagesFound,
+                  onOpen: () => _openWhatsApp(isBusinessMode),
                 );
               }
               final paths = items.map((item) => item.path).toList();
@@ -187,29 +215,34 @@ class _PermissionPrompt extends StatelessWidget {
 }
 
 class _RefreshMessage extends StatelessWidget {
-  const _RefreshMessage({required this.message});
-
+  const _RefreshMessage({required this.message, required this.onOpen});
   final String message;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) => Center(
-    child: RichText(
-      text: TextSpan(
-        style: const TextStyle(color: Colors.black, fontSize: 16),
-        children: <InlineSpan>[
-          TextSpan(text: '$message. '),
-          TextSpan(
-            text: StatusStrings.clickToRefresh,
-            style: const TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.visibility_outlined, size: 48),
+          const SizedBox(height: 16),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: onOpen,
+            child: Text(
+              context.read<StatusBloc>().state.isBusinessMode
+                  ? 'Open WhatsApp Business'
+                  : 'Open WhatsApp',
             ),
-            recognizer:
-                TapGestureRecognizer()
-                  ..onTap =
-                      () => context.read<StatusBloc>().add(
-                        const StatusLoadRequested(),
-                      ),
+          ),
+          TextButton(
+            onPressed:
+                () =>
+                    context.read<StatusBloc>().add(const StatusLoadRequested()),
+            child: const Text('Refresh statuses'),
           ),
         ],
       ),
@@ -385,13 +418,35 @@ class _StatusThumbnail extends StatelessWidget {
 
   final StatusMedia item;
 
+  void _recordDisplayed(BuildContext context) {
+    final business = context.read<StatusBloc>().state.isBusinessMode;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted &&
+          ModalRoute.of(context)?.isCurrent == true &&
+          context.read<NavigationBloc>().state.currentIndex ==
+              (item.isVideo ? 1 : 0) &&
+          TickerMode.of(context)) {
+        unawaited(
+          StatusConnectionJourney.instance.displayed(business: business),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // A previously decoded off-screen tab must get another visibility check
+    // when selected; cached thumbnail frames may not otherwise rebuild.
+    context.select<NavigationBloc, int>((bloc) => bloc.state.currentIndex);
     if (!item.isVideo) {
       return Image.file(
         File(item.path),
         fit: BoxFit.cover,
         cacheWidth: 600,
+        frameBuilder: (context, child, frame, synchronous) {
+          if (frame != null || synchronous) _recordDisplayed(context);
+          return child;
+        },
         errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
       );
     }
@@ -408,6 +463,10 @@ class _StatusThumbnail extends StatelessWidget {
             File(thumbnail),
             fit: BoxFit.cover,
             cacheWidth: 600,
+            frameBuilder: (context, child, frame, synchronous) {
+              if (frame != null || synchronous) _recordDisplayed(context);
+              return child;
+            },
           );
         }
         if (state.thumbnailFailures.contains(item.path)) {
