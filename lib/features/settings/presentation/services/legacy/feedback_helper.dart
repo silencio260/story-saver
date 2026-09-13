@@ -1,77 +1,64 @@
-import 'package:fancy_rating_bar/fancy_rating_bar.dart';
-import 'dart:io';
+import 'dart:async';
 
+import 'package:fancy_rating_bar/fancy_rating_bar.dart';
+import 'package:flutter/material.dart';
 import 'package:genrevibes_feedback/genrevibes_feedback.dart';
+import 'package:genrevibes_feedback_ui/genrevibes_feedback_ui.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../../container_injector.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_feedback_dialog/flutter_feedback_dialog.dart';
-import 'package:flutter_feedback_dialog/models/communication_type.dart';
+import '../../widgets/settings_page_style.dart';
 
 class FeedBackHelper {
   /// FeedbackNest is initialized by the kit's feedback provider, from the
   /// bootstrap. This was fire-and-forget, so it raced `runApp`.
   static void init() {}
 
-  void showFeedBackDialog(BuildContext context) {
-    FlutterFeedbackDialog.show(
-      context,
-      type: CommunicationViewType.feedback,
-      theme: CommunicationTheme.light,
-      onSubmit: (response) async {
-        sl<FeedbackProvider>().submit(
-          FeedbackSubmission(
-            message: response.message,
-            kind: FeedbackKind.feedback,
-            email: response.email,
-            attachments: await _attachmentsFrom(response.screenshots),
-          ),
-        );
-      },
-    );
-  }
+  /// Product feedback, on the kit's feedback page.
+  void showFeedBackDialog(BuildContext context) =>
+      unawaited(_show(context, FeedbackKind.feedback));
 
-  void showContactUsDialog(BuildContext context) {
-    FlutterFeedbackDialog.show(
-      context,
-      type: CommunicationViewType.contact,
-      theme: CommunicationTheme.light,
-      onSubmit: (response) async {
-        sl<FeedbackProvider>().submit(
-          FeedbackSubmission(
-            message: response.message,
-            kind: FeedbackKind.contact,
-            email: response.email,
-            attachments: await _attachmentsFrom(response.screenshots),
-          ),
-        );
-      },
-    );
-  }
+  /// A support request. The page asks for an email to reply to.
+  void showContactUsDialog(BuildContext context) =>
+      unawaited(_show(context, FeedbackKind.contact));
 
-  /// Reads screenshot files into the neutral attachment type.
-  ///
-  /// The dialog hands back files; the contract takes bytes, so a provider that
-  /// is not FeedbackNest does not have to know about the filesystem.
-  static Future<List<FeedbackAttachment>> _attachmentsFrom(
-    List<dynamic>? screenshots,
-  ) async {
-    if (screenshots == null || screenshots.isEmpty) {
-      return const <FeedbackAttachment>[];
-    }
-    final attachments = <FeedbackAttachment>[];
-    for (final screenshot in screenshots) {
-      final file = screenshot is File ? screenshot : File('$screenshot');
-      if (!file.existsSync()) continue;
-      attachments.add(
-        FeedbackAttachment(
-          filename: file.uri.pathSegments.last,
-          bytes: await file.readAsBytes(),
-          mimeType: 'image/png',
-        ),
+  /// The kit's page replaces `flutter_feedback_dialog`, whose dialog applied
+  /// the keyboard's height twice and could not scroll, so its fields spilled
+  /// out of the card with the keyboard open. It opens like the other Settings
+  /// pages, in their colors.
+  Future<void> _show(BuildContext context, FeedbackKind kind) =>
+      openFeedbackPage(
+        context,
+        provider: sl<FeedbackProvider>(),
+        kind: kind,
+        theme: SettingsPageStyle.feedback,
+        pickScreenshot: _pickScreenshot,
       );
-    }
-    return attachments;
+
+  /// One image from the gallery, through Android's photo picker, which needs
+  /// no storage permission.
+  static Future<FeedbackAttachment?> _pickScreenshot() async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (image == null) return null;
+    return FeedbackAttachment(
+      filename: image.name,
+      bytes: await image.readAsBytes(),
+      mimeType: _mimeType(image),
+    );
+  }
+
+  static String _mimeType(XFile image) {
+    final reported = image.mimeType;
+    if (reported != null && reported.isNotEmpty) return reported;
+    final name = image.name.toLowerCase();
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.webp')) return 'image/webp';
+    if (name.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
   }
 
   void showFancyRatings(BuildContext context) {

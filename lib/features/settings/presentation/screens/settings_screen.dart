@@ -28,6 +28,7 @@ import '../l10n/settings_strings.dart';
 import '../services/legacy/developer_options_service.dart';
 import '../services/legacy/feedback_helper.dart';
 import '../widgets/legacy/help_modal.dart';
+import '../widgets/settings_page_style.dart';
 import 'module_health_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -72,11 +73,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        // Seven quick taps open the developer passcode prompt. Nothing
-        // happens, and nothing hints that anything could, once access is
-        // granted or entry is locked out.
+        // Seven quick taps open the developer passcode page, in this screen's
+        // colors. Nothing happens, and nothing hints that anything could, once
+        // access is granted or entry is locked out.
         title: DeveloperUnlockGesture(
           controller: sl<DeveloperAccessController>(),
+          theme: SettingsPageStyle.passcode,
           child: const Text(
             SettingsStrings.title,
             style: TextStyle(
@@ -142,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               icon: Icons.feedback_outlined,
                               label: SettingsStrings.feedback,
                               onTap:
-                                  () => FeedBackHelper().showContactUsDialog(
+                                  () => FeedBackHelper().showFeedBackDialog(
                                     context,
                                   ),
                             ),

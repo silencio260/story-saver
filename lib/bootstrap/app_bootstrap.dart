@@ -282,7 +282,7 @@ Future<AppRuntime> bootstrapApp(
       dependencies.ads ??
       AppodealAdProvider(
         configuration: env.appodeal,
-        testMode: developerAccess.current.servesTestAds,
+        testMode: developerAccess.current.servesTestAds || env.keepsTestAds,
         canRequestAds:
             () =>
                 subscriptionAccess.adsAllowed &&
@@ -663,7 +663,9 @@ Future<AppRuntime> bootstrapApp(
     // An optional capability on a different interface, so bind it by pattern:
     // `is` cannot narrow an AdProvider to an unrelated type.
     if (ads case final AdTestModeProvider testable) {
-      unawaited(testable.setTestMode(access.servesTestAds));
+      unawaited(
+        testable.setTestMode(access.servesTestAds || env.keepsTestAds),
+      );
     }
     navigationBar.setDeveloperMode(access.isGranted);
     unawaited(

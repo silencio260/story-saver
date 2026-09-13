@@ -111,6 +111,8 @@ dependencies:
     path: packages/genrevibes_starter_kit/modules/splash/genrevibes_splash
   genrevibes_exit_prompt:
     path: packages/genrevibes_starter_kit/modules/exit_prompt/genrevibes_exit_prompt
+  genrevibes_feedback_ui:
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedback_ui
 
 
   # Clean Architecture foundations
@@ -169,7 +171,6 @@ dependencies:
   purchases_flutter: ^9.6.0
   purchases_ui_flutter: ^9.6.0
   in_app_review: ^2.0.11
-  flutter_feedback_dialog: ^0.0.8
   feedbacknest_core: ^0.0.8
   fancy_rating_bar: ^0.0.9
   logger: ^2.6.2
@@ -184,7 +185,8 @@ dependencies:
   workmanager: ^0.9.0+3
   flutter_local_notifications: ^19.5.0
 #  video_compress_v2: ^1.0.0+1
-  # image_picker: ^1.1.2
+  # Screenshots for the feedback sheet, through Android's photo picker.
+  image_picker: ^1.2.3
   # file_selector: ^1.0.3
 
   # video_thumbnail: ^0.5.3
@@ -281,6 +283,8 @@ dependency_overrides:
     path: packages/genrevibes_starter_kit/modules/splash/genrevibes_splash
   genrevibes_exit_prompt:
     path: packages/genrevibes_starter_kit/modules/exit_prompt/genrevibes_exit_prompt
+  genrevibes_feedback_ui:
+    path: packages/genrevibes_starter_kit/modules/feedback/genrevibes_feedback_ui
   device_info_plus: ^11.3.0
 #  image_gallery_saver:
 #    git:

@@ -134,6 +134,7 @@ final class AppEnv {
     this.termsUrl = '',
     this.developerPasscode = '',
     this.developerDeviceHashes = '',
+    this.developerAccessAsStoreBuild = false,
   });
 
   /// Reads the environment from compile-time defines.
@@ -161,6 +162,9 @@ final class AppEnv {
       termsUrl: String.fromEnvironment('terms_url'),
       developerPasscode: String.fromEnvironment('developer_passcode'),
       developerDeviceHashes: String.fromEnvironment('developer_device_hashes'),
+      developerAccessAsStoreBuild: bool.fromEnvironment(
+        'developer_access_store_build',
+      ),
     );
   }
 
@@ -243,6 +247,24 @@ final class AppEnv {
   /// [AppDeveloperDevices].
   final String developerDeviceHashes;
 
+  /// Makes developer access behave as in a store build, in a development
+  /// build, to test the Settings unlock gesture and passcode without a
+  /// release build.
+  ///
+  /// Pass `--dart-define=developer_access_store_build=true`. Only developer
+  /// access changes: the phone starts without access, the title taps open the
+  /// passcode page, and wrong attempts count towards the lockout (run once
+  /// without the define to clear it). Everything else stays a development
+  /// build, and ads stay on test inventory — see [keepsTestAds]. A release
+  /// build ignores it.
+  final bool developerAccessAsStoreBuild;
+
+  /// Whether ads stay on test inventory whatever developer access decides.
+  ///
+  /// True while [developerAccessAsStoreBuild] simulates a store build, so a
+  /// debug run on a phone without access never requests live ads.
+  bool get keepsTestAds => isDevelopment && developerAccessAsStoreBuild;
+
   /// Crash collection is off in development so local runs do not pollute
   /// production crash-free rates.
   CrashReportingConfig get crash =>
@@ -280,7 +302,7 @@ final class AppEnv {
   /// The remote list is not here; it is bound at runtime by
   /// `DeveloperAccessRemotePolicyBinder`.
   DeveloperAccessConfig get developerAccess => DeveloperAccessConfig(
-    isDevelopmentBuild: isDevelopment,
+    isDevelopmentBuild: isDevelopment && !developerAccessAsStoreBuild,
     hardcodedDeviceHashes: AppDeveloperDevices.hashes,
     environmentDeviceHashes: developerDeviceHashes,
     passcode: developerPasscode,
