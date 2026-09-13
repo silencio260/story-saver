@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
+import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
@@ -61,7 +62,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  StreamSubscription<LocalNotificationInteraction>? _notificationTaps;
   late final TabController _tabController;
 
   static const List<Widget> _pages = <Widget>[
@@ -73,6 +75,11 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final notifications = sl<LocalNotificationScheduler>();
+    _notificationTaps = notifications.interactions.listen(
+      (_) => _openNotification(),
+    );
     _tabController = TabController(
       length: _pages.length,
       initialIndex: context.read<NavigationBloc>().state.currentIndex,
@@ -91,10 +98,40 @@ class _HomeScreenState extends State<HomeScreen>
     unawaited(_preloadExitAd());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openNotification();
       if (mounted && SubscriptionManager().hasReachedFirstStatus) {
         RatingPrompt.showIfEligible(context);
       }
     });
+  }
+
+  void _openNotification() {
+    if (!mounted) return;
+    final notifications = sl<LocalNotificationScheduler>();
+    if (notifications is! LocalNotificationPendingInteractions) return;
+    final tap =
+        (notifications as LocalNotificationPendingInteractions)
+            .takePendingInteraction();
+    if (tap == null ||
+        (tap.notificationId != 0 && tap.payload != 'saved_media')) {
+      return;
+    }
+    Navigator.of(
+      context,
+    ).popUntil((route) => route.settings.name == Routes.home || route.isFirst);
+    context.read<NavigationBloc>().add(const NavigationTabSelected(2));
+    context.read<SavedMediaBloc>().add(const SavedMediaLoadRequested());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<PermissionsBloc>().add(
+        PermissionsCheckRequested(
+          isBusinessMode: context.read<StatusBloc>().state.isBusinessMode,
+        ),
+      );
+    }
   }
 
   void _onTabChanged() {
@@ -123,8 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
         ) ??
         ExitPromptStyle.featuresSheet;
     // Only ad_sheet and ad_dialog carry an ad here; see HomeExitPrompt.
-    if (!style.needsAd ||
-        !sl<DeveloperAdSwitches>().allows(AdFormat.native)) {
+    if (!style.needsAd || !sl<DeveloperAdSwitches>().allows(AdFormat.native)) {
       return;
     }
     await sl<GenRevibesStarterKit>().deferredStartupComplete;
@@ -136,6 +172,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_notificationTaps?.cancel());
     _tabController
       ..removeListener(_onTabChanged)
       ..dispose();

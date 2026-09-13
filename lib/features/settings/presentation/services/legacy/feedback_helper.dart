@@ -1,3 +1,4 @@
+import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
 import 'dart:async';
 
 import 'package:fancy_rating_bar/fancy_rating_bar.dart';
@@ -30,6 +31,7 @@ class FeedBackHelper {
       openFeedbackPage(
         context,
         provider: sl<FeedbackProvider>(),
+        protectContent: (child) => PostHogMaskWidget(child: child),
         kind: kind,
         theme: SettingsPageStyle.feedback,
         pickScreenshot: _pickScreenshot,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_crash/genrevibes_crash.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_crash_crashlytics/genrevibes_crash_crashlytics.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:workmanager/workmanager.dart';
@@ -12,6 +13,9 @@ import 'package:workmanager/workmanager.dart';
 import 'bloc_observer.dart';
 import 'bootstrap/app_bootstrap.dart';
 import 'bootstrap/app_env.dart';
+import 'bootstrap/app_runtime.dart';
+import 'config/theme_manager.dart';
+import 'features/monetization/data/services/subscription_service.dart';
 import 'bootstrap/runtime_registrar.dart';
 import 'container_injector.dart';
 import 'features/analytics/data/services/analytics_service.dart';
@@ -34,70 +38,207 @@ void callbackDispatcher() {
   });
 }
 
-void main() {
-  final env = AppEnv.fromDefines();
-  // Built here rather than inside bootstrapApp because the guarded zone needs
-  // it before any app code runs. It is registered as a kit module all the same.
-  final crash = CrashCoordinator(
-    reporter: CrashlyticsReporter(),
-    config: env.crash,
-  );
+CrashCoordinator? _activeCrash;
 
-  // Not awaited: runZonedGuarded returns once the zone is established, and the
-  // body keeps running inside it.
-  CrashHooks.runGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    Bloc.observer = AppBlocObserver(crash);
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+void main() {
+  runZonedGuarded(
+    () {
+      WidgetsFlutterBinding.ensureInitialized();
+      runApp(_StartupApp(env: AppEnv.fromDefines()));
+    },
+    (error, stack) {
+      debugPrint('Uncaught application error: ${error.runtimeType}');
+      unawaited(
+        _activeCrash?.report(
+          CrashReport(
+            error: error,
+            stackTrace: stack,
+            fatal: true,
+            source: CrashSource.zone,
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// The first frame always renders, even when Firebase or a plugin is offline.
+class _StartupApp extends StatefulWidget {
+  const _StartupApp({required this.env});
+  final AppEnv env;
+  @override
+  State<_StartupApp> createState() => _StartupAppState();
+}
+
+class _StartupAppState extends State<_StartupApp> {
+  AppRuntime? _runtime;
+  KitResourceScope? _resources;
+  bool _starting = false;
+  String? _failure;
+  int _attempt = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+  }
+
+  Future<void> _start() async {
+    if (_starting || !mounted) return;
+    setState(() {
+      _starting = true;
+      _failure = null;
+    });
+    final attempt = ++_attempt;
+    final resources = KitResourceScope();
+    _resources = resources;
+    final crash = CrashCoordinator(
+      reporter: CrashlyticsReporter(),
+      config: widget.env.crash,
+    );
+    _activeCrash = crash;
+    resources.addModule(crash);
+    try {
+      final runtime = await _prepare(
+        resources,
+        crash,
+      ).timeout(const Duration(seconds: 60));
+      resources.ensureActive();
+      if (!mounted || attempt != _attempt) {
+        await resources.dispose();
+        return;
+      }
+      if (runtime.initialization.isFailure) {
+        throw StateError('A service needed to start the app is unavailable.');
+      }
+      registerRuntime(runtime);
+      SubscriptionManager().refreshAccessPolicy();
+      initAppDependencies();
+      AutoSaveService.bindNotifications(runtime.localNotifications);
+      resources.add(
+        () => AutoSaveService.releaseNotifications(runtime.localNotifications),
+      );
+      unawaited(
+        _startupStep('auto_save', AutoSaveService.checkAndResumeDevMode),
+      );
+      final hooks = CrashHooks.install(crash);
+      resources.add(hooks.restore);
+      final previousObserver = Bloc.observer;
+      Bloc.observer = AppBlocObserver(crash);
+      resources.add(() => Bloc.observer = previousObserver);
+      setState(() {
+        _runtime = runtime;
+        _starting = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !resources.isClosed) {
+          unawaited(runtime.kit.startDeferred());
+          unawaited(AnalyticsService.drainPending());
+        }
+      });
+    } on Object catch (error, stack) {
+      // Do not expose provider errors/keys on the recovery screen.
+      debugPrint('Startup attempt failed: ${error.runtimeType}');
+      unawaited(
+        crash.report(
+          CrashReport(
+            error: error,
+            stackTrace: stack,
+            reason: 'Application startup',
+            source: CrashSource.flutter,
+          ),
+        ),
+      );
+      await resources.dispose();
+      if (identical(_activeCrash, crash)) _activeCrash = null;
+      await sl.reset();
+      SubscriptionManager().reset();
+      if (!mounted || attempt != _attempt) return;
+      setState(() {
+        _starting = false;
+        _failure =
+            error is TimeoutException
+                ? 'Starting the app took too long. Please try again.'
+                : 'The app could not start. Check your connection and try again.';
+      });
+    }
+  }
+
+  Future<AppRuntime> _prepare(
+    KitResourceScope resources,
+    CrashCoordinator crash,
+  ) async {
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    ).timeout(const Duration(seconds: 3));
+    resources.ensureActive();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
     );
-
-    // Firebase is initialized once, here, and awaited. It used to happen three
-    // layers down inside AnalyticsService.init(), which deleted any existing
-    // app first and swallowed every failure, so a Firebase fault silently
-    // disabled analytics, remote config and crash reporting together.
-    //
-    // Deliberately without options. Both platforms ship a native configuration
-    // file — google-services.json on Android, GoogleService-Info.plist on iOS —
-    // so the `[DEFAULT]` app already exists before Dart runs. Passing options
-    // makes firebase_core compare them against it and throw `duplicate-app` on
-    // any difference, which is what the old `Firebase.app().delete()` call was
-    // working around: it discarded the correct native app and rebuilt it from
-    // a generated file. There is no generated file now, and the native
-    // configuration is the single source of truth per platform.
-    //
-    // Bounded so a stalled platform call fails loudly instead of leaving the
-    // application parked on the launch screen with nothing in the log.
     await Firebase.initializeApp().timeout(const Duration(seconds: 20));
-
-    final runtime = await bootstrapApp(env, crash: crash);
-    // Installed after the coordinator has started, so a captured error has a
-    // live reporter to reach. Zone errors before this point are dropped rather
-    // than queued, which is the honest trade for not buffering crashes.
-    CrashHooks.install(crash);
-    registerRuntime(runtime);
-    unawaited(AnalyticsService.drainPending());
-    initAppDependencies();
-
-    // App-owned initialization the kit does not yet cover.
-    //
-    // These ran inside `AppServicesRepo.initialize()`'s single try/catch before
-    // this migration, which swallowed the first throw and silently skipped
-    // every step after it. Each one is isolated here instead, so one failing
-    // step neither hides the rest nor stops the application from starting.
+    resources.ensureActive();
+    final runtime = await bootstrapApp(
+      widget.env,
+      crash: crash,
+      resources: resources,
+      autoStartDeferred: false,
+    );
+    resources.ensureActive();
     await _startupStep('media_store', MediaStore.ensureInitialized);
+    resources.ensureActive();
     await _startupStep(
       'workmanager',
       () => Workmanager().initialize(callbackDispatcher),
     );
-    await _startupStep('auto_save', AutoSaveService.checkAndResumeDevMode);
+    resources.ensureActive();
+    return runtime;
+  }
 
-    runApp(const MyApp());
-  }, crash);
+  @override
+  void dispose() {
+    _attempt++;
+    unawaited(_resources?.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_runtime != null) return const MyApp();
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeManager.lightTheme,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Story Saver',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                if (_failure == null)
+                  const CircularProgressIndicator()
+                else ...[
+                  Text(_failure!, textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: _starting ? null : _start,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Runs one app-owned startup step without letting it stop the application.

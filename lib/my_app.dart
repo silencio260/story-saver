@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
@@ -14,6 +16,7 @@ import 'features/analytics/presentation/bloc/analytics_bloc/analytics_bloc.dart'
 import 'features/analytics/presentation/widgets/analytics_scope.dart';
 import 'features/monetization/presentation/bloc/ads_bloc/ads_bloc.dart';
 import 'features/monetization/presentation/bloc/iap_bloc/iap_bloc.dart';
+import 'features/monetization/data/services/subscription_service.dart';
 import 'features/navigation/presentation/bloc/navigation_bloc/navigation_bloc.dart';
 import 'features/onboarding/presentation/bloc/onboarding_bloc/onboarding_bloc.dart';
 import 'features/permissions/presentation/bloc/permissions_bloc/permissions_bloc.dart';
@@ -31,10 +34,22 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  IapBloc? _iap;
+  String? _lastIapMessage;
+
+  void _onAccessChanged() {
+    final bloc = _iap;
+    if (bloc != null && !bloc.isClosed) {
+      bloc.add(IapAccessChanged(SubscriptionManager().isPremium));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    SubscriptionManager().addListener(_onAccessChanged);
   }
 
   @override
@@ -44,11 +59,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
     if (state == AppLifecycleState.resumed) {
       unawaited(AnalyticsService.drainPending());
+      unawaited(_refreshNotificationZone());
+    }
+  }
+
+  Future<void> _refreshNotificationZone() async {
+    try {
+      final zone = await FlutterTimezone.getLocalTimezone().timeout(
+        const Duration(seconds: 2),
+      );
+      final scheduler = sl<LocalNotificationScheduler>();
+      if (scheduler is LocalNotificationTimeZoneUpdater) {
+        await (scheduler as LocalNotificationTimeZoneUpdater).updateTimeZone(
+          zone,
+        );
+      }
+    } on Object {
+      // Retain the last working zone when the platform cannot supply a new one.
     }
   }
 
   @override
   void dispose() {
+    SubscriptionManager().removeListener(_onAccessChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -66,7 +99,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         create: (_) => sl<AnalyticsBloc>()..add(const AnalyticsStarted()),
       ),
       BlocProvider<IapBloc>(
-        create: (_) => sl<IapBloc>()..add(const IapStarted()),
+        create: (_) => _iap = sl<IapBloc>()..add(const IapStarted()),
       ),
       BlocProvider<AdsBloc>(create: (_) => sl<AdsBloc>()),
       BlocProvider<NavigationBloc>(create: (_) => sl()),
@@ -81,8 +114,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       listenWhen:
           (previous, current) =>
               previous.isPremium != current.isPremium ||
-              previous.status != current.status,
+              previous.status != current.status ||
+              previous.message != current.message,
       listener: (context, state) {
+        if (state.message != null && state.message != _lastIapMessage) {
+          _messengerKey.currentState?.showSnackBar(
+            SnackBar(content: Text(state.message!)),
+          );
+        }
+        _lastIapMessage = state.message;
         if (state.isPremium) {
           context.read<AdsBloc>().add(const AdsDisabled());
         } else if (state.status == IapViewStatus.ready) {
@@ -101,6 +141,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             initialRoute: Routes.splash,
             onGenerateRoute: AppRouter.getRoute,
             navigatorKey: myGlobalNavigatorKey,
+            scaffoldMessengerKey: _messengerKey,
             navigatorObservers: <NavigatorObserver>[
               ...AnalyticsScope.navigatorObservers,
               sl<NavigationBarController>().observer,

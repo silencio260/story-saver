@@ -28,7 +28,8 @@ import 'app_env.dart';
 /// not resolve them. `registerRuntime` is what puts them into GetIt.
 final class AppRuntime {
   /// Creates a runtime.
-  const AppRuntime({
+  AppRuntime({
+    KitResourceScope? resources,
     required this.kit,
     required this.initialization,
     required this.store,
@@ -57,7 +58,11 @@ final class AppRuntime {
     required this.env,
     this.eventLog,
     this.kitLog,
-  });
+  }) : resources = resources ?? KitResourceScope();
+
+  final KitResourceScope resources;
+
+  Future<KitResult<void>> dispose() => resources.dispose();
 
   /// The module coordinator.
   final GenRevibesStarterKit kit;
@@ -94,8 +99,7 @@ final class AppRuntime {
 
   /// Ad timing and suppression policy.
   ///
-  /// Live and receiving premium updates, but nothing reads it until the ads
-  /// migration replaces `AdsBloc`.
+  /// Receives subscription and app-specific ad eligibility updates.
   final AdPolicyController adPolicy;
 
   /// Ad provider. Owns `Appodeal.initialize()`.
@@ -161,5 +165,5 @@ final class AppRuntime {
   final RecordingKitLogger? kitLog;
 
   /// Whether every required module started.
-  bool get isHealthy => initialization.isSuccess;
+  bool get isHealthy => kit.health.isOperational;
 }

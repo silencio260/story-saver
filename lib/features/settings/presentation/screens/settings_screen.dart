@@ -1,3 +1,4 @@
+import 'package:genrevibes_analytics_posthog/genrevibes_analytics_posthog.dart';
 import 'package:flutter/material.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import '../../../permissions/data/datasources/app_storage_permission.dart';
@@ -57,12 +58,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (state.message != null) _showMessage(state.message!);
         },
       ),
-      BlocListener<IapBloc, IapState>(
-        listenWhen: (previous, current) => previous.message != current.message,
-        listener: (context, state) {
-          if (state.message != null) _showMessage(state.message!);
-        },
-      ),
     ],
     child: Scaffold(
       backgroundColor: Colors.white,
@@ -77,6 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // colors. Nothing happens, and nothing hints that anything could, once
         // access is granted or entry is locked out.
         title: DeveloperUnlockGesture(
+          protectContent: (child) => PostHogMaskWidget(child: child),
           controller: sl<DeveloperAccessController>(),
           theme: SettingsPageStyle.passcode,
           child: const Text(
@@ -337,12 +333,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             value: DeveloperOptionsService.debugPremiumEnabled,
-            onChanged: (enabled) async {
-              await DeveloperOptionsService.setDebugPremium(enabled);
-              if (!mounted) return;
-              setLocalState(() {});
-              context.read<IapBloc>().add(const IapRefreshRequested());
-            },
+            onChanged:
+                !sl<DeveloperAccessController>().allows(
+                      DeveloperAction.premiumSimulation,
+                    )
+                    ? null
+                    : (enabled) async {
+                      await DeveloperOptionsService.setDebugPremium(enabled);
+                      if (!mounted || !context.mounted) return;
+                      setLocalState(() {});
+                      context.read<IapBloc>().add(const IapRefreshRequested());
+                    },
             activeColor: Colors.green,
             secondary: const Icon(
               Icons.admin_panel_settings,
@@ -423,10 +424,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Ask only when the user enables the feature that saves to the gallery
       // and reports background completions. Notification denial is optional.
       if (!await AppStoragePermission().getStoragePermission()) {
-        if (mounted)
+        if (mounted) {
           _showMessage(
             'Photo and video access is needed to auto-save statuses.',
           );
+        }
         return;
       }
       await sl<PushNotificationProvider>().requestPermission();

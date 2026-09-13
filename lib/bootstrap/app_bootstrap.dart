@@ -47,6 +47,16 @@ import '../features/monetization/presentation/controllers/legacy/ad_suppression_
 import 'app_env.dart';
 import 'app_runtime.dart';
 
+/// Preserve this app's rollout while other apps choose their own defaults.
+RemoteConfigSchema buildAppRemoteConfigSchema() =>
+    PortfolioRemoteConfigSchema.build(
+      replayDefaults: const SessionReplayPolicy(
+        percentOfUsers: 100,
+        maskAllText: false,
+        maskAllImages: false,
+      ),
+    );
+
 /// Module IDs, so registration and lookup cannot drift apart.
 abstract final class AppModules {
   /// Crash reporting.
@@ -125,8 +135,40 @@ Future<AppRuntime> bootstrapApp(
   required CrashCoordinator crash,
   BootstrapDependencies dependencies = const BootstrapDependencies(),
   Duration moduleTimeout = const Duration(seconds: 10),
+  bool autoStartDeferred = true,
+  KitResourceScope? resources,
 }) async {
-  final logger = const BootstrapLogger();
+  final scope = resources ?? KitResourceScope();
+  try {
+    return await _composeApp(
+      env,
+      crash: crash,
+      dependencies: dependencies,
+      moduleTimeout: moduleTimeout,
+      autoStartDeferred: autoStartDeferred,
+      resources: scope,
+    );
+  } on Object {
+    await scope.dispose();
+    rethrow;
+  }
+}
+
+Future<AppRuntime> _composeApp(
+  AppEnv env, {
+  required CrashCoordinator crash,
+  required BootstrapDependencies dependencies,
+  required Duration moduleTimeout,
+  required bool autoStartDeferred,
+  required KitResourceScope resources,
+}) async {
+  resources.ensureActive();
+  final kitLog =
+      env.isDevelopment
+          ? RecordingKitLogger(forwardTo: const BootstrapLogger())
+          : null;
+  final KitLogger logger = kitLog ?? const BootstrapLogger();
+  if (kitLog != null) resources.add(kitLog.dispose);
 
   // Development-only recorders. Firebase's DebugView cannot be enabled from
   // application code — on Android it reads a system property only a shell can
@@ -134,7 +176,7 @@ Future<AppRuntime> bootstrapApp(
   // development has to keep that record itself. Null in release, so nothing is
   // retained and no history exists to leak.
   final eventLog = env.isDevelopment ? RecordingDeliveryObserver() : null;
-  final kitLog = env.isDevelopment ? RecordingKitLogger() : null;
+  if (eventLog != null) resources.add(eventLog.dispose);
 
   final store = MigratingKeyValueStore(
     delegate: dependencies.store ?? SharedPreferencesKeyValueStore(),
@@ -161,6 +203,7 @@ Future<AppRuntime> bootstrapApp(
     advertising: dependencies.advertising ?? const AttAdvertisingIdSource(),
     vendor: dependencies.vendor ?? const DeviceInfoVendorIdSource(),
   );
+  resources.addModule(identity);
   // Who gets the developer tools and test ads. Settled before the ad provider
   // is built, which starts in the mode this decides. A device recognised later
   // — when its identifier resolves, remote config arrives, or the passcode is
@@ -174,7 +217,18 @@ Future<AppRuntime> bootstrapApp(
     ),
     logger: logger,
   );
-  await developerAccess.initialize();
+  resources.addModule(developerAccess);
+  await developerAccess.initialize().timeout(
+    moduleTimeout,
+    onTimeout:
+        () => const KitFailure<void>(
+          KitError(
+            code: KitErrorCode.timeout,
+            message: 'Developer access initialization timed out.',
+          ),
+        ),
+  );
+  resources.ensureActive();
   // Ad formats a developer turned off on this phone in the Starter Kit Lab.
   // They apply only while developer access is granted.
   final developerAdSwitches = DeveloperAdSwitches(
@@ -182,20 +236,32 @@ Future<AppRuntime> bootstrapApp(
     access: developerAccess,
     logger: logger,
   );
-  await developerAdSwitches.load();
+  resources.add(developerAdSwitches.dispose);
+  await developerAdSwitches.load().timeout(moduleTimeout, onTimeout: () {});
+  resources.ensureActive();
   // The phone's navigation bar is hidden on every screen unless the screen
   // shows it with NavigationBarVisibility. Developers see it everywhere while
   // the Lab's "Show on every screen" switch is on, through the listener below.
   final navigationBar = NavigationBarController(store: store, logger: logger);
+  resources.addModule(navigationBar);
   final consentProvider =
       dependencies.consent ??
-      AppodealConsentProvider(appKey: env.appodealAppKey, logger: logger);
-  final consent = ConsentGate(provider: consentProvider);
+      AppodealConsentProvider(
+        appKey: env.appodealAppKey,
+        timeout: const Duration(seconds: 8),
+        logger: logger,
+      );
+  final consent = ConsentGate(
+    provider: consentProvider,
+    timeout: const Duration(seconds: 8),
+    logger: logger,
+  );
+  resources.addModule(consent);
   // Remote configuration is built before analytics, because the pipeline
   // resolves event names through it: a name overridden remotely then reaches
   // every sink and every kit emitter without those packages knowing that
   // remote config exists.
-  final remoteConfigSchema = PortfolioRemoteConfigSchema.build();
+  final remoteConfigSchema = buildAppRemoteConfigSchema();
   final remoteConfig = RemoteConfigCoordinator(
     schema: remoteConfigSchema,
     provider:
@@ -203,6 +269,7 @@ Future<AppRuntime> bootstrapApp(
         GenRevibesFirebaseRemoteConfigProvider(schema: remoteConfigSchema),
     logger: logger,
   );
+  resources.addModule(remoteConfig);
   // Started here rather than left to `kit.initialize()` below, which would
   // start it after analytics. Session replay has to be settled before the
   // PostHog SDK is configured — masking is fixed at setup and cannot be moved
@@ -237,8 +304,20 @@ Future<AppRuntime> bootstrapApp(
     buildOverride: env.sessionReplayBuildOverride,
     logger: logger,
   );
-  await sessionReplay.initialize();
+  resources.addModule(sessionReplay);
+  await sessionReplay.initialize().timeout(
+    moduleTimeout,
+    onTimeout:
+        () => const KitFailure<void>(
+          KitError(
+            code: KitErrorCode.timeout,
+            message: 'Replay preferences initialization timed out.',
+          ),
+        ),
+  );
+  resources.ensureActive();
 
+  final replayAtSetup = sessionReplay.plan;
   final analytics = AnalyticsPipeline(
     // Granted at construction. Product analytics is a core function of this
     // application, not something an ad-consent dialog decides. See the note
@@ -248,25 +327,36 @@ Future<AppRuntime> bootstrapApp(
         dependencies.analyticsSinks ??
         <AnalyticsSink>[
           FirebaseAnalyticsSink(
+            logger: logger,
             collectionEnabled: env.firebaseAnalyticsCollectionEnabled,
           ),
           PostHogAnalyticsSink(
-            configuration: env.postHog.withSessionReplay(sessionReplay.plan),
+            logger: logger,
+            configuration: env.postHog.withSessionReplay(replayAtSetup),
           ),
         ],
     names: RemoteAnalyticsEventNames.forCoordinator(remoteConfig),
     observer: eventLog,
+    logger: logger,
   );
+  resources.addModule(analytics);
   AnalyticsService.bind(analytics);
+  resources.add(() => AnalyticsService.unbind(analytics));
   // Retention milestones are analytics events, so the tracker reports through
   // the pipeline rather than reaching for a sink of its own.
   final permissions = dependencies.permissions ?? PermissionHandlerProvider();
+  resources.addModule(permissions);
   final retention = RetentionTracker(
     store: store,
     observer: AnalyticsEngagementObserver(analytics),
   );
+  resources.addModule(retention);
   final subscriptionAccess = SubscriptionManager();
-  await subscriptionAccess.loadPreferences();
+  await subscriptionAccess.loadPreferences().timeout(
+    moduleTimeout,
+    onTimeout: () {},
+  );
+  resources.ensureActive();
   final adPolicy = AdPolicyController(
     placements: <String, AdPlacementPolicy>{
       for (final placement in AppPlacements.all)
@@ -290,37 +380,45 @@ Future<AppRuntime> bootstrapApp(
         client: DefaultAppodealClient(manualBannerCaching: true),
         logger: logger,
       );
+  resources.addModule(ads);
   final iap =
       dependencies.iap ??
       RevenueCatIapProvider(
         configuration: env.revenueCat,
         uiPresenter: const RevenueCatUiAdapter(),
       );
+  resources.addModule(iap);
   // Subscribe before IAP initialization so its first entitlement snapshot is
   // observed. The persisted premium override remains a separate startup gate.
-  iap.entitlementChanges.listen((snapshot) {
-    subscriptionAccess.updatePremiumAccess(
-      snapshot.activeEntitlementIds.isNotEmpty,
-    );
+  final entitlementListener = iap.entitlementChanges.listen((snapshot) {
+    subscriptionAccess.updateEntitlements(snapshot);
   });
-  subscriptionAccess.addListener(() {
+  resources.add(entitlementListener.cancel);
+  void followSubscription() {
     adPolicy.setPremium(!subscriptionAccess.adsAllowed);
     if (!subscriptionAccess.adsAllowed) {
       for (final placement in AppPlacements.all) {
         unawaited(ads.discard(placement));
       }
     }
-  });
+  }
+
+  subscriptionAccess.addListener(followSubscription);
+  resources.add(() => subscriptionAccess.removeListener(followSubscription));
   adPolicy.setPremium(true);
-  developerAccess.changes.listen(
+  final accessListener = developerAccess.changes.listen(
     (_) => subscriptionAccess.refreshAccessPolicy(),
   );
+  resources.add(accessListener.cancel);
   final push =
       dependencies.push ?? OneSignalPushProvider(configuration: env.oneSignal);
+  resources.addModule(push);
   final feedback =
       dependencies.feedback ??
       FeedbackNestFeedbackProvider(configuration: env.feedbackNest);
+  resources.addModule(feedback);
   final linkOpener = dependencies.linkOpener ?? UrlLauncherLinkOpener();
+  resources.addModule(linkOpener);
 
   // Where this app lives and how to reach us.
   //
@@ -332,6 +430,10 @@ Future<AppRuntime> bootstrapApp(
     playStoreUrl:
         'https://play.google.com/store/apps/details'
         '?id=com.genrevibes.whatsappstorysaver',
+    appStoreUrl:
+        const String.fromEnvironment('app_store_url').trim().isEmpty
+            ? null
+            : const String.fromEnvironment('app_store_url'),
     supportEmail: 'support@genrevibes.com',
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsUrl: env.termsUrl.trim().isEmpty ? null : env.termsUrl,
@@ -351,6 +453,7 @@ Future<AppRuntime> bootstrapApp(
           iosStoreUrl: appLinksConfig.appStoreUrl,
         ),
       );
+  resources.addModule(storeReview);
 
   // Rating policy. The coordinator decides whether to prompt; it never presents
   // UI and never talks to a store, so the rules stay testable against a clock.
@@ -358,12 +461,18 @@ Future<AppRuntime> bootstrapApp(
   // The suppression hook is wired here rather than inside the module because a
   // rating package must not depend on an ads package. This is the one place
   // that legitimately knows about both.
-  // Resolved from the device rather than assumed. The adapter refuses an empty
-  // zone on purpose: scheduling against the wrong one shifts every delivery
-  // after travel or a DST change, and UTC is wrong for most users.
+  // Resolve the device zone; keep immediate save notices working on lookup errors.
   final timeZone = await FlutterTimezone.getLocalTimezone()
       .timeout(const Duration(seconds: 2))
-      .catchError((Object _) => 'UTC');
+      .catchError((Object error) {
+        logger.log(
+          KitLogLevel.warning,
+          'Device timezone unavailable; using UTC.',
+          moduleId: AppModules.localNotifications,
+          error: error,
+        );
+        return 'UTC';
+      });
   final localNotifications = TrackedLocalNotifications(
     dependencies.localNotifications ??
         PersistentLocalNotificationScheduler(
@@ -374,8 +483,9 @@ Future<AppRuntime> bootstrapApp(
           ),
         ),
   );
+  resources.addModule(localNotifications);
 
-  push.events.listen((event) {
+  final pushListener = push.events.listen((event) {
     switch (event) {
       case PushMessageReceived(:final message):
         unawaited(
@@ -390,11 +500,6 @@ Future<AppRuntime> bootstrapApp(
           AnalyticsService.track('push_opened', {
             'provider': 'onesignal',
             'notification_id': message.messageId,
-            if (message.title != null) 'notification_title': message.title,
-            if (message.body != null) 'notification_body': message.body,
-            'notification_payload': message.additionalData,
-            if (message.additionalData['value'] != null)
-              'notification_value': message.additionalData['value'],
             if (message.actionId != null) 'action_id': message.actionId,
           }),
         );
@@ -411,7 +516,9 @@ Future<AppRuntime> bootstrapApp(
     }
   });
 
+  resources.add(pushListener.cancel);
   final onboarding = OnboardingController(store: store);
+  resources.addModule(onboarding);
 
   final rating = RatingCoordinator(
     store: store,
@@ -422,8 +529,11 @@ Future<AppRuntime> bootstrapApp(
           action: action,
         ),
   );
+  resources.addModule(rating);
 
+  resources.ensureActive();
   final kit = GenRevibesStarterKit(
+    autoStartDeferred: autoStartDeferred,
     logger: logger,
     // No vendor callback may hold the first frame hostage. Anything slower
     // than this is a fault, not slowness, and is reported as one.
@@ -453,20 +563,12 @@ Future<AppRuntime> bootstrapApp(
         create: () => navigationBar,
         isRequired: false,
       ),
-      // Consent and ads are deferred: they start after the first frame, in
-      // this order, and nothing waits for them.
+      // Consent runs first after the UI is visible. After eight seconds or
+      // an error, ads start anyway; the SDK retains the real consent signals.
       //
-      // Consent may present a form and sit there until someone dismisses it.
-      // On the startup chain that held back the eight modules behind it and
-      // the first frame with them — measured at two to four seconds on device
-      // even when no form appeared. It touches nothing else in this
-      // application: its result goes to the ad network and stays there.
-      //
-      // Ads follow it rather than running alongside, because consent must be
-      // gathered before an ad is requested, and
-      // AppodealAdProvider.initialize() owns Appodeal.initialize().
       StarterModuleRegistration.deferred(
         moduleId: AppModules.consent,
+        timeout: const Duration(seconds: 8),
         create: () => consent,
       ),
       StarterModuleRegistration.deferred(
@@ -489,6 +591,7 @@ Future<AppRuntime> bootstrapApp(
       StarterModuleRegistration.enabled(
         moduleId: AppModules.iap,
         create: () => iap,
+        isRequired: false,
       ),
       StarterModuleRegistration.enabled(
         moduleId: AppModules.push,
@@ -555,29 +658,12 @@ Future<AppRuntime> bootstrapApp(
     ],
   );
 
+  resources.addModule(kit);
   final initialization = await kit.initialize();
+  resources.ensureActive();
 
-  // UMP consent is not wired to analytics, deliberately.
-  //
-  // It used to be: the snapshot was mapped to the pipeline's consent, so a
-  // user UMP had not resolved produced no product analytics at all. That was
-  // wrong twice over. UMP governs ad personalization — it is the ad network's
-  // consent framework, and its outcome is the ad SDK's business. And
-  // `ConsentStatus.obtained` only means the flow completed; Google leaves the
-  // personalized/non-personalized distinction undefined at that level, so the
-  // boolean it produced said "allowed" for a user who had declined and
-  // "denied" for one who simply had not been asked.
-  //
-  // Product analytics is a core function of this application, not something
-  // gated on an ad-consent dialog. The pipeline is constructed already
-  // granted, above.
-  //
-  // Nothing waits on the consent outcome. The flow runs so Appodeal's consent
-  // manager, which is UMP underneath, can store its decision, and the mediated
-  // networks read that themselves when deciding whether to serve personalized
-  // or limited ads — which is what the pre-kit implementation did: run the
-  // flow, then initialize ads regardless, "proceed even on error, SDK handles
-  // limited ads".
+  // Advertising consent stays with the ad SDK. A failed or timed-out prompt
+  // does not gate analytics or startup and never becomes a fabricated grant.
 
   // Name the user on crash reports. Tracking is deliberately not prompted here:
   // an out-of-context ATT prompt at launch is an App Store rejection.
@@ -591,6 +677,7 @@ Future<AppRuntime> bootstrapApp(
           ),
         ),
   );
+  resources.ensureActive();
   await resolved.fold(
     onSuccess: (value) async {
       // Developer devices are listed under a hash of the vendor ID. This is
@@ -601,6 +688,7 @@ Future<AppRuntime> bootstrapApp(
       // describe one device. The old service sent this as a `unique_device_id`
       // parameter on app_open only; as a user property it applies to every
       // event and can be filtered on.
+      resources.ensureActive();
       await analytics.identify(AnalyticsUser(id: value.installId));
     },
     onFailure: (_) async => const KitSuccess<void>(null),
@@ -628,20 +716,30 @@ Future<AppRuntime> bootstrapApp(
     placements: AppPlacements.paced,
     logger: logger,
   );
+  resources.addModule(adPolicyBinder);
   await adPolicyBinder.initialize();
 
   // Now that the SDK is configured, the controller can move recording without
   // a relaunch: a rollout change, or the switch in the Starter Kit Lab, starts
   // or stops capture in place.
-  await sessionReplay.attach(
-    dependencies.sessionReplayRecorder ??
-        PostHogSessionReplayRecorder(logger: logger),
-  );
+  final replayProviderReady =
+      dependencies.sessionReplayRecorder != null ||
+      analytics.sinks.any(
+        (sink) => sink.sinkId == 'posthog' && sink.health.isOperational,
+      );
+  if (replayProviderReady) {
+    await sessionReplay.attach(
+      dependencies.sessionReplayRecorder ??
+          PostHogSessionReplayRecorder(logger: logger),
+      configuredPlan: replayAtSetup,
+    );
+  }
   final sessionReplayBinder = SessionReplayRemotePolicyBinder.forCoordinator(
     remoteConfig,
     controller: sessionReplay,
     logger: logger,
   );
+  resources.addModule(sessionReplayBinder);
   await sessionReplayBinder.initialize();
 
   // The remote developer device list: applied now from what a previous run
@@ -652,6 +750,7 @@ Future<AppRuntime> bootstrapApp(
         controller: developerAccess,
         logger: logger,
       );
+  resources.addModule(developerAccessBinder);
   await developerAccessBinder.initialize();
 
   // Ads follow developer access for the life of the process. A phone that
@@ -663,9 +762,7 @@ Future<AppRuntime> bootstrapApp(
     // An optional capability on a different interface, so bind it by pattern:
     // `is` cannot narrow an AdProvider to an unrelated type.
     if (ads case final AdTestModeProvider testable) {
-      unawaited(
-        testable.setTestMode(access.servesTestAds || env.keepsTestAds),
-      );
+      unawaited(testable.setTestMode(access.servesTestAds || env.keepsTestAds));
     }
     navigationBar.setDeveloperMode(access.isGranted);
     unawaited(
@@ -676,7 +773,7 @@ Future<AppRuntime> bootstrapApp(
   }
 
   followDeveloperAccess(developerAccess.current);
-  developerAccess.changes.listen(followDeveloperAccess);
+  resources.add(developerAccess.changes.listen(followDeveloperAccess).cancel);
 
   // Ad analytics, once for every placement. Appodeal reports banner and
   // full-screen callbacks per format rather than per view, so a listener per
@@ -728,16 +825,19 @@ Future<AppRuntime> bootstrapApp(
     if (tracked != null) unawaited(analytics.track(tracked));
   }
 
-  ads.events.listen(trackAdEvent);
+  resources.add(ads.events.listen(trackAdEvent).cancel);
   // Native callbacks come from genrevibes_ads_appodeal_native, not the
   // provider, which Appodeal's Flutter plugin never tells about them. Revenue
   // for native ads still arrives on ads.events above.
   if (ads is AppodealAdProvider) {
-    AppodealNativeAds.instance
-        // Once for every native placement — onboarding and the exit prompt —
-        // each callback attributed to the placement whose view took the ad.
-        .attributedAdEvents(fallback: AppPlacements.onboardingNative)
-        .listen(trackAdEvent);
+    resources.add(
+      AppodealNativeAds.instance
+          // Once for every native placement — onboarding and the exit prompt —
+          // each callback attributed to the placement whose view took the ad.
+          .attributedAdEvents(fallback: AppPlacements.onboardingNative)
+          .listen(trackAdEvent)
+          .cancel,
+    );
   }
 
   // Nothing else fetches. `initialize` only reads what a previous run
@@ -752,7 +852,9 @@ Future<AppRuntime> bootstrapApp(
   // not delay the first frame.
   unawaited(retention.recordAppOpen());
 
+  resources.ensureActive();
   return AppRuntime(
+    resources: resources,
     kit: kit,
     initialization: initialization,
     store: store,

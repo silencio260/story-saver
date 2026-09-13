@@ -6,17 +6,16 @@ import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'analytics_service.dart';
 
 /// Tracks OS requests and interactions without claiming confirmed display.
-final class TrackedLocalNotifications implements LocalNotificationScheduler {
+final class TrackedLocalNotifications
+    implements
+        LocalNotificationScheduler,
+        LocalNotificationPendingInteractions,
+        LocalNotificationTimeZoneUpdater {
   TrackedLocalNotifications(this._delegate) {
     _subscription = _delegate.interactions.listen((interaction) {
       unawaited(
         AnalyticsService.track('local_notification_opened', {
           'provider': 'local',
-          if (interaction.title != null)
-            'notification_title': interaction.title,
-          if (interaction.body != null) 'notification_body': interaction.body,
-          if (interaction.payload != null)
-            'notification_payload': interaction.payload,
           if (interaction.notificationId != null)
             'notification_id': interaction.notificationId,
           if (interaction.actionId?.isNotEmpty == true)
@@ -28,6 +27,30 @@ final class TrackedLocalNotifications implements LocalNotificationScheduler {
 
   final LocalNotificationScheduler _delegate;
   late final StreamSubscription<LocalNotificationInteraction> _subscription;
+
+  @override
+  LocalNotificationInteraction? takePendingInteraction() {
+    final delegate = _delegate;
+    return delegate is LocalNotificationPendingInteractions
+        ? (delegate as LocalNotificationPendingInteractions)
+            .takePendingInteraction()
+        : null;
+  }
+
+  @override
+  Future<KitResult<void>> updateTimeZone(String name) {
+    final delegate = _delegate;
+    return delegate is LocalNotificationTimeZoneUpdater
+        ? (delegate as LocalNotificationTimeZoneUpdater).updateTimeZone(name)
+        : Future.value(
+          const KitFailure<void>(
+            KitError(
+              code: KitErrorCode.unsupported,
+              message: 'Timezone updates are unsupported.',
+            ),
+          ),
+        );
+  }
 
   @override
   String get moduleId => _delegate.moduleId;

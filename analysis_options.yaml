@@ -12,6 +12,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - deprecated_old_version_1/**
+    - packages/genrevibes_starter_kit/deprecated_old_version_1/**
 
 linter:
   # The lint rules applied to this project can be customized in the

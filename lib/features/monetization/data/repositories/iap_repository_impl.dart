@@ -22,7 +22,7 @@ class IapRepo implements IapBaseRepo {
 
   @override
   Future<Either<Failure, Subscription>> showPaywall() =>
-      _guard(_remoteDataSource.showPaywall);
+      _guard(_remoteDataSource.showPaywall, includePurchaseStatus: true);
 
   @override
   Future<Either<Failure, Unit>> showCustomerCenter() async {
@@ -39,10 +39,21 @@ class IapRepo implements IapBaseRepo {
       _guard(_remoteDataSource.restorePurchases);
 
   Future<Either<Failure, Subscription>> _guard(
-    Future<bool> Function() operation,
-  ) async {
+    Future<bool> Function() operation, {
+    bool includePurchaseStatus = false,
+  }) async {
     try {
-      return Right(Subscription(isPremium: await operation()));
+      final premium = await operation();
+      final source = _remoteDataSource;
+      return Right(
+        Subscription(
+          isPremium: premium,
+          purchaseStatus:
+              includePurchaseStatus && source is PurchaseOutcomeSource
+                  ? (source as PurchaseOutcomeSource).lastPurchaseStatus
+                  : null,
+        ),
+      );
     } catch (error) {
       return Left(ErrorHandler.handle(error));
     }

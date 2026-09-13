@@ -354,16 +354,13 @@ final class AppEnv {
   /// what is written here is only the state to be in if that never happens:
   /// recording off.
   ///
-  /// Masking stays off, as it was pre-kit. A replay of a masked screen is grey
-  /// boxes moving around and cannot show where a user got stuck, which is the
-  /// only reason this app pays for replay. `session_replay_mask_text` and
-  /// `session_replay_mask_images` can turn it on for everyone without a
-  /// release if a screen ever renders something that should not be recorded.
-  ///
-  /// `debug` is still set unconditionally, so production builds log verbosely.
-  /// That is a separate parity carry-over and is worth revisiting on its own.
-  GenRevibesPostHogConfiguration get postHog =>
-      GenRevibesPostHogConfiguration(apiKey: postHogApiKey, debug: true);
+  /// The app schema preserves its existing rollout and global masking choices.
+  /// Remote masking changes take effect after restart; stricter pending settings
+  /// pause replay. Sensitive routes use their own mask widget.
+  GenRevibesPostHogConfiguration get postHog => GenRevibesPostHogConfiguration(
+    apiKey: postHogApiKey,
+    debug: isDevelopment,
+  );
 
   /// FeedbackNest configuration.
   FeedbackNestConfiguration get feedbackNest =>

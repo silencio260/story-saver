@@ -1,10 +1,12 @@
+import 'package:genrevibes_iap/genrevibes_iap.dart';
 import '../services/revenue_cat_service.dart';
 import '../services/subscription_service.dart';
 import 'iap_base_remote_data_source.dart';
 
 export 'iap_base_remote_data_source.dart';
 
-class RevenueCatIapRemoteDataSource implements IapBaseRemoteDataSource {
+class RevenueCatIapRemoteDataSource
+    implements IapBaseRemoteDataSource, PurchaseOutcomeSource {
   RevenueCatIapRemoteDataSource({
     required RevenueCatService revenueCat,
     required SubscriptionManager subscriptionManager,
@@ -28,8 +30,19 @@ class RevenueCatIapRemoteDataSource implements IapBaseRemoteDataSource {
   }
 
   @override
+  PurchaseStatus? lastPurchaseStatus;
+
+  @override
   Future<bool> showPaywall() async {
-    await _revenueCat.PresentRevenueCatPayWallIfNeeded();
+    lastPurchaseStatus = null;
+    final outcome = await _revenueCat.PresentRevenueCatPayWallIfNeeded();
+    lastPurchaseStatus = switch (outcome) {
+      PaywallOutcome.purchased => PurchaseStatus.purchased,
+      PaywallOutcome.restored => PurchaseStatus.restored,
+      PaywallOutcome.cancelled => PurchaseStatus.cancelled,
+      PaywallOutcome.pending => PurchaseStatus.pending,
+      PaywallOutcome.notPresented => null,
+    };
     return refresh();
   }
 
@@ -39,7 +52,8 @@ class RevenueCatIapRemoteDataSource implements IapBaseRemoteDataSource {
 
   @override
   Future<bool> restorePurchases() async {
-    await _revenueCat.restorePurchases();
+    final result = await _revenueCat.restorePurchases();
+    result.fold(onSuccess: (_) {}, onFailure: (error) => throw error);
     return refresh();
   }
 }

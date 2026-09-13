@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:genrevibes_core/genrevibes_core.dart';
 
 import 'package:flutter/services.dart';
 
@@ -11,6 +12,12 @@ class ErrorHandler {
   const ErrorHandler._();
 
   static Failure handle(Object error) {
+    if (error is KitError) {
+      return UnexpectedFailure(
+        'The service could not complete this action. Please try again.',
+        cause: error,
+      );
+    }
     if (error is FileSystemException) {
       return StorageFailure(error.message, cause: error);
     }

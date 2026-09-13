@@ -1,4 +1,5 @@
 import 'package:genrevibes_iap/genrevibes_iap.dart';
+import '../../domain/app_purchase_policy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:storysaver/container_injector.dart';
@@ -10,7 +11,15 @@ class SubscriptionManager extends ChangeNotifier {
   factory SubscriptionManager() => _instance;
   SubscriptionManager._internal();
 
+  int _generation = 0;
   bool _isPremium = false;
+  EntitlementSnapshot? snapshot;
+
+  void updateEntitlements(EntitlementSnapshot value) {
+    snapshot = value;
+    updatePremiumAccess(AppPurchasePolicy.isPremium(value));
+  }
+
   bool _isInitialized = false;
   bool _preferencesLoaded = false;
   bool _hasReachedFirstStatus = false;
@@ -68,7 +77,7 @@ class SubscriptionManager extends ChangeNotifier {
 
   bool get _hasDeveloperAccess =>
       sl.isRegistered<DeveloperAccessController>() &&
-      sl<DeveloperAccessController>().current.isGranted;
+      sl<DeveloperAccessController>().allows(DeveloperAction.premiumSimulation);
 
   /// Returns true if user is premium OR if the debug override applies
   bool get isPremium {
@@ -86,10 +95,12 @@ class SubscriptionManager extends ChangeNotifier {
   static const String _debugPremiumKey = "debug_premium_override";
 
   Future<void> loadPreferences() async {
+    final generation = _generation;
     // Load once so a concurrent initialize cannot overwrite a just-toggled
     // in-memory premium override with an older preference value.
     if (!_preferencesLoaded) {
       final prefs = await SharedPreferences.getInstance();
+      if (generation != _generation) return;
       if (!_preferencesLoaded) {
         debugOverridePremium = prefs.getBool(_debugPremiumKey) ?? false;
         _hasReachedFirstStatus =
@@ -124,6 +135,7 @@ class SubscriptionManager extends ChangeNotifier {
 
   /// Toggle debug premium override
   Future<void> toggleDebugPremium(bool value) async {
+    if (value && !_hasDeveloperAccess) return;
     debugOverridePremium = value;
     _preferencesLoaded = true;
     notifyListeners();
@@ -135,13 +147,15 @@ class SubscriptionManager extends ChangeNotifier {
 
   /// Check current subscription status from RevenueCat
   Future<void> checkSubscriptionStatus() async {
+    final generation = _generation;
     try {
       print('SubscriptionManager: Checking subscription status...');
-      final result = await sl<IapProvider>().getEntitlements();
+      final result = await sl<IapProvider>().getEntitlements().timeout(
+        const Duration(seconds: 15),
+      );
+      if (generation != _generation) return;
       result.fold(
-        onSuccess:
-            (snapshot) =>
-                updatePremiumAccess(snapshot.activeEntitlementIds.isNotEmpty),
+        onSuccess: (snapshot) => updateEntitlements(snapshot),
         onFailure: (_) {
           // Keep known premium access, but do not authorize requests on error.
           _isInitialized = false;
@@ -154,6 +168,7 @@ class SubscriptionManager extends ChangeNotifier {
         'SubscriptionManager: Subscription status updated - isPremium: $_isPremium',
       );
     } catch (e) {
+      if (generation != _generation) return;
       print('SubscriptionManager: Error checking subscription status: $e');
       // A failed lookup is not proof of free access.
       _isInitialized = false;
@@ -170,7 +185,10 @@ class SubscriptionManager extends ChangeNotifier {
 
   /// Reset subscription status (useful for logout)
   void reset() {
+    _generation++;
+    snapshot = null;
     _isPremium = false;
+    _onboardingActive = false;
     _isInitialized = false;
     _lastChecked = null;
     notifyListeners();

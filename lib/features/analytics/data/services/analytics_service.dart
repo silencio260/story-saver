@@ -35,6 +35,10 @@ abstract final class AnalyticsService {
 
   static void bind(AnalyticsPipeline pipeline) => _pipeline = pipeline;
 
+  static void unbind(AnalyticsPipeline pipeline) {
+    if (identical(_pipeline, pipeline)) _pipeline = null;
+  }
+
   /// Never let diagnostics interrupt an operation. Background isolates persist
   /// one file per event, avoiding shared-preference read/modify/write races.
   static Future<void> track(
@@ -52,8 +56,9 @@ abstract final class AnalyticsService {
           (sl.isRegistered<AnalyticsPipeline>()
               ? sl<AnalyticsPipeline>()
               : null);
-      if (pipeline != null && pipeline.consent != AnalyticsConsent.granted)
+      if (pipeline != null && pipeline.consent != AnalyticsConsent.granted) {
         return;
+      }
       if (pipeline != null && pipeline.health.isOperational) {
         if (await _deliver(pipeline, record)) return;
         // Consent suppression is intentional, never queue it for later replay.

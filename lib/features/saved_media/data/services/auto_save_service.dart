@@ -2,13 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:docman/docman.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_notifications_local/genrevibes_notifications_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:storysaver/container_injector.dart';
-import 'package:storysaver/core/utils/legacy_app_constants.dart';
 import 'package:storysaver/features/analytics/data/services/analytics_service.dart';
 import 'package:storysaver/features/analytics/data/services/tracked_local_notifications.dart';
 import 'package:storysaver/features/saved_media/data/datasources/local/media_file_operations.dart';
@@ -26,6 +24,17 @@ class AutoSaveService {
   /// ran and GetIt is empty. The scheduler is built here for the same reason
   /// the raw plugin used to be: this isolate needs its own.
   static LocalNotificationScheduler? _notifications;
+
+  static void bindNotifications(LocalNotificationScheduler scheduler) {
+    _notifications = scheduler;
+  }
+
+  static void releaseNotifications(LocalNotificationScheduler scheduler) {
+    if (identical(_notifications, scheduler)) {
+      stopDevTestMode();
+      _notifications = null;
+    }
+  }
 
   // Initialize WorkManager and Notifications
   static Future<void> initialize() async {
@@ -127,11 +136,6 @@ class AutoSaveService {
   static Future<void> _checkAndSaveNewStatuses({bool isDevMode = false}) async {
     await AnalyticsService.track('auto_save_started', {'dev_mode': isDevMode});
     try {
-      // 1. Check if feature is enabled (double check for background)
-      final prefs = await SharedPreferences.getInstance();
-      // We assume the caller checks permission/premium, but good to verify
-      // bool isPremium = ... (Check premium status if possible in background, or rely on UI toggle state)
-
       // 2. Get accessible files using DocMan (Headless)
       // Note: DocMan relies on persisted permissions.
       List<PersistedPermission> accessiblePath = await DocMan.perms.list(
@@ -291,6 +295,7 @@ class AutoSaveService {
     await _notifications?.show(
       0,
       LocalNotificationContent(
+        payload: 'saved_media',
         title: 'Auto Save Complete',
         body: 'Saved $count new statuses to your gallery.',
         channelId: 'auto_save_channel',

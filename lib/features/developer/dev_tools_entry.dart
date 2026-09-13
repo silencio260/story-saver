@@ -14,12 +14,12 @@ import 'package:genrevibes_iap/genrevibes_iap.dart';
 import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:genrevibes_permissions/genrevibes_permissions.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
-import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import '../../bootstrap/app_env.dart';
+import '../../bootstrap/app_bootstrap.dart' show buildAppRemoteConfigSchema;
 import '../../bootstrap/app_runtime.dart';
 import '../../container_injector.dart';
 import '../analytics/domain/entities/app_analytics_catalogue.dart';
@@ -33,6 +33,9 @@ import '../home/presentation/widgets/home_exit_prompt.dart';
 /// Story Saver has not adopted is simply left out, and the hub shows it as
 /// unavailable rather than pretending otherwise.
 void openStarterKitLab(BuildContext context) {
+  if (!sl<DeveloperAccessController>().allows(DeveloperAction.diagnostics)) {
+    return;
+  }
   Navigator.of(context).push(
     MaterialPageRoute<void>(builder: (_) => StarterKitLabScreen(host: _host())),
   );
@@ -54,7 +57,7 @@ DevToolsHost _host() {
     push: sl<PushNotificationProvider>(),
     permissions: sl<PermissionProvider>(),
     remoteConfig: sl<RemoteConfigCoordinator>(),
-    remoteConfigSchema: PortfolioRemoteConfigSchema.build(),
+    remoteConfigSchema: buildAppRemoteConfigSchema(),
     // Analytics-name overrides are left out: this app does not rename events
     // remotely, and their forty-two keys buried the three it does configure.
     identity: sl<DeviceIdentityResolver>(),
@@ -79,8 +82,9 @@ DevToolsHost _host() {
     feedback: sl<FeedbackProvider>(),
     store: sl<KeyValueStore>(),
     storageKeys: _storageKeys,
-    // Not adopted yet: local notifications still run through AutoSaveService,
-    // and rating and onboarding keep their own app-side services.
+    localNotifications: sl<AppRuntime>().localNotifications,
+    rating: sl<AppRuntime>().rating,
+    onboarding: sl<AppRuntime>().onboarding,
   );
 }
 

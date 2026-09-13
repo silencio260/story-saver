@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:genrevibes_iap/genrevibes_iap.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
+import 'subscription_service.dart';
+import '../../domain/app_purchase_policy.dart';
 
 import '../../../../container_injector.dart';
 import '../../../analytics/data/services/analytics_service.dart';
@@ -18,30 +21,19 @@ import '../../../analytics/data/services/analytics_service.dart';
 class RevenueCatService {
   IapProvider get _iap => sl<IapProvider>();
 
-  /// The most recent entitlement snapshot, kept for the synchronous check the
-  /// ad path relies on.
-  static EntitlementSnapshot? _snapshot;
+  static EntitlementSnapshot? get _snapshot => SubscriptionManager().snapshot;
+  static set _snapshot(EntitlementSnapshot? value) {
+    if (value != null) SubscriptionManager().updateEntitlements(value);
+  }
 
-  static StreamSubscription<EntitlementSnapshot>? _subscription;
-
-  /// Starts mirroring entitlement changes.
-  ///
-  /// The provider is already initialized; this only keeps [_snapshot] current
-  /// so [isSubscriptionActive] can answer without awaiting.
+  /// Provider initialization belongs to bootstrap; this only refreshes access.
   Future<void> ConfigureRevenueCatSDK() async {
-    _subscription ??= _iap.entitlementChanges.listen((snapshot) {
-      _snapshot = snapshot;
-    });
-    final result = await _iap.getEntitlements();
-    result.fold(
-      onSuccess: (snapshot) => _snapshot = snapshot,
-      onFailure: (_) {},
-    );
+    await getCustomerInfo();
   }
 
   /// Shows the paywall when [entitlementId] is not already active.
   Future<PaywallOutcome> PresentRevenueCatPayWallIfNeeded({
-    String entitlementId = 'Pro',
+    String entitlementId = AppPurchasePolicy.premiumEntitlement,
   }) async {
     await AnalyticsService.logViewPaywall();
 
@@ -50,6 +42,7 @@ class RevenueCatService {
     );
     return result.fold(
       onSuccess: (purchase) {
+        if (purchase.entitlements != null) _snapshot = purchase.entitlements;
         switch (purchase.status) {
           case PurchaseStatus.purchased:
             unawaited(_trackNewPurchase());
@@ -66,7 +59,7 @@ class RevenueCatService {
             return PaywallOutcome.cancelled;
           case PurchaseStatus.pending:
             AnalyticsService.track('purchase_pending');
-            return PaywallOutcome.notPresented;
+            return PaywallOutcome.pending;
           case PurchaseStatus.notPurchased:
             AnalyticsService.track('paywall_not_presented');
             return PaywallOutcome.notPresented;
@@ -76,7 +69,7 @@ class RevenueCatService {
         AnalyticsService.track('paywall_failed', {
           'error_code': error.code.name,
         });
-        return PaywallOutcome.notPresented;
+        throw error;
       },
     );
   }
@@ -89,11 +82,14 @@ class RevenueCatService {
           ? 'custom_customer_center_viewed'
           : 'customer_center_failed',
     );
+    result.fold(onSuccess: (_) {}, onFailure: (error) => throw error);
   }
 
   /// The latest entitlement snapshot, refreshed from the provider.
   Future<EntitlementSnapshot?> getCustomerInfo() async {
-    final result = await _iap.getEntitlements();
+    final result = await _iap.getEntitlements().timeout(
+      const Duration(seconds: 15),
+    );
     return result.fold(
       onSuccess: (snapshot) {
         _snapshot = snapshot;
@@ -104,13 +100,17 @@ class RevenueCatService {
   }
 
   /// Restores previous purchases.
-  Future<void> restorePurchases() async {
+  Future<KitResult<EntitlementSnapshot>> restorePurchases() async {
     await AnalyticsService.track('restore_purchases_requested');
-    final result = await _iap.restorePurchases();
+    final result = await _iap.restorePurchases().timeout(
+      const Duration(seconds: 30),
+    );
     result.fold(
       onSuccess: (snapshot) {
         _snapshot = snapshot;
-        AnalyticsService.logCustomPurchasesRestored(entitlementId: 'Pro');
+        AnalyticsService.logCustomPurchasesRestored(
+          entitlementId: AppPurchasePolicy.premiumEntitlement,
+        );
       },
       onFailure: (error) {
         AnalyticsService.track('restore_purchases_failed', {
@@ -118,18 +118,16 @@ class RevenueCatService {
         });
       },
     );
+    return result;
   }
 
   Future<void> _trackNewPurchase() async {
     final snapshot = await getCustomerInfo();
-    final entitlement = snapshot?.entitlements.firstOrNull;
-    if (entitlement == null) return;
-    await AnalyticsService.logCustomPurchase(
-      currency: 'USD',
-      price: 0,
-      productId: entitlement.productId,
-      entitlementId: entitlement.id,
-    );
+    if (snapshot == null) return;
+    await AnalyticsService.track('purchase_completed', {
+      'entitlement_id': AppPurchasePolicy.premiumEntitlement,
+      'premium_active': AppPurchasePolicy.isPremium(snapshot),
+    });
   }
 
   /// Whether any entitlement is active, fetched fresh.
@@ -138,7 +136,7 @@ class RevenueCatService {
     return result.fold(
       onSuccess: (snapshot) {
         _snapshot = snapshot;
-        return snapshot.activeEntitlementIds.isNotEmpty;
+        return AppPurchasePolicy.isPremium(snapshot);
       },
       onFailure: (_) => false,
     );
@@ -150,7 +148,8 @@ class RevenueCatService {
   /// previous implementation dereferenced a null customer info here, which
   /// crashed whenever the ad path ran before the first fetch completed.
   static bool isSubscriptionActive() {
-    return _snapshot?.activeEntitlementIds.isNotEmpty ?? false;
+    final snapshot = _snapshot;
+    return snapshot != null && AppPurchasePolicy.isPremium(snapshot);
   }
 
   /// Whether one specific entitlement is active.
@@ -177,6 +176,9 @@ enum PaywallOutcome {
   /// The user dismissed the paywall.
   cancelled,
 
-  /// The paywall was not shown, or the attempt failed.
+  /// The store is still processing payment.
+  pending,
+
+  /// The paywall was not shown.
   notPresented,
 }

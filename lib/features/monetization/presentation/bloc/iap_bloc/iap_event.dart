@@ -26,3 +26,10 @@ class IapCustomerCenterRequested extends IapEvent {
 class IapRestoreRequested extends IapEvent {
   const IapRestoreRequested();
 }
+
+class IapAccessChanged extends IapEvent {
+  const IapAccessChanged(this.isPremium);
+  final bool isPremium;
+  @override
+  List<Object?> get props => [isPremium];
+}

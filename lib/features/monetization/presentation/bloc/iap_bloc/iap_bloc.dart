@@ -25,6 +25,9 @@ class IapBloc extends Bloc<IapEvent, IapState> {
        _showCustomerCenter = showCustomerCenterUseCase,
        _restorePurchases = restorePurchasesUseCase,
        super(const IapState()) {
+    on<IapAccessChanged>(
+      (event, emit) => emit(state.copyWith(isPremium: event.isPremium)),
+    );
     on<IapStarted>(_onStarted);
     on<IapRefreshRequested>(_onRefreshRequested);
     on<IapPaywallRequested>(_onPaywallRequested);
@@ -71,6 +74,7 @@ class IapBloc extends Bloc<IapEvent, IapState> {
     BaseUseCase<Subscription, NoParams> operation,
     Emitter<IapState> emit,
   ) async {
+    if (state.status == IapViewStatus.loading) return;
     emit(state.copyWith(status: IapViewStatus.loading, clearMessage: true));
     final result = await operation(NoParams.instance);
     result.fold(
@@ -81,7 +85,15 @@ class IapBloc extends Bloc<IapEvent, IapState> {
         state.copyWith(
           status: IapViewStatus.ready,
           isPremium: subscription.isPremium,
-          clearMessage: true,
+          message: switch (subscription.purchaseStatus) {
+            PurchaseStatus.pending =>
+              'Payment is pending. Premium will unlock after the store confirms it.',
+            PurchaseStatus.cancelled => 'Purchase cancelled.',
+            PurchaseStatus.purchased => 'Purchase completed.',
+            PurchaseStatus.restored => 'Purchases restored.',
+            _ => null,
+          },
+          clearMessage: subscription.purchaseStatus == null,
         ),
       ),
     );
