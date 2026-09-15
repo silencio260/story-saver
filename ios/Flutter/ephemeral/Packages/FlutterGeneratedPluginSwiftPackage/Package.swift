@@ -25,6 +25,7 @@ let package = Package(
         .package(name: "onesignal_flutter", path: "../.packages/onesignal_flutter-5.6.8"),
         .package(name: "device_info_plus", path: "../.packages/device_info_plus-11.3.0"),
         .package(name: "in_app_review", path: "../.packages/in_app_review-2.0.11"),
+        .package(name: "image_picker_ios", path: "../.packages/image_picker_ios-0.8.13+7"),
         .package(name: "firebase_remote_config", path: "../.packages/firebase_remote_config-5.5.0"),
         .package(name: "firebase_core", path: "../.packages/firebase_core-3.15.2"),
         .package(name: "flutter_local_notifications", path: "../.packages/flutter_local_notifications-19.5.0"),
@@ -33,7 +34,6 @@ let package = Package(
         .package(name: "posthog_flutter", path: "../.packages/posthog_flutter-5.39.0"),
         .package(name: "firebase_analytics", path: "../.packages/firebase_analytics-11.6.0"),
         .package(name: "flutter_timezone", path: "../.packages/flutter_timezone-4.1.1"),
-        .package(name: "image_picker_ios", path: "../.packages/image_picker_ios-0.8.13+7"),
         .package(name: "sqflite_darwin", path: "../.packages/sqflite_darwin-2.4.3+1"),
         .package(name: "FlutterFramework", path: "../.packages/FlutterFramework")
     ],
@@ -51,6 +51,7 @@ let package = Package(
                 .product(name: "onesignal-flutter", package: "onesignal_flutter"),
                 .product(name: "device-info-plus", package: "device_info_plus"),
                 .product(name: "in-app-review", package: "in_app_review"),
+                .product(name: "image-picker-ios", package: "image_picker_ios"),
                 .product(name: "firebase-remote-config", package: "firebase_remote_config"),
                 .product(name: "firebase-core", package: "firebase_core"),
                 .product(name: "flutter-local-notifications", package: "flutter_local_notifications"),
@@ -59,7 +60,6 @@ let package = Package(
                 .product(name: "posthog-flutter", package: "posthog_flutter"),
                 .product(name: "firebase-analytics", package: "firebase_analytics"),
                 .product(name: "flutter-timezone", package: "flutter_timezone"),
-                .product(name: "image-picker-ios", package: "image_picker_ios"),
                 .product(name: "sqflite-darwin", package: "sqflite_darwin"),
                 .product(name: "FlutterFramework", package: "FlutterFramework")
             ]

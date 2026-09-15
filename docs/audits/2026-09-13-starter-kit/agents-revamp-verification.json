@@ -1,0 +1,30 @@
+{
+  "skills_validated": 55,
+  "local_links_checked": 285,
+  "json_files_parsed": 6,
+  "xml_files_parsed": 3,
+  "remote_defaults_matched": 27,
+  "dependency_walks": {
+    "small_app": [
+      "flutter",
+      "genrevibes_core",
+      "genrevibes_onboarding",
+      "genrevibes_settings",
+      "genrevibes_starter_kit",
+      "genrevibes_storage",
+      "genrevibes_storage_shared_preferences",
+      "shared_preferences"
+    ],
+    "feedback_only": [
+      "feedbacknest_core",
+      "flutter",
+      "genrevibes_app_rating",
+      "genrevibes_core",
+      "genrevibes_feedback",
+      "genrevibes_feedback_ui",
+      "genrevibes_feedbacknest",
+      "genrevibes_storage"
+    ]
+  },
+  "errors": []
+}
