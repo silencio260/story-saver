@@ -42,6 +42,8 @@ import 'package:genrevibes_storage_shared_preferences/genrevibes_storage_shared_
 import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
 import '../features/analytics/data/services/analytics_service.dart';
+import '../features/analytics/data/services/push_analytics_tracker.dart';
+import '../features/notifications/daily_reminder_service.dart';
 import '../features/analytics/data/services/tracked_local_notifications.dart';
 import '../features/monetization/presentation/controllers/legacy/ad_suppression_manager.dart';
 import 'app_env.dart';
@@ -485,38 +487,15 @@ Future<AppRuntime> _composeApp(
   );
   resources.addModule(localNotifications);
 
-  final pushListener = push.events.listen((event) {
-    switch (event) {
-      case PushMessageReceived(:final message):
-        unawaited(
-          AnalyticsService.track('push_received', {
-            'provider': 'onesignal',
-            'notification_id': message.messageId,
-            'app_state': 'foreground',
-          }),
-        );
-      case PushMessageOpened(:final message):
-        unawaited(
-          AnalyticsService.track('push_opened', {
-            'provider': 'onesignal',
-            'notification_id': message.messageId,
-            if (message.actionId != null) 'action_id': message.actionId,
-          }),
-        );
-      case PushStateChanged(:final reason, :final state):
-        unawaited(
-          AnalyticsService.track('push_state_changed', {
-            'provider': state.providerId,
-            'reason': reason,
-            'permission': state.permission.name,
-            'opted_in': state.optedIn,
-            'deliverable': state.isDeliverable,
-          }),
-        );
-    }
-  });
+  final pushAnalytics = PushAnalyticsTracker(provider: push, store: store)
+    ..start();
+  resources.add(pushAnalytics.dispose);
+  final dailyReminders = DailyReminderService(
+    store: store,
+    scheduler: localNotifications,
+    permissions: permissions,
+  );
 
-  resources.add(pushListener.cancel);
   final onboarding = OnboardingController(store: store);
   resources.addModule(onboarding);
 
@@ -867,6 +846,8 @@ Future<AppRuntime> _composeApp(
     ads: ads,
     iap: iap,
     push: push,
+    pushAnalytics: pushAnalytics,
+    dailyReminders: dailyReminders,
     feedback: feedback,
     remoteConfig: remoteConfig,
     sessionReplay: sessionReplay,

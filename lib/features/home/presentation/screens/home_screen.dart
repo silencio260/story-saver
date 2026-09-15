@@ -13,6 +13,9 @@ import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
 import '../../../../bootstrap/app_env.dart';
+import '../../../../bootstrap/app_runtime.dart';
+import '../../../notifications/daily_reminder_service.dart';
+import '../../../notifications/notification_strings.dart';
 import '../../../../config/routes_manager.dart';
 import '../../../../container_injector.dart';
 import '../../../../core/utils/legacy_custom_colors.dart';
@@ -97,11 +100,12 @@ class _HomeScreenState extends State<HomeScreen>
     // an interstitial straight after it is one ad on top of another.
     unawaited(_preloadExitAd());
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _openNotification();
       if (mounted && SubscriptionManager().hasReachedFirstStatus) {
-        RatingPrompt.showIfEligible(context);
+        await RatingPrompt.showIfEligible(context);
       }
+      if (mounted) await _askForNotifications();
     });
   }
 
@@ -112,6 +116,10 @@ class _HomeScreenState extends State<HomeScreen>
     final tap =
         (notifications as LocalNotificationPendingInteractions)
             .takePendingInteraction();
+    if (tap?.payload == DailyReminderService.payload) {
+      _showStatuses();
+      return;
+    }
     if (tap == null ||
         (tap.notificationId != 0 && tap.payload != 'saved_media')) {
       return;
@@ -121,6 +129,51 @@ class _HomeScreenState extends State<HomeScreen>
     ).popUntil((route) => route.settings.name == Routes.home || route.isFirst);
     context.read<NavigationBloc>().add(const NavigationTabSelected(2));
     context.read<SavedMediaBloc>().add(const SavedMediaLoadRequested());
+  }
+
+  void _showStatuses() {
+    Navigator.of(
+      context,
+    ).popUntil((route) => route.settings.name == Routes.home || route.isFirst);
+    context.read<NavigationBloc>().add(const NavigationTabSelected(0));
+    context.read<StatusBloc>().add(const StatusLoadRequested());
+  }
+
+  /// First launch: the system prompt. After a denial or "Not now": the modal,
+  /// every so often, and the system prompt only if the user taps Allow.
+  Future<void> _askForNotifications() async {
+    final notifications = sl<AppRuntime>().dailyReminders;
+    final prompt = await notifications.promptToShow();
+    if (!mounted) return;
+    if (prompt == NotificationPrompt.none ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    if (prompt == NotificationPrompt.modal) {
+      final allow = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text(NotificationStrings.promptTitle),
+              content: const Text(NotificationStrings.promptBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text(NotificationStrings.notNow),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text(NotificationStrings.allow),
+                ),
+              ],
+            ),
+      );
+      if (allow != true) {
+        await notifications.postpone();
+        return;
+      }
+    }
+    await notifications.requestPermission();
   }
 
   @override

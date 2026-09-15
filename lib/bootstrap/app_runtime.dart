@@ -19,6 +19,8 @@ import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 import 'package:genrevibes_storage/genrevibes_storage.dart';
 import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
+import '../features/analytics/data/services/push_analytics_tracker.dart';
+import '../features/notifications/daily_reminder_service.dart';
 import 'app_env.dart';
 
 /// Everything the composition root built, ready to hand to dependency
@@ -42,6 +44,8 @@ final class AppRuntime {
     required this.ads,
     required this.iap,
     required this.push,
+    required this.pushAnalytics,
+    required this.dailyReminders,
     required this.feedback,
     required this.remoteConfig,
     required this.sessionReplay,
@@ -110,6 +114,9 @@ final class AppRuntime {
 
   /// Remote push.
   final PushNotificationProvider push;
+
+  final PushAnalyticsTracker pushAnalytics;
+  final DailyReminderService dailyReminders;
 
   /// User feedback submission.
   final FeedbackProvider feedback;

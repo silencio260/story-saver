@@ -6,6 +6,7 @@ import 'package:genrevibes_notifications/genrevibes_notifications.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_system_ui/genrevibes_system_ui.dart';
 
+import 'bootstrap/app_runtime.dart';
 import 'config/routes_manager.dart';
 import 'config/theme_manager.dart';
 import 'container_injector.dart';
@@ -59,8 +60,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
     if (state == AppLifecycleState.resumed) {
       unawaited(AnalyticsService.drainPending());
-      unawaited(_refreshNotificationZone());
+      unawaited(_refreshNotifications());
+      unawaited(sl<AppRuntime>().pushAnalytics.refresh());
     }
+  }
+
+  /// Moves the schedule to the current timezone, then schedules the daily
+  /// notifications if permission was granted while the app was away.
+  Future<void> _refreshNotifications() async {
+    await _refreshNotificationZone();
+    await sl<AppRuntime>().dailyReminders.sync();
   }
 
   Future<void> _refreshNotificationZone() async {

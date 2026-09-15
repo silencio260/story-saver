@@ -133,6 +133,8 @@ class _StartupAppState extends State<_StartupApp> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !resources.isClosed) {
           unawaited(runtime.kit.startDeferred());
+          unawaited(runtime.pushAnalytics.refresh(reason: 'startup'));
+          unawaited(runtime.dailyReminders.sync());
           unawaited(AnalyticsService.drainPending());
         }
       });
