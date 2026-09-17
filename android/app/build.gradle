@@ -40,6 +40,13 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    // Release builds skip Android lint. It runs once per plugin module, took
+    // hours and ran Gradle out of memory on an 8 GB Mac. Run lint from Android
+    // Studio when you want it.
+    lint {
+        checkReleaseBuilds false
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.genrevibes.whatsappstorysaver"
@@ -85,30 +92,36 @@ dependencies {
     // adds app size, so trim this to the networks the dashboard uses.
     // Appodeal's analytics adapters (Adjust, AppsFlyer, Facebook, Firebase,
     // Sentry) are left out: the app reports ad revenue itself.
+    // Commented out on 17 September 2026: no account for these in the Appodeal
+    // dashboard (Mediation Setup > Ad Networks), so they cannot serve. Kept as
+    // comments, not deleted: restoring a network is then a one-line edit plus a
+    // release. applovin_max and level_play belong to the dashboard's MAX and
+    // LevelPlay tabs; uncomment them if accounts appear there. bidmachine and
+    // bidon stay in the build: Appodeal ships them as its own demand.
     implementation "com.appodeal.ads.sdk.adapters:admob:24.7.0.0"
     implementation "com.appodeal.ads.sdk.adapters:amazon:11.3.0.0"
     implementation "com.appodeal.ads.sdk.adapters:applovin:13.5.1.0"
-    implementation "com.appodeal.ads.sdk.adapters:applovin_max:13.5.1.1"
+    // implementation "com.appodeal.ads.sdk.adapters:applovin_max:13.5.1.1"
     implementation "com.appodeal.ads.sdk.adapters:bidmachine:3.7.1.0"
     implementation "com.appodeal.ads.sdk.adapters:bidon:0.14.0.0"
     implementation "com.appodeal.ads.sdk.adapters:bigo_ads:5.6.2.0"
-    implementation "com.appodeal.ads.sdk.adapters:chartboost:9.10.2.0"
+    // implementation "com.appodeal.ads.sdk.adapters:chartboost:9.10.2.0"
     implementation "com.appodeal.ads.sdk.adapters:dt_exchange:8.4.1.0"
     implementation "com.appodeal.ads.sdk.adapters:inmobi:11.1.0.0"
     implementation "com.appodeal.ads.sdk.adapters:ironsource:9.1.0.0"
-    implementation "com.appodeal.ads.sdk.adapters:level_play:9.1.0.0"
+    // implementation "com.appodeal.ads.sdk.adapters:level_play:9.1.0.0"
     implementation "com.appodeal.ads.sdk.adapters:meta:6.21.0.0"
     implementation "com.appodeal.ads.sdk.adapters:mintegral:17.1.61.0"
-    implementation "com.appodeal.ads.sdk.adapters:mobilefuse:1.9.3.0"
-    implementation "com.appodeal.ads.sdk.adapters:moloco:4.3.1.0"
+    // implementation "com.appodeal.ads.sdk.adapters:mobilefuse:1.9.3.0"
+    // implementation "com.appodeal.ads.sdk.adapters:moloco:4.3.1.0"
     implementation "com.appodeal.ads.sdk.adapters:my_target:5.47.1.0"
-    implementation "com.appodeal.ads.sdk.adapters:ogury:6.2.0.0"
-    implementation "com.appodeal.ads.sdk.adapters:pubmatic:4.10.0.0"
-    implementation "com.appodeal.ads.sdk.adapters:smaato:22.7.2.0"
-    implementation "com.appodeal.ads.sdk.adapters:startio:5.2.4.0"
-    implementation "com.appodeal.ads.sdk.adapters:taurusx:1.12.2.0"
+    // implementation "com.appodeal.ads.sdk.adapters:ogury:6.2.0.0"
+    // implementation "com.appodeal.ads.sdk.adapters:pubmatic:4.10.0.0"
+    // implementation "com.appodeal.ads.sdk.adapters:smaato:22.7.2.0"
+    // implementation "com.appodeal.ads.sdk.adapters:startio:5.2.4.0"
+    // implementation "com.appodeal.ads.sdk.adapters:taurusx:1.12.2.0"
     implementation "com.appodeal.ads.sdk.adapters:unity_ads:4.17.0.0"
-    implementation "com.appodeal.ads.sdk.adapters:verve:3.7.1.0"
+    // implementation "com.appodeal.ads.sdk.adapters:verve:3.7.1.0"
     implementation "com.appodeal.ads.sdk.adapters:vungle:7.6.1.0"
     implementation "com.appodeal.ads.sdk.adapters:yandex:7.17.0.0"
 }
@@ -117,3 +130,23 @@ flutter {
     source = "../.."
 }
 
+
+// TEST ONLY, remove together with the partial-shrinking switches in
+// gradle.properties. With partial shrinking on, R8 never writes its build-info
+// file (r8-metadata.dat), and packageReleaseBundle refuses to start because the
+// file it is told to read does not exist. Write an empty JSON object there so
+// packaging can run: it states nothing about the build, rather than inventing
+// optimization data for Play, which reads this as com.android.tools/r8.json.
+// tasks.matching { it.name == "minifyReleaseWithR8" }.configureEach { r8Task ->
+//     r8Task.doLast {
+//         def metadata = new File(
+//             project.layout.buildDirectory.get().asFile,
+//             "intermediates/r8_metadata/release/minifyReleaseWithR8/r8-metadata.dat"
+//         )
+//         if (!metadata.exists()) {
+//             metadata.parentFile.mkdirs()
+//             metadata.text = "{}"
+//             logger.lifecycle("Wrote placeholder ${metadata.name} for partial shrinking.")
+//         }
+//     }
+// }

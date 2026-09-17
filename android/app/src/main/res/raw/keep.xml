@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resource shrinking runs on release builds. Dart names the notification icon
+     as text ("ic_stat_download" in app_bootstrap.dart and auto_save_service.dart),
+     and the shrinker cannot see Dart strings, so without this it can delete the
+     icon and notifications silently stop showing. Keep every drawable and the
+     launcher icon; there are only a handful. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/*,@mipmap/launcher_icon" />
