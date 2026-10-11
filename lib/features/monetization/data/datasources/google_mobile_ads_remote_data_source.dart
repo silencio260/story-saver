@@ -46,47 +46,74 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
   bool _initialDelayApplied = false;
   bool _adsDisabled = false;
 
+  Timer? _retryTimer;
+  int _loadGeneration = 0;
+
+  bool get _mayLoad =>
+      !_adsDisabled &&
+      _developerAllows &&
+      _subscriptionManager.adsAllowed &&
+      _config.read(AdsPolicyKeys.adsEnabled);
+
+  void _scheduleRetry() {
+    if (!_mayLoad || _retryTimer != null) return;
+    _retryTimer = Timer(Duration.zero, () {
+      _retryTimer = null;
+      if (!_mayLoad || _ads.isReady(AppPlacements.interstitial)) return;
+      unawaited(_retryLoad());
+    });
+  }
+
+  Future<void> _retryLoad() async {
+    try {
+      await loadInterstitial();
+    } on Object {
+      // loadInterstitial has scheduled the next eligible attempt.
+    }
+  }
+
   @override
   Future<void> loadInterstitial() async {
-    if (!_developerAllows) return;
-    await _subscriptionManager.initialize();
-    if (!_subscriptionManager.adsAllowed) return;
-    _adsDisabled = false;
-    if (_isLoading || _ads.isReady(AppPlacements.interstitial)) return;
-
-    // Consent and the ad SDK start after the first frame. An ad may not be
-    // requested before consent has been gathered, so this waits for them
-    // rather than the application waiting at launch.
-    await sl<GenRevibesStarterKit>().deferredStartupComplete;
-
-    await _subscriptionManager.initialize();
-    if (!_subscriptionManager.adsAllowed) return;
-
+    if (!_developerAllows || _isLoading) return;
     _isLoading = true;
-    if (!_initialDelayApplied) {
-      _initialDelayApplied = true;
-      await Future<void>.delayed(
-        Duration(
-          seconds: _config.read(AdsPolicyKeys.timeBeforeFirstInterstitial),
-        ),
-      );
-    }
-    if (_adsDisabled || !_subscriptionManager.adsAllowed) {
-      _isLoading = false;
-      return;
-    }
+    _adsDisabled = false;
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    final generation = _loadGeneration;
+    try {
+      await _subscriptionManager.initialize();
+      if (generation != _loadGeneration || !_mayLoad) return;
+      if (_ads.isReady(AppPlacements.interstitial)) return;
 
-    final result = await _ads.load(AppPlacements.interstitial);
-    _isLoading = false;
-    if (_adsDisabled || !_subscriptionManager.adsAllowed) {
-      await _ads.discard(AppPlacements.interstitial);
-      return;
+      // Consent and SDK startup must finish before requesting inventory.
+      await sl<GenRevibesStarterKit>().deferredStartupComplete;
+      if (generation != _loadGeneration || !_mayLoad) return;
+      if (!_initialDelayApplied) {
+        _initialDelayApplied = true;
+        await Future<void>.delayed(
+          Duration(
+            seconds: _config.read(AdsPolicyKeys.timeBeforeFirstInterstitial),
+          ),
+        );
+      }
+      if (generation != _loadGeneration || !_mayLoad) return;
+      final result = await _ads.load(AppPlacements.interstitial);
+      if (generation != _loadGeneration || !_mayLoad) {
+        await _ads.discard(AppPlacements.interstitial);
+        return;
+      }
+      result.fold(
+        onSuccess: (_) {
+          if (!_ads.isReady(AppPlacements.interstitial)) _scheduleRetry();
+        },
+        onFailure: (error) => throw StateError(error.message),
+      );
+    } on Object {
+      if (generation == _loadGeneration) _scheduleRetry();
+      rethrow;
+    } finally {
+      _isLoading = false;
     }
-    // The repository above still signals failure by throwing.
-    result.fold(
-      onSuccess: (_) {},
-      onFailure: (error) => throw StateError(error.message),
-    );
   }
 
   @override
@@ -116,13 +143,16 @@ class GoogleMobileAdsRemoteDataSource implements AdsBaseRemoteDataSource {
     try {
       await loadInterstitial();
     } on Object {
-      // A later user action can retry loading without affecting the UI.
+      // Failed loads schedule their next eligible attempt automatically.
     }
   }
 
   @override
   Future<void> dispose() async {
     _adsDisabled = true;
+    _loadGeneration++;
+    _retryTimer?.cancel();
+    _retryTimer = null;
     await _ads.discard(AppPlacements.interstitial);
   }
 }

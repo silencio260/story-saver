@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Fast Real Ads (reuse debug APK)" type="FlutterRunConfigurationType" factoryName="Flutter">
+    <option name="filePath" value="$PROJECT_DIR$/lib/main.dart" />
+    <option name="additionalArgs" value="--debug --no-pub --dart-define-from-file=env/dev.json --dart-define=ads_live_diagnostics=true --use-application-binary=build/app/outputs/flutter-apk/app-debug.apk" />
+    <method v="2" />
+  </configuration>
+</component>

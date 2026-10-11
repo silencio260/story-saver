@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_exit_prompt/genrevibes_exit_prompt.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
 import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 
 import '../../../../bootstrap/app_env.dart';
+import '../../../../bootstrap/app_runtime.dart';
 import '../../../../config/routes_manager.dart';
 import '../../../../container_injector.dart';
 import '../../../../core/utils/legacy_custom_colors.dart';
@@ -149,14 +151,14 @@ abstract final class HomeExitPrompt {
   }
 
   static ExitPromptAd _ad(AppodealAdProvider provider) => ExitPromptAd(
-    height: adStyle.resolvedHeight,
     builder:
         (_) => AppodealNativeAdView(
+          retryDelay: Duration.zero,
           provider: provider,
+          logger: sl<AppRuntime>().kitLog ?? const NoopKitLogger(),
           placement: AppPlacements.exitNative,
           enabled: true,
           style: adStyle,
-          placeholder: const AppodealNativeAdPlaceholder(style: adStyle),
           // The next Back finds an ad already loaded.
           preloadNext: true,
         ),

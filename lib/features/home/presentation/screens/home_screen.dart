@@ -396,8 +396,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 ),
                 body: TabBarView(controller: _tabController, children: _pages),
-                // A native ad under the grid instead of a banner. Its space is
-                // kept, so the grid never jumps when it loads.
+                // A native ad under the grid, shown only when inventory is ready.
                 bottomNavigationBar: const NativeAdSlot(
                   placement: AppPlacements.homeNative,
                   style: _homeAdStyle,

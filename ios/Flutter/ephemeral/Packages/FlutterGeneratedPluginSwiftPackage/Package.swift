@@ -34,7 +34,7 @@ let package = Package(
         .package(name: "posthog_flutter", path: "../.packages/posthog_flutter-5.39.0"),
         .package(name: "firebase_analytics", path: "../.packages/firebase_analytics-11.6.0"),
         .package(name: "flutter_timezone", path: "../.packages/flutter_timezone-4.1.1"),
-        .package(name: "sqflite_darwin", path: "../.packages/sqflite_darwin-2.4.3+1"),
+        .package(name: "sqflite_darwin", path: "../.packages/sqflite_darwin-2.4.2"),
         .package(name: "FlutterFramework", path: "../.packages/FlutterFramework")
     ],
     targets: [

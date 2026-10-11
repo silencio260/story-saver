@@ -5,20 +5,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
+import '../../../../bootstrap/app_runtime.dart';
 import '../../../../container_injector.dart';
 import '../../data/services/subscription_service.dart';
 import '../bloc/ads_bloc/ads_bloc.dart';
 import '../bloc/iap_bloc/iap_bloc.dart';
 
-/// A native ad with its space kept, for a screen built around one.
-///
-/// The space is part of the screen for every user who can be shown ads, from
-/// the first frame, with a quiet placeholder until the ad loads, so nothing
-/// moves when it arrives. Premium users, and platforms where native ads do not
-/// render, get no space at all.
+/// A native ad that takes space only when eligible inventory is ready.
+/// Loading, no fill, premium access, and unsupported platforms leave no gap.
 ///
 /// The ad waits for what the banner waits for: deferred startup (consent),
 /// known entitlements, access that allows ads, and ads not disabled. Native
@@ -35,7 +33,7 @@ class NativeAdSlot extends StatefulWidget {
   /// A native placement configured on the Appodeal provider.
   final AdPlacement placement;
 
-  /// The ad's look; its `resolvedHeight` is the space kept.
+  /// The ad's look; its `resolvedHeight` is used only for a loaded ad.
   final AppodealNativeAdStyle style;
 
   /// Around the ad, applied only when the slot takes space.
@@ -106,24 +104,19 @@ class _NativeAdSlotState extends State<NativeAdSlot> {
                   _access.adsAllowed &&
                   iap.status == IapViewStatus.ready &&
                   adsState.status != AdsViewStatus.disabled;
-              return SafeArea(
-                top: false,
-                child: Padding(
-                  padding: widget.padding,
-                  child: SizedBox(
-                    height: widget.style.resolvedHeight,
-                    child: AppodealNativeAdView(
-                      provider: ads,
-                      placement: widget.placement,
-                      enabled: enabled,
-                      style: widget.style,
-                      placeholder: AppodealNativeAdPlaceholder(
-                        style: widget.style,
-                      ),
-                      preloadNext: widget.preloadNext,
+              return AppodealNativeAdView(
+                retryDelay: Duration.zero,
+                provider: ads,
+                logger: sl<AppRuntime>().kitLog ?? const NoopKitLogger(),
+                placement: widget.placement,
+                enabled: enabled,
+                style: widget.style,
+                adBuilder:
+                    (context, ad) => SafeArea(
+                      top: false,
+                      child: Padding(padding: widget.padding, child: ad),
                     ),
-                  ),
-                ),
+                preloadNext: widget.preloadNext,
               );
             },
           ),

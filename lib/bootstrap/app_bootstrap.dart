@@ -374,7 +374,7 @@ Future<AppRuntime> _composeApp(
       dependencies.ads ??
       AppodealAdProvider(
         configuration: env.appodeal,
-        testMode: developerAccess.current.servesTestAds || env.keepsTestAds,
+        testMode: env.adTestModeFor(developerAccess.current),
         canRequestAds:
             () =>
                 subscriptionAccess.adsAllowed &&
@@ -741,7 +741,7 @@ Future<AppRuntime> _composeApp(
     // An optional capability on a different interface, so bind it by pattern:
     // `is` cannot narrow an AdProvider to an unrelated type.
     if (ads case final AdTestModeProvider testable) {
-      unawaited(testable.setTestMode(access.servesTestAds || env.keepsTestAds));
+      unawaited(testable.setTestMode(env.adTestModeFor(access)));
     }
     navigationBar.setDeveloperMode(access.isGranted);
     unawaited(
@@ -809,6 +809,20 @@ Future<AppRuntime> _composeApp(
   // provider, which Appodeal's Flutter plugin never tells about them. Revenue
   // for native ads still arrives on ads.events above.
   if (ads is AppodealAdProvider) {
+    if (env.isDevelopment) {
+      resources.add(
+        AppodealNativeAds.instance.events.listen((event) {
+          logger.log(
+            event == AppodealNativeEventType.failedToLoad ||
+                    event == AppodealNativeEventType.showFailed
+                ? KitLogLevel.warning
+                : KitLogLevel.debug,
+            'Native SDK callback: ${event.name}',
+            moduleId: 'ads.appodeal.native',
+          );
+        }).cancel,
+      );
+    }
     resources.add(
       AppodealNativeAds.instance
           // Once for every native placement — onboarding and the exit prompt —

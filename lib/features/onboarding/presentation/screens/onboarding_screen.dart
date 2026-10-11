@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genrevibes_ads/genrevibes_ads.dart';
 import 'package:genrevibes_ads_appodeal/genrevibes_ads_appodeal.dart';
 import 'package:genrevibes_ads_appodeal_native/genrevibes_ads_appodeal_native.dart';
+import 'package:genrevibes_core/genrevibes_core.dart';
 import 'package:genrevibes_developer_access/genrevibes_developer_access.dart';
 import 'package:genrevibes_onboarding/genrevibes_onboarding.dart';
 import 'package:genrevibes_remote_config/genrevibes_remote_config.dart';
@@ -12,6 +13,7 @@ import 'package:genrevibes_remote_policy/genrevibes_remote_policy.dart';
 import 'package:genrevibes_starter_kit/genrevibes_starter_kit.dart';
 
 import '../../../../bootstrap/app_env.dart';
+import '../../../../bootstrap/app_runtime.dart';
 import '../../../../config/routes_manager.dart';
 import '../../../../container_injector.dart';
 import '../../../../core/utils/legacy_custom_colors.dart';
@@ -71,18 +73,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       page(
         OnboardingStrings.firstTitle,
         OnboardingStrings.firstDescription,
-        'assets/images/onboarding_1.png',
+        'assets/images/onboarding_1.webp',
       ),
       page(
         OnboardingStrings.secondTitle,
         OnboardingStrings.secondDescription,
-        'assets/images/onboarding_2.png',
+        'assets/images/onboarding_2.webp',
         showAd: false,
       ),
       page(
         OnboardingStrings.thirdTitle,
         OnboardingStrings.thirdDescription,
-        'assets/images/onboarding_3.png',
+        'assets/images/onboarding_3.webp',
       ),
     ];
   }
@@ -194,8 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               final ads = sl<AdProvider>();
               // The remote switch, premium, and whether native ads render
               // on this platform at all pick the presentation. An ad
-              // screen keeps its ad's space, so it is only chosen where an
-              // ad can fill it.
+              // screen expands its ad slot only when inventory is ready.
               final withAds =
                   sl<RemoteConfigCoordinator>().current.read(
                     OnboardingPolicyKeys.adsEnabled,
@@ -228,20 +229,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   adSlot:
                       withAds && ads is AppodealAdProvider
                           ? OnboardingAdSlot(
-                            // The ad's space is part of every ad screen
-                            // from its first frame, so nothing moves when
-                            // the ad loads.
-                            reservedHeight: _adStyle.resolvedHeight,
                             builder:
                                 (context, _) => AppodealNativeAdView(
+                                  retryDelay: Duration.zero,
                                   provider: ads,
+                                  logger:
+                                      sl<AppRuntime>().kitLog ??
+                                      const NoopKitLogger(),
                                   placement: AppPlacements.onboardingNative,
                                   enabled: adAllowed,
                                   style: _adStyle,
-                                  placeholder:
-                                      const AppodealNativeAdPlaceholder(
-                                        style: _adStyle,
-                                      ),
                                   // The full-screen page between the two
                                   // ad screens is when the next ad loads.
                                   preloadNext: true,

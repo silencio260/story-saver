@@ -16,6 +16,10 @@
   <!-- If you need to save media files -->
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
   <uses-permission android:name="com.android.vending.BILLING"/>
+  <!-- Ad SDKs merge in ACCESS_WIFI_STATE, which Play treats as requiring WiFi
+       hardware and then hides the app from devices without it (36 devices, mostly
+       cars and TVs, on version code 10). The SDKs only read WiFi state. -->
+  <uses-feature android:name="android.hardware.wifi" android:required="false"/>
   <application android:label="Story Saver" android:name="${applicationName}" android:requestLegacyExternalStorage="true" android:enableOnBackInvokedCallback="true" android:icon="@mipmap/launcher_icon">
     <!-- flutter_local_notifications: shows scheduled notifications, and restores
          them after a restart or an app update. Without these they never fire. -->

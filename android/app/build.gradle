@@ -96,13 +96,25 @@ dependencies {
     // dashboard (Mediation Setup > Ad Networks), so they cannot serve. Kept as
     // comments, not deleted: restoring a network is then a one-line edit plus a
     // release. applovin_max and level_play belong to the dashboard's MAX and
-    // LevelPlay tabs; uncomment them if accounts appear there. bidmachine and
+    // LevelPlay tabs; restore them when configured there. bidmachine and
     // bidon stay in the build: Appodeal ships them as its own demand.
     implementation "com.appodeal.ads.sdk.adapters:admob:24.7.0.0"
     implementation "com.appodeal.ads.sdk.adapters:amazon:11.3.0.0"
     implementation "com.appodeal.ads.sdk.adapters:applovin:13.5.1.0"
-    // implementation "com.appodeal.ads.sdk.adapters:applovin_max:13.5.1.1"
+    // Restored 7 October 2026: All countries - MAX has a configured interstitial unit.
+    implementation "com.appodeal.ads.sdk.adapters:applovin_max:13.5.1.1"
+    // Added 7 October 2026: MAX logs report these mediation adapter classes missing.
+    // Appodeal's direct adapters do not supply MAX's network adapters; include
+    // the versions listed by stack_appodeal_flutter 4.2.0 for the existing SDKs.
+    implementation "com.applovin.mediation:bidmachine-adapter:3.7.1.0"
+    implementation "com.applovin.mediation:inmobi-adapter:11.1.0.0"
+    implementation "com.applovin.mediation:vungle-adapter:7.6.1.0"
     implementation "com.appodeal.ads.sdk.adapters:bidmachine:3.7.1.0"
+    // Added 7 October 2026: native Meta and Mintegral units use header bidding.
+    // Their direct Appodeal adapters below do not include these BidMachine bridges.
+    // Versions match the installed stack_appodeal_flutter 4.2.0 integration guide.
+    implementation "io.bidmachine:ads.networks.meta_audience:6.21.0.1"
+    implementation "io.bidmachine:ads.networks.mintegral:17.1.61.1"
     implementation "com.appodeal.ads.sdk.adapters:bidon:0.14.0.0"
     implementation "com.appodeal.ads.sdk.adapters:bigo_ads:5.6.2.0"
     // implementation "com.appodeal.ads.sdk.adapters:chartboost:9.10.2.0"
@@ -118,7 +130,8 @@ dependencies {
     // implementation "com.appodeal.ads.sdk.adapters:ogury:6.2.0.0"
     // implementation "com.appodeal.ads.sdk.adapters:pubmatic:4.10.0.0"
     // implementation "com.appodeal.ads.sdk.adapters:smaato:22.7.2.0"
-    // implementation "com.appodeal.ads.sdk.adapters:startio:5.2.4.0"
+    // Restored 7 October 2026: startapp_phone_native is the native waterfall fallback.
+    implementation "com.appodeal.ads.sdk.adapters:startio:5.2.4.0"
     // implementation "com.appodeal.ads.sdk.adapters:taurusx:1.12.2.0"
     implementation "com.appodeal.ads.sdk.adapters:unity_ads:4.17.0.0"
     // implementation "com.appodeal.ads.sdk.adapters:verve:3.7.1.0"

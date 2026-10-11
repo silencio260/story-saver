@@ -115,9 +115,9 @@ abstract final class AppDeveloperDevices {
 
 /// Build-time configuration, read from `--dart-define-from-file`.
 ///
-/// Every key here already exists in the app's `env/*.json`. Nothing is invented
-/// and nothing is defaulted to a real credential: an absent key yields an empty
-/// string and the module that needs it reports itself unconfigured.
+/// Credentials come from the app's `env/*.json`; diagnostic switches may be
+/// passed directly with `--dart-define`. Missing credentials default to an
+/// empty string and leave the corresponding module unconfigured.
 final class AppEnv {
   /// Creates an environment.
   const AppEnv({
@@ -135,6 +135,7 @@ final class AppEnv {
     this.developerPasscode = '',
     this.developerDeviceHashes = '',
     this.developerAccessAsStoreBuild = false,
+    this.useLiveAdsForDiagnostics = false,
   });
 
   /// Reads the environment from compile-time defines.
@@ -165,6 +166,7 @@ final class AppEnv {
       developerAccessAsStoreBuild: bool.fromEnvironment(
         'developer_access_store_build',
       ),
+      useLiveAdsForDiagnostics: bool.fromEnvironment('ads_live_diagnostics'),
     );
   }
 
@@ -258,6 +260,15 @@ final class AppEnv {
   /// build, and ads stay on test inventory — see [keepsTestAds]. A release
   /// build ignores it.
   final bool developerAccessAsStoreBuild;
+
+  /// Explicitly requests real inventory during a development diagnostic run.
+  /// Requires a fresh SDK initialization; ignored outside development builds.
+  final bool useLiveAdsForDiagnostics;
+
+  /// Inventory mode at startup and after developer access changes.
+  bool adTestModeFor(DeveloperAccess access) =>
+      !(isDevelopment && useLiveAdsForDiagnostics) &&
+      (access.servesTestAds || keepsTestAds);
 
   /// Whether ads stay on test inventory whatever developer access decides.
   ///

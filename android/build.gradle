@@ -1,27 +1,23 @@
 allprojects {
     repositories {
-        google()
-        mavenCentral()
+        google {
+            content {
+                excludeGroupByRegex 'com\\.appodeal(\\..*)?'
+            }
+        }
+        mavenCentral {
+            content {
+                excludeGroupByRegex 'com\\.appodeal(\\..*)?'
+            }
+        }
         // Appodeal and the network adapters it mediates.
         maven { url "https://artifactory.appodeal.com/appodeal" }
     }
 }
 
-buildscript {
-    // Define ext.kotlin_version if it's not already defined
-    // If you have this line elsewhere, ensure it's a compatible version.
-    // If not, we're adding it here.
-    ext.kotlin_version = '2.2.20'
-
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.11.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
+// Legacy plugins may read this value. Android and Kotlin plugin dependencies
+// are already declared in settings.gradle; do not resolve them again here.
+ext.kotlin_version = '2.2.20'
 
 // subprojects {
 //    afterEvaluate { project ->
@@ -46,3 +42,6 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
+// Record slow debug tasks locally, including partial results if a run is killed.
+apply from: 'build-timings.gradle'

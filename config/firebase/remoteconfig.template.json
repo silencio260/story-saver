@@ -1,0 +1,218 @@
+{
+  "parameterGroups": {
+    "Ads Group": {
+      "description": "The settings for ads",
+      "parameters": {
+        "min_insta_ad_interval": {
+          "defaultValue": {
+            "value": "7"
+          },
+          "description": "Minimum intervals btw showing interstitial ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "min_banner_ad_interval": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Minimum intervals btw showing banner ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "time_before_first_insta_ad": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Time before dispalying first insta ad",
+          "valueType": "NUMBER"
+        },
+        "ads_enabled": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Allows ads globally. App access and provider availability still apply."
+        },
+        "time_before_first_rewared_ad": {
+          "defaultValue": {
+            "value": "0"
+          },
+          "valueType": "NUMBER",
+          "description": "Seconds before the first paced rewarded ad. Preserve this existing key spelling."
+        },
+        "min_rewarded_ad_interval": {
+          "defaultValue": {
+            "value": "0"
+          },
+          "valueType": "NUMBER",
+          "description": "Minimum seconds between paced rewarded ads."
+        },
+        "min_native_interval": {
+          "defaultValue": {
+            "value": "0"
+          },
+          "valueType": "NUMBER",
+          "description": "Minimum seconds between paced native ads."
+        },
+        "min_app_open_ad": {
+          "defaultValue": {
+            "value": "0"
+          },
+          "valueType": "NUMBER",
+          "description": "Minimum seconds between paced app-open ads."
+        },
+        "should_show_app_open_ad": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Allows app-open ads when an integrated provider supports them."
+        },
+        "banner_ad_id": {
+          "defaultValue": {
+            "value": ""
+          },
+          "valueType": "STRING",
+          "description": "Optional ad unit override for a provider that supports unit IDs. Empty keeps the bundled unit."
+        },
+        "interstitial_ad_id": {
+          "defaultValue": {
+            "value": ""
+          },
+          "valueType": "STRING",
+          "description": "Optional ad unit override for a provider that supports unit IDs. Empty keeps the bundled unit."
+        },
+        "rewarded_ad_id": {
+          "defaultValue": {
+            "value": ""
+          },
+          "valueType": "STRING",
+          "description": "Optional ad unit override for a provider that supports unit IDs. Empty keeps the bundled unit."
+        },
+        "native_ad_id": {
+          "defaultValue": {
+            "value": ""
+          },
+          "valueType": "STRING",
+          "description": "Optional ad unit override for a provider that supports unit IDs. Empty keeps the bundled unit."
+        },
+        "app_open_ad_id": {
+          "defaultValue": {
+            "value": ""
+          },
+          "valueType": "STRING",
+          "description": "Optional ad unit override for a provider that supports unit IDs. Empty keeps the bundled unit."
+        }
+      }
+    },
+    "Session replay": {
+      "parameters": {
+        "session_replay_enabled": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Replay master switch. Changes apply after fetch and activation."
+        },
+        "session_replay_percent": {
+          "defaultValue": {
+            "value": "100"
+          },
+          "valueType": "NUMBER",
+          "description": "Percentage of installs eligible for replay, from 0 to 100. Uses a stable install bucket."
+        },
+        "session_replay_mask_text": {
+          "defaultValue": {
+            "value": "false"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Masks text. Changing SDK masking requires restart; stricter pending masking pauses replay."
+        },
+        "session_replay_mask_images": {
+          "defaultValue": {
+            "value": "false"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Masks images. Changing SDK masking requires restart; stricter pending masking pauses replay."
+        }
+      }
+    },
+    "Developer access": {
+      "parameters": {
+        "developer_device_hashes": {
+          "defaultValue": {
+            "value": "[\"5251fe14611f35ccae754f48c9d4db497a123df2072e454c39357af2930a0d4f\"]"
+          },
+          "valueType": "JSON",
+          "description": "JSON array of developer device hashes. Never include raw device identifiers."
+        }
+      }
+    },
+    "Onboarding": {
+      "parameters": {
+        "onboarding_ads_enabled": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Allows onboarding ad slots; app access, startup, and provider rules still apply."
+        }
+      }
+    },
+    "Splash ads": {
+      "parameters": {
+        "splash_ad_enabled": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Launch-ad switch. Does not control ordinary in-app placements."
+        },
+        "splash_ad_provider": {
+          "defaultValue": {
+            "value": "appodeal"
+          },
+          "valueType": "STRING",
+          "description": "ID of a provider already integrated in the app. Unknown IDs skip the launch ad."
+        },
+        "splash_ad_format": {
+          "defaultValue": {
+            "value": "interstitial"
+          },
+          "valueType": "STRING",
+          "description": "interstitial, rewarded, app_open, or none. Unsupported formats skip. Select placements according to the app and current network requirements."
+        },
+        "splash_ad_max_wait_seconds": {
+          "defaultValue": {
+            "value": "8"
+          },
+          "valueType": "NUMBER",
+          "description": "Startup, decision, and ad-load wait budget for the splash, from 1 to 30 seconds."
+        },
+        "splash_ad_on_first_launch": {
+          "defaultValue": {
+            "value": "true"
+          },
+          "valueType": "BOOLEAN",
+          "description": "Allows a launch ad on first use, subject to the app eligibility rules."
+        }
+      }
+    },
+    "Exit prompt": {
+      "parameters": {
+        "exit_prompt_style": {
+          "defaultValue": {
+            "value": "features_sheet"
+          },
+          "valueType": "STRING",
+          "description": "features_sheet, offer_sheet, confirm_dialog, double_tap, none, ad_sheet, or ad_dialog. App content and eligibility determine the result."
+        },
+        "exit_prompt_exit_button": {
+          "defaultValue": {
+            "value": "standard"
+          },
+          "valueType": "STRING",
+          "description": "Exit button emphasis: standard or dimmed. Standard is the readable default."
+        }
+      }
+    }
+  }
+}

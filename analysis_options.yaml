@@ -13,6 +13,13 @@ analyzer:
   exclude:
     - deprecated_old_version_1/**
     - packages/genrevibes_starter_kit/deprecated_old_version_1/**
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   # The lint rules applied to this project can be customized in the

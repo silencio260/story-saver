@@ -57,3 +57,7 @@ app.*.map.json
 
 # Android Studio profiler heap dumps
 *.hprof
+
+/android/build/
+
+/ios/Flutter/ephemeral/.swift_pm.lock

@@ -1,0 +1,42 @@
+import java.util.concurrent.ConcurrentHashMap
+
+// Only observe debug builds. This does not change task inputs, outputs or cache
+// eligibility. Gradle 8.13 supports these listeners; configuration cache is off.
+def configurationStarted = System.nanoTime()
+def taskStarts = new ConcurrentHashMap<String, Long>()
+def timingReport = null
+def reportLock = new Object()
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.name == 'assembleDebug' }) {
+        timingReport = new File(rootProject.buildDir, 'reports/build-timing/latest.tsv')
+        timingReport.parentFile.mkdirs()
+        def configurationSeconds = (System.nanoTime() - configurationStarted) / 1_000_000_000d
+        timingReport.text = "seconds\ttask\toutcome\n" +
+            String.format(java.util.Locale.ROOT, '%.3f\troot project evaluation to task graph\tREADY\n', configurationSeconds)
+    }
+}
+
+gradle.taskGraph.beforeTask { task ->
+    if (timingReport != null) {
+        taskStarts.put(task.path, System.nanoTime())
+    }
+}
+
+gradle.taskGraph.afterTask { task, state ->
+    if (timingReport != null) {
+        def started = taskStarts.remove(task.path)
+        if (started != null) {
+            def seconds = (System.nanoTime() - started) / 1_000_000_000d
+            // Keep the report small and avoid writing a line for every skipped task.
+            if (seconds >= 1d || state.failure != null) {
+                def outcome = state.failure != null ? 'FAILED' :
+                    (state.skipped ? state.skipMessage : 'EXECUTED')
+                def row = String.format(java.util.Locale.ROOT, '%.3f\t%s\t%s\n', seconds, task.path, outcome)
+                synchronized (reportLock) {
+                    timingReport.append(row, 'UTF-8')
+                }
+            }
+        }
+    }
+}

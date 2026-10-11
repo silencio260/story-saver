@@ -1,0 +1,30 @@
+{
+  "parameterGroups": {
+    "Ads Group": {
+      "description": "The settings for ads",
+      "parameters": {
+        "min_insta_ad_interval": {
+          "defaultValue": {
+            "value": "7"
+          },
+          "description": "Minimum intervals btw showing interstitial ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "min_banner_ad_interval": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Minimum intervals btw showing banner ads in  seconds",
+          "valueType": "NUMBER"
+        },
+        "time_before_first_insta_ad": {
+          "defaultValue": {
+            "value": "3"
+          },
+          "description": "Time before dispalying first insta ad",
+          "valueType": "NUMBER"
+        }
+      }
+    }
+  }
+}

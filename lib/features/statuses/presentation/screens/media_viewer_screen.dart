@@ -267,9 +267,8 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
               ),
             ),
             // A native ad under the actions instead of a banner over the
-            // status. Its space is kept, so the status never moves when it
-            // loads, and the gap above it keeps quick taps on the buttons off
-            // the ad.
+            // status. It takes space only when ready; padding above the loaded
+            // ad keeps quick taps on the buttons off the ad.
             NativeAdSlot(
               placement: AppPlacements.viewerNative,
               // The big card with the ad's image under an image status from the

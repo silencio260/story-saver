@@ -21,6 +21,42 @@
       "type": "dart",
       "program": "lib/main.dart",
       "args": ["--dart-define-from-file=env/special_dev.json"]
+    },
+    {
+      "name": "Real Ads Diagnostics",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "args": [
+        "--dart-define-from-file=env/dev.json",
+        "--dart-define=ads_live_diagnostics=true"
+      ]
+    },
+    {
+      "name": "Fast Dev (reuse debug APK)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "args": [
+        "--no-pub",
+        "--dart-define-from-file=env/dev.json",
+        "--use-application-binary=build/app/outputs/flutter-apk/app-debug.apk"
+      ]
+    },
+    {
+      "name": "Fast Real Ads (reuse debug APK)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "args": [
+        "--no-pub",
+        "--dart-define-from-file=env/dev.json",
+        "--dart-define=ads_live_diagnostics=true",
+        "--use-application-binary=build/app/outputs/flutter-apk/app-debug.apk"
+      ]
     }
   ]
 }
